@@ -1,0 +1,520 @@
+{
+  "rows_views": [
+    [
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      }
+    ],
+    [
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "center",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      }
+    ],
+    [
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "center",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      }
+    ],
+    [
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      }
+    ],
+    [
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      },
+      {
+        "style": {
+          "borders": "lrtb",
+          "font_style": {},
+          "text_color": "",
+          "bg_color": "",
+          "halign": "left",
+          "valign": "top",
+          "padding": { "top": 10, "bottom": 10, "left": 5, "right": 5 },
+          "border_color": ""
+        }
+      }
+    ]
+  ],
+  "model": {
+    "rows": [
+      [
+        { "value": "**Module**", "cspan": 1, "rspan": 1, "markup": [3, 10] },
+        { "value": "**Type**", "cspan": 1, "rspan": 1, "markup": [3, 8] },
+        {
+          "value": "**Parameters**",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [3, 14]
+        },
+        { "value": "**Datum**", "cspan": 1, "rspan": 1, "markup": [3, 9] },
+        { "value": "**Redeemer**", "cspan": 1, "rspan": 1, "markup": [3, 12] },
+        { "value": "**Comment**", "cspan": 1, "rspan": 1, "markup": [3, 11] }
+      ],
+      [
+        { "value": "Control NFT", "cspan": 1, "rspan": 1, "markup": [1, 11] },
+        {
+          "value": "Minting Policy\n(one-shot)\n",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 25, 0, 1]
+        },
+        { "value": "N/A", "cspan": 1, "rspan": 1, "markup": [1, 3] },
+        { "value": "void", "cspan": 1, "rspan": 1, "markup": [1, 4] },
+        {
+          "value": "N/A\n\nWhen it started\nit cannot be stopped",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 3, 0, 2, 1, 36]
+        },
+        {
+          "value": "It is a one-shot NFT minting policy based on a valid spendable UTxO.\nIt mints 26 control NFT \"a\"..\"z\", which will be sent, one-by-one, \nto the Validator's script address.",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 170]
+        }
+      ],
+      [
+        { "value": "Time Deposit", "cspan": 1, "rspan": 1, "markup": [1, 12] },
+        {
+          "value": "Validator\n(locked deposit \nspending)",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 36]
+        },
+        { "value": "N/A", "cspan": 1, "rspan": 1, "markup": [1, 3] },
+        {
+          "value": "beneficiary\ndeadline\n",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 20, 0, 1]
+        },
+        {
+          "value": "N/A\n\nAs the beneficiary\n& deadline will be\nin the datum of the\nspending UTxO.",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 3, 0, 2, 1, 72]
+        },
+        {
+          "value": "A very simple generic time deposit validator\nit locks deposit till deadline.\n\nIt allows spending only after a specific time by the \nbeneficiary specified in datum.\n\n\nThe creation of the time deposit  UTxO is handled by the minting policy.\nSpending it is handled by the Time Deposit validator.\nthe minting policy handles the logic \n(amount, beneficiary, deadline)) of it.",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 76, 0, 2, 1, 85, 0, 3, 1, 204]
+        }
+      ],
+      [
+        {
+          "value": "Minting Policy",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 14]
+        },
+        {
+          "value": "Minting Policy\n(Username creation,\ndeletion)",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 44]
+        },
+        {
+          "value": "ControlNFT\nTimeDeposit\nAdaHandle\nlockUntil\nlockingPeriod\nbaseDeposit",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 68]
+        },
+        { "value": "N/A", "cspan": 1, "rspan": 1, "markup": [1, 3] },
+        {
+          "value": "action: add/delete\nx: elem to add/del\nnu: node to update\nna: node to append\nU: minimal tree",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 91]
+        },
+        {
+          "value": "The most complex validator it handles the:\n1. time locking deposit logic:\n  - no time locked deposit when a spendable $adahandle is present\n  - the user already has this handle\n  - the handle must not exist in the tree.\n2. control NFT's (on validator address) \ndatum validity\n3. the logic of proof generation and validation.\n4. and minting burning logic.",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 42, 0, 312]
+        }
+      ],
+      [
+        { "value": "Validator", "cspan": 1, "rspan": 1, "markup": [1, 9] },
+        {
+          "value": "Validator \n(State carrying\nusing control NFT)",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 45]
+        },
+        {
+          "value": "conrolNFT\nmintingPolicy",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 23]
+        },
+        {
+          "value": "action: added/deleted/initial\nn: nr. of elems in the Tree\nelem: elem added/removed\nproof: proof of the tree",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 107]
+        },
+        {
+          "value": "N/A\n\nThe validator's only\npurpose is carrying the\ncontrol NFT and the datum\n(state of the tree).",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 3, 0, 2, 1, 91]
+        },
+        {
+          "value": "A very simple validator for carrying control NFTs:\n1. ensures just one NFT is spent\n2. ensures the datum is not empty\n3. ensures that minting policy in the transaction\n\nAs minting policy will handle all the business logic",
+          "cspan": 1,
+          "rspan": 1,
+          "markup": [1, 50, 0, 119, 1, 52]
+        }
+      ]
+    ]
+  },
+  "theme": null,
+  "fixed_layout": false,
+  "markup": {
+    "instances": [
+      {},
+      { "style": {} },
+      null,
+      { "style": { "fontWeight": "bold" } },
+      null
+    ]
+  },
+  "options": {}
+}

@@ -1,0 +1,15 @@
+Adatag - A Universal NFT based User name service Plutus V2 implementation 
+Copyright 2023 Pal Dorogi <pal.dorogi@gmail.com>
+
+LabeledTree - Labeled Complete Binary Tree
+Copyright 2023 Pal Dorogi <pal.dorogi@gmail.com>
+
+This project uses code (as a template) from and was also inspired by the Plutus Pioneer Program 4th Cohort, 
+which is licensed under the Creative Commons Attribution 4.0 International License. 
+You can find the Plutus Pioneer Program repository here: https://github.com/input-output-hk/plutus-pioneer-program
+
+This project was also inspired by and uses code (as the benchmark template) from the Hydra,
+which is licensed under the Apache 2.0 license.
+You can find the Hydra repository here: https://github.com/input-output-hk/hydra
+
+We would like to thank the original authors for their work.

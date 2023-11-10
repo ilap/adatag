@@ -1,0 +1,93 @@
+cabal-version:          3.4
+name:                   adatag
+version:                0.1.0.0
+description:            Adatag - Universal NFT PlutusV2 example
+author:                 Pal Dorogi
+maintainer:             "ilap" <pal.dorogi@gmail.com>
+license:                Apache-2.0
+build-type:             Simple
+
+common common-all
+    build-depends:    base ^>=4.14.3.0
+                    , aeson
+                    , bytestring
+                    , containers
+                    , cardano-api
+                    , cardano-crypto-class
+                    , data-default
+                    , plutus-ledger-api
+                    , plutus-tx-plugin
+                    , plutus-tx
+                    , text
+                    , serialise
+                    , QuickCheck
+                    , tasty
+                    , tasty-quickcheck
+                    , plutus-simple-model
+                    , mtl
+                    , base16-bytestring
+                    , bytestring
+                    , cardano-ledger-core
+                    , time
+                    , cryptohash-sha256
+                    , SHA               ^>= 1.6.4
+                    , utf8-string
+
+
+    default-language: Haskell2010
+    ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
+                 -fno-omit-interface-pragmas -fno-strictness 
+                 -fno-spec-constr -fno-specialise -fexpose-all-unfoldings
+                 -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
+
+library
+  import:               common-all
+  hs-source-dirs:       src lib
+  exposed-modules:      Contracts.AdatagMinting
+                        Contracts.AlwaysFail
+                        Contracts.ControlNFTMinting
+                        Contracts.TimeDeposit
+                        Contracts.Validator
+                        Plutus.LabeledTree
+                        Utilities
+
+  other-modules:        Utilities.Conversions 
+                        Utilities.PlutusTx 
+                        Utilities.Serialise
+                        Utilities.Utils
+   
+executable            labeled-tree
+    import:           common-all
+    hs-source-dirs:   examples
+    main-is:          TestLabeledTree.hs
+    build-depends:    adatag
+
+executable            functions
+    import:           common-all
+    hs-source-dirs:   examples
+    main-is:          TestFunctions.hs
+    build-depends:    adatag
+
+test-suite              control-nft-minting
+    import:             common-all
+    type:               exitcode-stdio-1.0
+    main-is:            UControlNFTMinting.hs
+    --                  ^ U means Unit test, P means Property tests
+    hs-source-dirs:     tests
+    build-depends:      adatag
+
+test-suite              time-deposit
+    import:             common-all
+    type:               exitcode-stdio-1.0
+    main-is:            UTimeDeposit.hs
+    --                  ^ U means Unit test, P means Property tests
+    hs-source-dirs:     tests
+    build-depends:      adatag
+
+test-suite              validator
+    import:             common-all
+    type:               exitcode-stdio-1.0
+    main-is:            UValidator.hs
+    --                  ^ U means Unit test, P means Property tests
+    hs-source-dirs:     tests
+    build-depends:      adatag
