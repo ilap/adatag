@@ -51,7 +51,7 @@ main = defaultMain $ do
 setupUsers :: Run [PubKeyHash]
 setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
 
-type TagValidator = TypedValidator Integer TV.ValidatorRedeemer
+type TagValidator = TypedValidator CurrencySymbol
 
 mintingScript :: AM.MintParams -> TypedPolicy AM.MintRedeemer
 mintingScript = TypedPolicy . toV2 . AM.policy
@@ -102,10 +102,10 @@ testMintControlNFT = do
 --------------------------------------VALIDATOR FUNCTIONS --------------------------------------------
 
 -- Validator's script
-validatorScript :: TV.ValidatorParams -> TagValidator
+validatorScript :: TV.ControlNFT -> TagValidator
 validatorScript validator = TypedValidator . toV2 $ TV.validator validator
 
-deployValidatorTx :: UserSpend -> TV.ValidatorParams -> () -> Value -> Tx
+deployValidatorTx :: UserSpend -> TV.ControlNFT -> () -> Value -> Tx
 deployValidatorTx sp op r val =
   mconcat
     [ userSpend sp,
@@ -133,7 +133,7 @@ deployValidator u or = do
   let nftV = assetClassValue a 1
   sp <- spend u $ adaValue 1 <> nftV
   -------
-  let tvParams = TV.ValidatorParams s cn
+  let tvParams = cn
   --    oracleVH     = validatorHash' $ Oracle.validator oracleParams
   --    tdVH = validatorHash' TD.validator
 
@@ -142,7 +142,7 @@ deployValidator u or = do
 
   -- let mintingVH = validatorHash' $ Oracle.validator op
   -- stableCoinScript $ Minting.MintParams oracleVH collateralVH 150
-  let validator = TV.ValidatorParams s cn
+  let validator = cn
       validatorTx = deployValidatorTx sp validator or nftV
   submitTx u validatorTx
   return (validatorScript validator, a)

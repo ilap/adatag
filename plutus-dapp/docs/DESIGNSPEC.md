@@ -15,7 +15,7 @@ management system that consists the following core components:
 
 Assumptions:
 
-- A datum must be attached to an UTXO with a script address.
+- A datum must be attached to an UTXO for a script address.
 - The maximum size of an inline datum in an EUTxO is 4096 bytes (4KB)
 - A transaction only passes when all of the script validators of the transaction
   pass.
@@ -38,8 +38,7 @@ Assumptions:
 ### Control NFT Minting Policy
 
 This is a one-time NFT creation policy used to make control NFTs (with token
-names: `"a",...,"z"`). These NFTs are used by the Validator and Minting Policy
-Plutus scripts. They hold the state (in their datum) of the associated adatag
+names: `"a",...,"z"`). These NFTs are used by the Validator and Minting Policy Plutus scripts. They hold the state (in their datum) of the associated adatag
 Tree (`Ta,...,Tz`), which holds the relevant public usernames. For example, the
 proof of the adatag tree `Ta`, carried by the control NFT has token name `'a'`,
 only includes usernames starting with `'a'`, and so forth.
@@ -55,6 +54,7 @@ containing the newly updated state by the minting script).
 > Note: **Importantly**, the validator **does not** modify the tree's state; it
 > only stores the updated (by the minting script) state in the datum of its
 > address UTxO together with the control NFT token.
+
 
 #### Validation logic
 

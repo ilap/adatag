@@ -28,10 +28,10 @@ validator = PlutusV2.mkValidatorScript $$(PlutusTx.compile [||mkAFValidator||])
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
-saveVal :: IO ()
-saveVal = writeValidatorToFile "./assets/01_afv.plutus" validator
+saveScript :: IO ()
+saveScript = writeValidatorToFile "contracts/01_afv.plutus" validator
 
--- Generate the address to send the validators and minting script.
+-- Generate the address to send the validators and minting scripts to referencing them from.
 -- Network details, from Shelley genesis file, at
 -- https://book.world.dev.cardano.org/environments.html
 -- Network IDs and magics:

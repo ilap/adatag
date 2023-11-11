@@ -7,8 +7,8 @@ import System.IO ()
 main :: IO ()
 main = do
   -- Create a new tree with some childrem
-  let node = Node 1 (fromString "`", fromString "alma") (Node 2 (fromString "alma", fromString "barack") (Node 4 (fromString "barack", fromString "korte") leaf leaf) leaf) (Node 3 (fromString "korte", fromString "{") leaf leaf)
-  let nodeU = Node 1 (fromString "`", fromString "alma") (Node 2 (fromString "alma", fromString "barack") (Node 4 (fromString "barack", fromString "korte") leaf leaf) (Node 5 (fromString "szilva", fromString "{") leaf leaf)) (Node 3 (fromString "korte", fromString "szilva") leaf leaf)
+  let node = Node (fromString "`", fromString "alma") (Node (fromString "alma", fromString "barack") (Node (fromString "barack", fromString "korte") leaf leaf) leaf) (Node (fromString "korte", fromString "{") leaf leaf)
+  let nodeU = Node (fromString "`", fromString "alma") (Node (fromString "alma", fromString "barack") (Node (fromString "barack", fromString "korte") leaf leaf) (Node (fromString "szilva", fromString "{") leaf leaf)) (Node (fromString "korte", fromString "szilva") leaf leaf)
 
   putStrLn "############## U ###############"
   printTree node ""

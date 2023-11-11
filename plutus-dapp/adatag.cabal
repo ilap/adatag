@@ -56,6 +56,12 @@ library
                         Utilities.Serialise
                         Utilities.Utils
    
+executable            bootstrap
+    import:           common-all
+    hs-source-dirs:   app
+    main-is:          Main.hs
+    build-depends:    adatag
+
 executable            labeled-tree
     import:           common-all
     hs-source-dirs:   examples

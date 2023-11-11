@@ -13,7 +13,7 @@ import qualified PlutusTx
 import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
 import PlutusTx.Prelude (Bool, Eq ((==)), all, any, elem, head, traceIfFalse, ($), (&&))
 import Text.Printf (printf)
-import Utilities (bytesFromHex, bytesToHex, currencySymbol, wrapPolicy, writeCodeToFile, writePolicyToFile)
+import Utilities (bytesFromHex, currencySymbol, wrapPolicy, writeCodeToFile, writePolicyToFile)
 import Prelude (Bool (False), IO, Integer, Show (show), String)
 
 -- One-shot NFT minting policy for generating 26 control NFTs for @adatag namely "a" to "z"
@@ -36,7 +36,7 @@ mkNFTPolicy oref tnList () ctx =
 
 {-# INLINEABLE mkWrappedNFTPolicy #-}
 mkWrappedNFTPolicy :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedNFTPolicy tid ix tn' = wrapPolicy $ mkNFTPolicy oref tn
+mkWrappedNFTPolicy tid ix tn = wrapPolicy $ mkNFTPolicy oref tn'
   where
     oref :: TxOutRef
     oref =
@@ -44,8 +44,8 @@ mkWrappedNFTPolicy tid ix tn' = wrapPolicy $ mkNFTPolicy oref tn
         (TxId $ PlutusTx.unsafeFromBuiltinData tid)
         (PlutusTx.unsafeFromBuiltinData ix)
 
-    tn :: [TokenName]
-    tn = PlutusTx.unsafeFromBuiltinData tn'
+    tn' :: [TokenName]
+    tn' = PlutusTx.unsafeFromBuiltinData tn
 
 nftCode :: PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 nftCode = $$(PlutusTx.compile [||mkWrappedNFTPolicy||])
@@ -61,34 +61,34 @@ nftPolicy oref tns =
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
-saveNFTCode :: IO ()
-saveNFTCode = writeCodeToFile "assets/02-control-nft-minting.plutus" nftCode
+-- It does not require handling utf-8, as these are ASCII letters.
+hexToBS :: String -> BuiltinByteString
+hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
 
-saveNFTPolicy :: TxOutRef -> [TokenName] -> IO ()
-saveNFTPolicy oref tn =
-  writePolicyToFile
-    ( printf
-        "assets/02-control-nft-minting-%s#%d-%s.plutus"
-        (show $ txOutRefId oref)
-        (txOutRefIdx oref)
-        tn'
-    )
-    $ nftPolicy oref tn
-  where
-    tn' :: String
-    tn' = case unTokenName $ head tn of
-      (BuiltinByteString bs) -> BS8.unpack $ bytesToHex bs
+generateOutRef :: String -> Integer -> TxOutRef
+generateOutRef tx = TxOutRef (TxId $ hexToBS tx)
+
+-- Generate the currency symbol based on the parameters (UTxO ref, and the letters)
+controlNFTCurrencySymbol :: TxOutRef -> CurrencySymbol
+controlNFTCurrencySymbol oref = currencySymbol $ nftPolicy oref letters
+
+saveControlNFTMintingScript :: IO ()
+saveControlNFTMintingScript = writeCodeToFile "contracts/02-control-nft-minting.plutus" nftCode
 
 letters :: [TokenName]
 letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
--- It does not require handling utf-8, as these are ASCII letters.
-toBS :: String -> BuiltinByteString
-toBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
-
-mockOref :: String -> Integer -> TxOutRef
-mockOref tx = TxOutRef (TxId $ toBS tx)
-
--- Generate the currency symbol based on the parameters (UTxO ref, and the letters)
-nftCurrencySymbol :: TxOutRef -> CurrencySymbol
-nftCurrencySymbol oref = currencySymbol $ nftPolicy oref letters
+saveControlNFTMintingPolicy :: TxOutRef -> IO ()
+saveControlNFTMintingPolicy oref =
+  writePolicyToFile
+    ( printf
+        "contracts/02-control-nft-minting-%s#%d-%s.plutus"
+        (show $ txOutRefId oref)
+        (txOutRefIdx oref)
+        tn'
+    )
+    $ nftPolicy oref letters
+  where
+    tn' :: String
+    tn' = case unTokenName $ head letters of -- It gets the first tokenname the "a"
+      (BuiltinByteString bs) -> BS8.unpack bs --  $ bytesToHex bs

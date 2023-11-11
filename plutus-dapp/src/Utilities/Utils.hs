@@ -9,13 +9,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fexpose-all-unfoldings #-}
 -- Prevent unboxing, which the plugin can't deal with
 {-# OPTIONS_GHC -fno-omit-interface-pragmas #-}
 {-# OPTIONS_GHC -fno-spec-constr #-}
 {-# OPTIONS_GHC -fno-specialise #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 
 module Utilities.Utils where
 
@@ -32,6 +32,7 @@ import PlutusTx.Prelude
 getTokenNamesOfSymbol :: Value -> CurrencySymbol -> [TokenName]
 getTokenNamesOfSymbol (Value mp) cur =
   maybe [] Map.keys (Map.lookup cur mp)
+
 -- case Map.lookup cur mp of
 -- -> Nothing -> []
 -- Just i  -> Map.keys i
@@ -50,10 +51,10 @@ getTokenNameOfSymbol (Value mp) cur =
 getOnlyTokenBySymbol :: Value -> CurrencySymbol -> TokenName
 getOnlyTokenBySymbol (Value v) s =
   case Map.lookup s v of
-    Nothing -> traceError "expected existing currency in value"
+    Nothing -> traceError "expected currency in value"
     Just i -> case Map.keys i of
       [tn] -> tn
-      _ -> traceError "expected only one token"
+      _ -> traceError "expected only one token name"
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-ledger-api/src/PlutusLedgerApi/V1/Value.hs#L256
 {-# INLINEABLE hasSymbol #-}
@@ -113,6 +114,7 @@ hasOnlyAllowedChars :: BuiltinByteString -> Bool
 hasOnlyAllowedChars bs =
   let n = lengthOfByteString bs
    in all (isValidChar . indexByteString bs) [0 .. n -1]
+
 --  case lengthOfByteString bs of
 --    0 -> True
 --    n -> all (isValidChar . indexByteString bs) [0 .. n -1]

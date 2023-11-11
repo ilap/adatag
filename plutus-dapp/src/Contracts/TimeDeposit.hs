@@ -1,113 +1,223 @@
 {-# LANGUAGE DataKinds #-}
+{-# HLINT ignore "Use if" #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 -- {-# LANGUAGE StrictData #-}
 
 module Contracts.TimeDeposit where
 
+-- import Cardano.Api (ScriptData (..), prettyPrintJSON)
 import qualified Data.ByteString.Char8 as BS8 (pack)
+--import qualified Data.ByteString.Lazy as LBS
+import Data.Maybe (fromJust)
 import Plutus.V1.Ledger.Interval (contains)
 import Plutus.V2.Ledger.Api
   ( Datum (Datum),
     OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
     POSIXTime (..),
-    PubKeyHash,
+    PubKeyHash (..),
     ScriptContext (scriptContextTxInfo),
     TxInfo (txInfoValidRange),
     Validator,
     from,
     mkValidatorScript,
+    unsafeFromBuiltinData,
   )
-import Plutus.V2.Ledger.Contexts (findDatum, txSignedBy)
-import PlutusTx (FromData (fromBuiltinData), compile, unstableMakeIsData)
+import Plutus.V2.Ledger.Contexts (txSignedBy)
+import PlutusTx (CompiledCode, FromData (fromBuiltinData), applyCode, compile, liftCode, makeLift, unstableMakeIsData)
 import PlutusTx.Builtins.Internal
-import PlutusTx.Prelude (Bool, Maybe (..), traceError, traceIfFalse, ($), (&&))
+import PlutusTx.Prelude (Bool (..), Maybe (..), take, traceError, traceIfFalse, ($), (&&), (.))
+import System.IO
+import Text.Printf (printf)
 import Utilities
-  ( Network,
-    printDataToJSON,
-    validatorAddressBech32,
+  ( printDataToJSON,
     wrapValidator,
+    writeDataToFile,
     writeValidatorToFile,
   )
-import Prelude (IO, Integer, String)
+import Utilities.Conversions
+import Prelude (Show, String, show)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
-
+-- Note: the unit type () has a different signature than the {} and therefore different PLC data
+-- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
+-- {} = {"constructor": 1, "fields": []}"
 data TimeDepositDatum = TimeDepositDatum
   { ddBeneficiary :: PubKeyHash, -- beneficiary of the locked time deposit.
-    ddDeadline :: POSIXTime, -- preferably 20 days, the minting policy will validate the deadline.
-
-    -- | this prevents any adversaries using only 1 time-lock output and generating 26 adatag.
+    ddDeadline :: POSIXTime, -- preferably ~20 days, the minting policy will validate the deadline at minting time.
+    -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
+    -- Minting policy handles this logic. It's not required for unlocking.
     ddAdatag :: BuiltinByteString
   }
+  deriving (Prelude.Show)
 
 unstableMakeIsData ''TimeDepositDatum
 
--- data TimeDepositParams = TimeDepositParams
---    { dpCollectorPkh          :: PubKeyHash -- Collecting donations (void datum is used) and unclaimed deposits (after a year or 2)
---    , dpCollectionTime        :: POSIXTime  -- it should be twice as deactivation time. 1-1.5yrs
---    , dpDeactivationTime      :: POSIXTime  -- When the time lock deposit feature is deactivated. Usially in 6-9 months of bootstrap
---    , dpAdaHandle             :: ValidatorHash
---    }
--- PlutusTx.makeLift ''TimeDepositParams
+data TimeDepositParams = TimeDepositParams
+  { dpCollector :: PubKeyHash, -- Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
+    dpCollectionTime :: POSIXTime -- The time the collector can collect the unclaimed time-lock deposits. It should be twice as deactivation time. ~1-2yrs
+  }
+  deriving (Prelude.Show)
 
+PlutusTx.makeLift ''TimeDepositParams
+
+-- Collector can collect any donation (having any non TimeDepositDatum) anytime or
+-- after the collection time has passed with an UTxO having a valid TimeDepositDatum datum.
+-- The beneficiary always can redeem after the deatline in the datum has passed
+data TimeDepositRedeemer = Collect | Redeem
+
+unstableMakeIsData ''TimeDepositRedeemer
+
+-- Only inline datums are allowed.
 {-# INLINEABLE parseTimeDepositDatum #-}
-parseTimeDepositDatum :: OutputDatum -> TxInfo -> Maybe TimeDepositDatum
-parseTimeDepositDatum o info = case o of
+parseTimeDepositDatum :: OutputDatum -> Maybe TimeDepositDatum
+parseTimeDepositDatum o = case o of
   NoOutputDatum -> traceError "Found time deposit output but NoOutputDatum"
-  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d
-  OutputDatumHash dh -> do
-    Datum d <- findDatum dh info
-    PlutusTx.fromBuiltinData d
+  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
+  OutputDatumHash _ -> traceError "Found time deposit output but no Inline datum"
 
 -- TimeDeposit validator for locking a certain amount of ADA for some time (20 days) at minting time
 -- to prevent for buying a lot of the rare usernames and sell them on the market for high price.
 {-# INLINEABLE mkTimeDepositValidator #-}
-mkTimeDepositValidator :: TimeDepositDatum -> () -> ScriptContext -> Bool
-mkTimeDepositValidator dat () ctx =
-  traceIfFalse "beneficiary's signature missing" signedByBeneficiary
-    && traceIfFalse "deadline not reached " deadlineReached
+mkTimeDepositValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRedeemer -> ScriptContext -> Bool
+mkTimeDepositValidator params dat red ctx =
+  case red of
+    -- User can redeem only after the deadline has passed.
+    Redeem -> validClaim info dat
+    -- Collector can collect donations (with no TimeDepositDatum) anytime or
+    -- after the collection time with a TimeDepositDatum (unlcaimed time-lock deposits).
+    Collect -> validCollection info params dat
   where
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-    signedByBeneficiary :: Bool
-    signedByBeneficiary = txSignedBy info $ ddBeneficiary dat
+-- Validate claim
+{-# INLINEABLE validClaim #-}
+validClaim :: TxInfo -> TimeDepositDatum -> Bool
+validClaim info dat =
+  case isTimeDepositDatum dat of
+    True -> traceIfFalse "deadline not reached" timeReached
+    False -> False -- Any other datum is handled as donation, meaning only the collector can claim it.
+    && traceIfFalse "beneficiary's signature is missing" signedByValidKey
+  where
+    signedByValidKey :: Bool
+    signedByValidKey = txSignedBy info $ ddBeneficiary dat
 
-    deadlineReached :: Bool
-    deadlineReached = Plutus.V1.Ledger.Interval.contains (from $ ddDeadline dat) $ txInfoValidRange info
+    timeReached :: Bool
+    timeReached = Plutus.V1.Ledger.Interval.contains (from $ ddDeadline dat) $ txInfoValidRange info
 
+-- Validate collection
+{-# INLINEABLE validCollection #-}
+validCollection :: TxInfo -> TimeDepositParams -> TimeDepositDatum -> Bool
+validCollection info params dat =
+  case isTimeDepositDatum dat of
+    True -> traceIfFalse "collection time not reached" timeReached -- valid lock-time datum, meaning unclaimed deposits can unly collected after the collection time.
+    False -> True -- Any other datum is handled as donation.
+    && traceIfFalse "collector's signature is missing" signedByValidKey
+  where
+    signedByValidKey :: Bool
+    signedByValidKey = txSignedBy info $ dpCollector params
+
+    timeReached :: Bool
+    timeReached = Plutus.V1.Ledger.Interval.contains (from $ dpCollectionTime params) $ txInfoValidRange info
+
+-- Check the validity of the redeemer and datum.
+{-# INLINEABLE isTimeDepositDatum #-}
+isTimeDepositDatum :: TimeDepositDatum -> Bool
+isTimeDepositDatum d =
+  case d of
+    TimeDepositDatum {} -> True
+    _ -> False
+
+------------------
 {-# INLINEABLE mkWrappedTimeDepositValidator #-}
-mkWrappedTimeDepositValidator :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedTimeDepositValidator = wrapValidator mkTimeDepositValidator
+mkWrappedTimeDepositValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedTimeDepositValidator = wrapValidator . mkTimeDepositValidator
 
-validator :: Validator
-validator = mkValidatorScript $$(compile [||mkWrappedTimeDepositValidator||])
+validator :: TimeDepositParams -> Validator
+validator params =
+  mkValidatorScript $
+    $$(PlutusTx.compile [||mkWrappedTimeDepositValidator||])
+      `PlutusTx.applyCode` PlutusTx.liftCode params
+
+{-# INLINEABLE mkWrappedValidatorLucid #-}
+--                         Coll PKH       Coll time      datum          redeemer       context
+mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedValidatorLucid pkh ct = wrapValidator $ mkTimeDepositValidator tdp
+  where
+    tdp =
+      TimeDepositParams
+        { dpCollector = PubKeyHash $ unsafeFromBuiltinData pkh, --
+          dpCollectionTime = POSIXTime $ unsafeFromBuiltinData ct -- The time the collector can collect donations.
+        }
+
+--                             Coll PKH       Coll time      datum          redeemer       context
+validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
+validatorCode = $$(compile [||mkWrappedValidatorLucid||])
 
 ---------------------------------------------------------------------------------------------------
-------------------------------------- HELPER FUNCTIONS --------------------------------------------
+------------------------------------- SAVE VALIDATOR -------------------------------------------
 
-saveVal :: IO ()
-saveVal = writeValidatorToFile "./scripts/03-time-deposit.plutus" validator
+-- saveTimeDepositCode :: IO ()
+-- saveTimeDepositCode = writeValidatorToFile "contracts/03-time-deposit.plutus" validatorCode
 
-timeDepositAddressBech32 :: Network -> String
-timeDepositAddressBech32 network = validatorAddressBech32 network validator
+saveTimeDepositScript :: PubKeyHash -> POSIXTime -> IO ()
+saveTimeDepositScript pkh ct = do
+  let
+  writeValidatorToFile fp $ validator op
+  where
+    op =
+      TimeDepositParams
+        { dpCollector = pkh,
+          dpCollectionTime = ct
+        }
+    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (show pkh) $ show (getPOSIXTime ct)
 
-printPosixTimeDepositDatumJSON :: PubKeyHash -> Integer -> String -> IO ()
-printPosixTimeDepositDatumJSON pkh time adatag =
+---------------------------------------------------------------------------------------------------
+---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------
+
+-- Get to script address the time lock deposit sent to.
+timeDepositAddressBech32 :: Network -> TimeDepositParams -> String
+timeDepositAddressBech32 network tdp = validatorAddressBech32 network (validator tdp)
+
+-- Generate a datum to lock.
+printTimeDepositDatumJSON :: PubKeyHash -> String -> String -> IO ()
+printTimeDepositDatumJSON pkh time adatag =
   printDataToJSON $
     TimeDepositDatum
       { ddBeneficiary = pkh,
-        ddDeadline = POSIXTime time,
+        ddDeadline = fromJust $ posixTimeFromIso8601 time,
         ddAdatag = BuiltinByteString $ BS8.pack adatag
       }
 
-{- See an exampe below, how to use it
+writeTimeDepositDatumJson :: String -> String -> String -> IO ()
+writeTimeDepositDatumJson pkh time adatag = do
+  let
+  writeDataToFile fp datum
+  where
+    datum =
+      TimeDepositDatum
+        { ddBeneficiary = PubKeyHash $ BuiltinByteString $ BS8.pack pkh,
+          ddDeadline = fromJust $ posixTimeFromIso8601 time,
+          ddAdatag = BuiltinByteString $ BS8.pack adatag
+        }
+    fp = printf "contracts/03-time-deposit-%s-%s-%s-datum.json" (take 3 (show pkh)) time adatag
 
+-- Write unit to construct outputs
+writeUnit :: IO ()
+writeUnit = writeDataToFile fp ()
+  where
+    fp = printf "contracts/03-time-deposit-unit.json"
+
+{- See an exampe below, how to use it
 Repl> import Plutus.V2.Ledger.Api
 Repl> :set -XOverloadedStrings
 Repl> printTimeDepositDatumJSON (PubKeyHash "alma") "2022-09-09T08:06:21.630747Z" "adatag"

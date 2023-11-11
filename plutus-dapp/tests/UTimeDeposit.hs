@@ -25,7 +25,7 @@ import Prelude (mconcat, show)
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------
 
-type TimeDepositScript = TypedValidator TD.TimeDepositDatum ()
+type TimeDepositScript = TypedValidator TD.TimeDepositParams TD.TimeDepositDatum 
 
 script :: TimeDepositScript
 script = TypedValidator $ toV2 TD.validator

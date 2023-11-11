@@ -12,25 +12,23 @@
 module Contracts.AdatagMinting where
 
 import Contracts.Validator
+import qualified Data.ByteString.Char8 as BS8 (pack, unpack)
 import Data.String (IsString (fromString))
 import Plutus.V1.Ledger.Address (scriptHashAddress)
 import Plutus.V1.Ledger.Value (AssetClass (AssetClass), TokenName (TokenName), assetClassValueOf, flattenValue, CurrencySymbol)
 import Plutus.V2.Ledger.Api
-  ( BuiltinByteString,
-    BuiltinData,
+  ( BuiltinData,
     MintingPolicy,
     OutputDatum (..),
     ScriptContext (scriptContextTxInfo),
     TxInInfo (txInInfoResolved),
     TxInfo (txInfoMint, txInfoReferenceInputs),
-    TxOut (txOutAddress, txOutValue),
+    TxOut (txOutAddress),
     UnsafeFromData (unsafeFromBuiltinData),
     Value,
     mkMintingPolicyScript,
-    txInfoInputs,
     txOutDatum,
-    txOutValue,
-    unTokenName,
+    unTokenName, TxOutRef (txOutRefId, txOutRefIdx), ValidatorHash,
   )
 import Plutus.V2.Ledger.Api qualified as PlutusV2
 import Plutus.V2.Ledger.Contexts (ownCurrencySymbol, scriptOutputsAt)
@@ -43,7 +41,7 @@ import PlutusTx
     unstableMakeIsData,
   )
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
-import PlutusTx.Builtins.Internal (BuiltinInteger)
+import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString), BuiltinInteger)
 import PlutusTx.Prelude
   ( Bool (False),
     Eq ((==)),
@@ -55,10 +53,14 @@ import PlutusTx.Prelude
     traceIfFalse,
     ($),
     (&&),
-    (.),
+    (.), head,
   )
 import Utilities (isValidUsername, wrapPolicy, writeCodeToFile)
-import Prelude (IO, Show)
+import Prelude (IO, Show (show), String)
+import Utilities.Serialise
+import Text.Printf
+import Contracts.ControlNFTMinting
+import Utilities.Conversions
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------ ON-CHAIN: VALIDATOR ------------------------------------------
@@ -87,19 +89,20 @@ PlutusTx.unstableMakeIsData ''Node
 -- Minting policy parameters.
 data MintParams = MintParams
   { -- | AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
-    mpControlNFT :: CurrencySymbol,
+    mpControlNFT :: CurrencySymbol, -- The control NFT that's carrying the state of the @adatag tree.
     mpValidator :: PlutusV2.ValidatorHash, -- ControlNFT validator hash.
-    mpTimeDeposit :: PlutusV2.ValidatorHash, -- TimeDeposit validator hash.
+    mpTimeDeposit :: PlutusV2.ValidatorHash, -- TimeDeposit validator hash. -- for checking time-lock deposits
     mpLockExpiry :: PlutusV2.POSIXTime, -- The POSIXTime until the Lock Time Deposit Feature is active
-    --  (e.g. 6 months form the @adatag bootstrapping).
+    --  (e.g. ~6-9 months form the @adatag bootstrapping).
     mpUserLockingPeriod :: PlutusV2.POSIXTime, -- The POSIXTime from the Lock Time Deposit is available for the user to claim.
     --  The user's `lockEndDate` in the datum, created by the minting script is currentTime + userLockingPeriod
-    mpDepositBase :: BuiltinInteger -- The user's deposit is calculated from deposit base and the lenght of the username.
+    mpDepositBase :: BuiltinInteger, -- The user's deposit is calculated from deposit base and the lenght of the username.
     {-
       The formula of calculating the user's time lock deposit is `mpDepositBase * (maxLength - usernameLength + 1)`.
       Therefore, mpDepositBase = 50 means, that the value of the locked time deposit for a 1 length username is 750ADA.
       Example: 50 * ( 16 - 1 + 1) = 750. the 16 is the max length of an @adatag.
     -}
+     mpAdaHandle         :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
   }
   deriving (Prelude.Show)
 
@@ -187,7 +190,7 @@ mkPolicy mp r ctx = case mrAction r of
 
     -- Get the validator's output datum
     stateOutputDatum :: Maybe ValidatorDatum
-    stateOutputDatum = parseValidatorDatum d info
+    stateOutputDatum = parseValidatorDatum d
       where
         (d, _) = stateOutput
 
@@ -239,31 +242,7 @@ mkPolicy mp r ctx = case mrAction r of
 
     -- Get the collateral's input datum
     validatorInputDatum :: Maybe ValidatorDatum
-    validatorInputDatum = parseValidatorDatum (txOutDatum validatorInput) info
-
----------------------------------------------------------------------------------------------------
-------------------------------------- HELPER FUNCTIONS --------------------------------------------
-
-leaf :: Node
-leaf = Leaf (stringToBuiltinByteString "")
-
-val :: Val
-val = Val (stringToBuiltinByteString "", stringToBuiltinByteString "")
-
-tag :: Tag
-tag = Tag 1 val
-
--- node :: Node
--- node = Node  leaf leaf
-
--- saveVal :: IO ()
--- saveVal = writeValidatorToFile "./assets/adatag.plutus" validator
-
-nodeU :: Node
-nodeU = Node 1 (fromString "`", fromString "alma") (Node 2 (fromString "alma", fromString "barack") (Node 4 (fromString "barack", fromString "korte") leaf leaf) leaf) (Node 3 (fromString "korte", fromString "{") leaf leaf)
-
-nodeU2 :: Node
-nodeU2 = Node 1 (fromString "`", fromString "alma") (Node 2 (fromString "alma", fromString "barack") (Node 4 (fromString "barack", fromString "korte") leaf leaf) (Node 5 (fromString "szilva", fromString "{") leaf leaf)) (Node 3 (fromString "korte", fromString "szilva") leaf leaf)
+    validatorInputDatum = parseValidatorDatum (txOutDatum validatorInput)
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------ COMPILE AND SERIALIZE VALIDATOR ------------------------------------
@@ -290,11 +269,30 @@ mkWrappedPolicyLucid tdv cv p = wrapPolicy $ mkPolicy mp
           mpValidator = unsafeFromBuiltinData cv,
           mpLockExpiry = unsafeFromBuiltinData cv,
           mpUserLockingPeriod = unsafeFromBuiltinData cv,
-          mpDepositBase = unsafeFromBuiltinData cv
+          mpDepositBase = unsafeFromBuiltinData cv,
+          mpAdaHandle = unsafeFromBuiltinData cv
         }
 
 policyCodeLucid :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 policyCodeLucid = $$(compile [||mkWrappedPolicyLucid||])
 
-saveMintingCode :: Prelude.IO ()
-saveMintingCode = writeCodeToFile "assets/tag-minting.plutus" policyCodeLucid
+---------------------------------------------------------------------------------------------------
+------------------------------------- HELPER FUNCTIONS --------------------------------------------
+
+saveAdatagMintingCode :: Prelude.IO ()
+saveAdatagMintingCode = writeCodeToFile "contracts/05-adatag-minting.plutus" policyCodeLucid
+
+saveAdatagMintingPolicy :: TxOutRef -> [TokenName] -> IO ()
+saveAdatagMintingPolicy oref tn =
+  writePolicyToFile
+    ( printf
+        "contracts/05-adatag-minting-%s#%d-%s.plutus"
+        (show $ txOutRefId oref)
+        (txOutRefIdx oref)
+        tn'
+    )
+    $ nftPolicy oref tn
+  where
+    tn' :: String
+    tn' = case unTokenName $ head tn of
+      (BuiltinByteString bs) -> BS8.unpack $ bytesToHex bs
