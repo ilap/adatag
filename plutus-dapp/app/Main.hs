@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StrictData #-}
+-- {-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -19,11 +19,16 @@ import qualified Data.Text as Text
 import Data.Time.Clock
 import Data.Time.Format
 import Plutus.V1.Ledger.Value (AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, unAssetClass)
-import Plutus.V2.Ledger.Api (CurrencySymbol (CurrencySymbol), POSIXTime (POSIXTime), PubKeyHash)
-import PlutusTx.Builtins.Class (stringToBuiltinByteString)
+import Plutus.V2.Ledger.Api (CurrencySymbol (CurrencySymbol), POSIXTime (POSIXTime), PubKeyHash, ValidatorHash (..))
 import PlutusTx.Prelude (fromMaybe, takeByteString, traceError)
 import System.IO ()
-import Utilities (Network (..), policyHash, posixTimeFromIso8601, posixTimeToIso8601, validatorHash')
+import Utilities (Network (..), policyHash, posixTimeFromIso8601, posixTimeToIso8601, validatorHash', bytesFromHex)
+import qualified Contracts.AdatagMinting as CNM
+import qualified Data.ByteString.Char8 as BS8
+import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+
+hexToBS :: String -> BuiltinByteString
+hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
 
 bech32ToPubkeyHash :: String -> Maybe PubKeyHash
 bech32ToPubkeyHash address = do
@@ -70,8 +75,8 @@ main = do
 
   let deactivationDaysAfter = 183 --  approx. half year after bootstrap
   let collectionDaysAfter = 365 -- approx a year after bootsrap
-  let lockPeriod = 20 :: Integer
-  let baseDeposit = 50 :: Integer
+  let lockPeriod = 60*60*24*20 :: Integer
+ 
 
   putStrLn "############ Bootstrap details ##############"
   putStrLn ""
@@ -147,15 +152,23 @@ main = do
   putStrLn "-----------------------------------------------"
   putStrLn ""
 
+  let maxDeposit = 1750 :: Integer
+  let dt = fromMaybe (error "Invalid Time string.") $ posixTimeFromIso8601 deactivationTime
+  let ah = ValidatorHash $ hexToBS adahandle
   putStrLn "---------- 5. Adatag Minting Script ----------"
-  putStrLn $ "CNFT Currency Symbol      : " ++ show cnftSymbol
+
   putStrLn $ "Deactivation time : " ++ deactivationTime
 
-  putStrLn "CNFT Validator policy ID  : "
-  putStrLn $ "Time Deposit Policy ID    : " ++ show timdedepositValidator
-  putStrLn $ "Time Deposit Lock Expiry  : " ++ show deactivationTime
-  putStrLn $ "Time Deposit Lock Period  : " ++ show lockPeriod
-  putStrLn $ "Time Deposit Deposit Base : " ++ show baseDeposit
-  putStrLn $ "Adahandle Policy ID       : " ++ adahandle
+
+  putStrLn "----------------  Parameters  -----------------"
+  putStrLn $ "1. Control NFT Symbol       : " ++ show cnftSymbol
+  putStrLn $ "2. Validator policy Id      : " ++ show cnftValidator
+  putStrLn $ "3. Time Deposit policy Id   : " ++ show timdedepositValidator
+  putStrLn $ "4. Time Deposit Lock expiry : " ++ show deactivationTime
+  putStrLn $ "5. Time Deposit Lock period : " ++ show lockPeriod
+  putStrLn $ "6. Time Deposit max deposit : " ++ show maxDeposit
+  putStrLn $ "7. Adahandle policy id      : " ++ show ah
   putStrLn "------------------- Saving --------------------"
+    -- Save script
+  CNM.saveAdatagMintingPolicy cnftSymbol cnftValidator timdedepositValidator dt lockPeriod maxDeposit ah
   putStrLn "-----------------------------------------------"

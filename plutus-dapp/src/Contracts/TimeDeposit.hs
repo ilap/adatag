@@ -9,13 +9,9 @@
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
--- {-# LANGUAGE StrictData #-}
-
 module Contracts.TimeDeposit where
 
--- import Cardano.Api (ScriptData (..), prettyPrintJSON)
 import qualified Data.ByteString.Char8 as BS8 (pack)
---import qualified Data.ByteString.Lazy as LBS
 import Data.Maybe (fromJust)
 import Plutus.V1.Ledger.Interval (contains)
 import Plutus.V2.Ledger.Api
@@ -47,16 +43,22 @@ import Prelude (Show, String, show)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
--- Note: the unit type () has a different signature than the {} and therefore different PLC data
--- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
--- {} = {"constructor": 1, "fields": []}"
-data TimeDepositDatum = TimeDepositDatum
-  { ddBeneficiary :: PubKeyHash, -- beneficiary of the locked time deposit.
-    ddDeadline :: POSIXTime, -- preferably ~20 days, the minting policy will validate the deadline at minting time.
+
+data TimeDepositDatum = -- |
+                        TimeDepositDatum
+  { -- |
+    ddBeneficiary :: PubKeyHash, -- |
+
+                        -- beneficiary of the locked time deposit.
+    ddDeadline :: POSIXTime -- preferably ~20 days, the minting policy will validate the deadline at minting time.
     -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
     -- Minting policy handles this logic. It's not required for unlocking.
-    ddAdatag :: BuiltinByteString
+    -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
   }
+  -- Note: the unit type () has a different signature than the {} and therefore different PLC data
+  -- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
+  -- {} = {"constructor": 1, "fields": []}"
+  | UnitDatum ()
   deriving (Prelude.Show)
 
 unstableMakeIsData ''TimeDepositDatum
@@ -91,51 +93,27 @@ mkTimeDepositValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRe
 mkTimeDepositValidator params dat red ctx =
   case red of
     -- User can redeem only after the deadline has passed.
-    Redeem -> validClaim info dat
+    Redeem -> validClaim info False dat (ddBeneficiary dat) (ddDeadline dat)
     -- Collector can collect donations (with no TimeDepositDatum) anytime or
     -- after the collection time with a TimeDepositDatum (unlcaimed time-lock deposits).
-    Collect -> validCollection info params dat
+    Collect -> validClaim info True dat (dpCollector params) (dpCollectionTime params)
   where
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
--- Validate claim
 {-# INLINEABLE validClaim #-}
-validClaim :: TxInfo -> TimeDepositDatum -> Bool
-validClaim info dat =
-  case isTimeDepositDatum dat of
-    True -> traceIfFalse "deadline not reached" timeReached
-    False -> False -- Any other datum is handled as donation, meaning only the collector can claim it.
-    && traceIfFalse "beneficiary's signature is missing" signedByValidKey
+validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> Bool
+validClaim info iscoll dat pkh pt = do
+  case dat of
+    TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
+    UnitDatum {} -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
+  && traceIfFalse "signature is missing" signedByValidKey
   where
     signedByValidKey :: Bool
-    signedByValidKey = txSignedBy info $ ddBeneficiary dat
+    signedByValidKey = txSignedBy info pkh
 
     timeReached :: Bool
-    timeReached = Plutus.V1.Ledger.Interval.contains (from $ ddDeadline dat) $ txInfoValidRange info
-
--- Validate collection
-{-# INLINEABLE validCollection #-}
-validCollection :: TxInfo -> TimeDepositParams -> TimeDepositDatum -> Bool
-validCollection info params dat =
-  case isTimeDepositDatum dat of
-    True -> traceIfFalse "collection time not reached" timeReached -- valid lock-time datum, meaning unclaimed deposits can unly collected after the collection time.
-    False -> True -- Any other datum is handled as donation.
-    && traceIfFalse "collector's signature is missing" signedByValidKey
-  where
-    signedByValidKey :: Bool
-    signedByValidKey = txSignedBy info $ dpCollector params
-
-    timeReached :: Bool
-    timeReached = Plutus.V1.Ledger.Interval.contains (from $ dpCollectionTime params) $ txInfoValidRange info
-
--- Check the validity of the redeemer and datum.
-{-# INLINEABLE isTimeDepositDatum #-}
-isTimeDepositDatum :: TimeDepositDatum -> Bool
-isTimeDepositDatum d =
-  case d of
-    TimeDepositDatum {} -> True
-    _ -> False
+    timeReached = contains (from pt) $ txInfoValidRange info
 
 ------------------
 {-# INLINEABLE mkWrappedTimeDepositValidator #-}
@@ -179,7 +157,7 @@ saveTimeDepositScript pkh ct = do
         { dpCollector = pkh,
           dpCollectionTime = ct
         }
-    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (show pkh) $ show (getPOSIXTime ct)
+    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (take 8 (show pkh)) -- (show pkh) $ show (getPOSIXTime ct)
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------
@@ -189,33 +167,41 @@ timeDepositAddressBech32 :: Network -> TimeDepositParams -> String
 timeDepositAddressBech32 network tdp = validatorAddressBech32 network (validator tdp)
 
 -- Generate a datum to lock.
-printTimeDepositDatumJSON :: PubKeyHash -> String -> String -> IO ()
-printTimeDepositDatumJSON pkh time adatag =
+printTimeDepositDatumJSON :: PubKeyHash -> String -> IO ()
+printTimeDepositDatumJSON pkh time =
   printDataToJSON $
     TimeDepositDatum
       { ddBeneficiary = pkh,
-        ddDeadline = fromJust $ posixTimeFromIso8601 time,
-        ddAdatag = BuiltinByteString $ BS8.pack adatag
+        ddDeadline = fromJust $ posixTimeFromIso8601 time
       }
 
-writeTimeDepositDatumJson :: String -> String -> String -> IO ()
-writeTimeDepositDatumJson pkh time adatag = do
+writeTimeDepositDatumJson :: String -> String -> IO ()
+writeTimeDepositDatumJson pkh time = do
   let
   writeDataToFile fp datum
   where
     datum =
       TimeDepositDatum
         { ddBeneficiary = PubKeyHash $ BuiltinByteString $ BS8.pack pkh,
-          ddDeadline = fromJust $ posixTimeFromIso8601 time,
-          ddAdatag = BuiltinByteString $ BS8.pack adatag
+          ddDeadline = fromJust $ posixTimeFromIso8601 time
         }
-    fp = printf "contracts/03-time-deposit-%s-%s-%s-datum.json" (take 3 (show pkh)) time adatag
+    fp = printf "contracts/03-time-deposit-%s-datum.json" (take 8 (show pkh))
 
 -- Write unit to construct outputs
 writeUnit :: IO ()
 writeUnit = writeDataToFile fp ()
   where
     fp = printf "contracts/03-time-deposit-unit.json"
+
+{-
+> import qualified Data.ByteString.Char8 as BS8 (pack)
+> import Data.Maybe (fromJust)
+> import Plutus.V2.Ledger.Api
+> import PlutusTX.Builtins.Internal
+> import PlutusTx.Builtins.Internal
+> TimeDepositDatum (PubKeyHash "alma") (fromJust $ posixTimeFromIso8601 "2022-09-09T08:06:21.630747Z") (BuiltinByteString $ BS8.pack "adatag")
+TimeDepositDatum {ddBeneficiary = 616c6d61, ddDeadline = POSIXTime {getPOSIXTime = 1662710781631}, ddAdatag = "adatag"}
+-}
 
 {- See an exampe below, how to use it
 Repl> import Plutus.V2.Ledger.Api

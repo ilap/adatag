@@ -1,34 +1,42 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-} -- FIXME: remove it on release
 
 module Contracts.AdatagMinting where
 
+import Contracts.TimeDeposit
 import Contracts.Validator
-import qualified Data.ByteString.Char8 as BS8 (pack, unpack)
 import Data.String (IsString (fromString))
 import Plutus.V1.Ledger.Address (scriptHashAddress)
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass), TokenName (TokenName), assetClassValueOf, flattenValue, CurrencySymbol)
+import Plutus.V1.Ledger.Interval hiding (singleton)
+import Plutus.V1.Ledger.Value (AssetClass (AssetClass), CurrencySymbol, TokenName (TokenName), adaSymbol, adaToken, assetClassValueOf, valueOf)
 import Plutus.V2.Ledger.Api
-  ( BuiltinData,
+  ( BuiltinByteString,
+    BuiltinData,
     MintingPolicy,
     OutputDatum (..),
+    POSIXTime (POSIXTime),
+    POSIXTimeRange,
     ScriptContext (scriptContextTxInfo),
     TxInInfo (txInInfoResolved),
-    TxInfo (txInfoMint, txInfoReferenceInputs),
+    TxInfo (txInfoMint),
     TxOut (txOutAddress),
     UnsafeFromData (unsafeFromBuiltinData),
-    Value,
+    ValidatorHash (..),
+    Value (..),
     mkMintingPolicyScript,
+    txInfoInputs,
+    txInfoValidRange,
     txOutDatum,
-    unTokenName, TxOutRef (txOutRefId, txOutRefIdx), ValidatorHash,
+    unTokenName,
   )
 import Plutus.V2.Ledger.Api qualified as PlutusV2
 import Plutus.V2.Ledger.Contexts (ownCurrencySymbol, scriptOutputsAt)
@@ -40,30 +48,32 @@ import PlutusTx
     makeLift,
     unstableMakeIsData,
   )
-import PlutusTx.Builtins.Class (stringToBuiltinByteString)
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString), BuiltinInteger)
+import PlutusTx.Builtins.Internal (BuiltinInteger)
+import PlutusTx.Integer
 import PlutusTx.Prelude
-  ( Bool (False),
+  ( Bool (False, True),
     Eq ((==)),
-    Integer,
     Maybe (..),
-    filter,
+    Ord ((>=)),
+    divide,
+    lengthOfByteString,
     takeByteString,
     traceError,
     traceIfFalse,
     ($),
     (&&),
-    (.), head,
+    (+),
+    (-),
   )
-import Utilities (isValidUsername, wrapPolicy, writeCodeToFile)
-import Prelude (IO, Show (show), String)
+import Utilities (wrapPolicy)
 import Utilities.Serialise
-import Text.Printf
-import Contracts.ControlNFTMinting
-import Utilities.Conversions
+import Utilities.Utils
+import Prelude (IO, Show)-- (show))
+
 
 ---------------------------------------------------------------------------------------------------
------------------------------------- ON-CHAIN: VALIDATOR ------------------------------------------
+------------------------------------ LABELED TREE MOCKS -------------------------------------------
+-- FIXME: These are vill be in the LabeledTree library
 
 -- | Node data structure represents a node of the Labeled Complete Binary Tree.
 newtype Val = Val (BuiltinByteString, BuiltinByteString)
@@ -71,6 +81,12 @@ newtype Val = Val (BuiltinByteString, BuiltinByteString)
   deriving (Show)
 
 PlutusTx.unstableMakeIsData ''Val
+
+toVal :: BuiltinByteString -> BuiltinByteString -> Val
+toVal bs1 bs2 = Val (bs1, bs2)
+
+fromVal :: Val -> (BuiltinByteString, BuiltinByteString)
+fromVal (Val (bs1, bs2)) = (bs1, bs2)
 
 data Tag = Tag BuiltinInteger Val
   deriving (Show)
@@ -84,44 +100,52 @@ data Node
 
 PlutusTx.unstableMakeIsData ''Node
 
----------------------------
+
+---------------------------------------------------------------------------------------------------
+------------------------------------ ON-CHAIN: VALIDATOR ------------------------------------------
 
 -- Minting policy parameters.
 data MintParams = MintParams
   { -- | AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
     mpControlNFT :: CurrencySymbol, -- The control NFT that's carrying the state of the @adatag tree.
-    mpValidator :: PlutusV2.ValidatorHash, -- ControlNFT validator hash.
-    mpTimeDeposit :: PlutusV2.ValidatorHash, -- TimeDeposit validator hash. -- for checking time-lock deposits
+    mpValidator :: PlutusV2.ValidatorHash, -- ControlNFT validator hash the control NFT resides on.
+    mpTimeDepositValidator :: PlutusV2.ValidatorHash, -- TimeDeposit validator hash. -- for checking time-lock deposits
     mpLockExpiry :: PlutusV2.POSIXTime, -- The POSIXTime until the Lock Time Deposit Feature is active
     --  (e.g. ~6-9 months form the @adatag bootstrapping).
-    mpUserLockingPeriod :: PlutusV2.POSIXTime, -- The POSIXTime from the Lock Time Deposit is available for the user to claim.
-    --  The user's `lockEndDate` in the datum, created by the minting script is currentTime + userLockingPeriod
-    mpDepositBase :: BuiltinInteger, -- The user's deposit is calculated from deposit base and the lenght of the username.
+    mpUserLockingPeriod :: Integer, -- The days in seconds the deposit is locked from minting, if required. i.e. 86400 * days
+    --  The user's `lockEndDate` in the datum, created by the front-end is currentTime + userLockingPeriod
+    -- Note: the script would fail if the user's lock end date time in the output datum is larger than the currentTime + 2 * lockingPeriod
+    -- to prevent any accidental over locking.
+    mpMaxDeposit :: BuiltinInteger, -- The user's max deposit for locking an @adatag.
     {-
-      The formula of calculating the user's time lock deposit is `mpDepositBase * (maxLength - usernameLength + 1)`.
-      Therefore, mpDepositBase = 50 means, that the value of the locked time deposit for a 1 length username is 750ADA.
-      Example: 50 * ( 16 - 1 + 1) = 750. the 16 is the max length of an @adatag.
+      The formula of calculating the user's time lock deposit is `floor (maxPrice / 2 ^ (strLen - 1))` when it's > 5 otherwise 5ADA.
+      Therefore, mpMaxDeposit = 1750 means, that locked value for a 1 length username is 1750ADA and for a 10 length one is 5.
+      Note: We should have an different one when only the max 4 length adatags hav high time-lock deposits, the others the len > 5
+      will only have 10 or 5 ADA.
     -}
-     mpAdaHandle         :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
+    mpAdaHandle :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
   }
   deriving (Prelude.Show)
 
 makeLift ''MintParams
 
--- ####### REDEEMER
+------- REDEEMER
 -- The users can mint new usernames or burn theirs.
 -- An update action could be considered when the users allows changing it's data hash or similar.
 -- Only if, when the Tag is modified to contain an additional 32-byte long data.
 -- This, could be used for holding a public key hash or similar arbitrary data.
 -- Note: Not implemented in this version of @adatag.
-data MintAction = AddUser | DeleteUser
-
+data MintAction = AddAdatag | DeleteAdatag
+instance Eq MintAction where
+  AddAdatag == AddAdatag = True
+  DeleteAdatag == DeleteAdatag = True
+  _ == _ = False
 unstableMakeIsData ''MintAction
 
 -- The users can only mint or burn usernames based on the redeemer.
 data MintRedeemer = MintRedeemer
   { mrAction :: MintAction,
-    mrUserName :: BuiltinByteString,
+    mrAdatag :: BuiltinByteString,
     mrUpdateLabel :: Val,
     mrAppendLabel :: Val,
     mrMinimalTree :: Node
@@ -129,48 +153,65 @@ data MintRedeemer = MintRedeemer
 
 unstableMakeIsData ''MintRedeemer
 
+-- FIXME: -- These are just mock proover.
+
+{-# INLINEABLE leaf #-}
+leaf :: Node
+leaf = Leaf (fromString "")
+
+{-# INLINEABLE buildTree #-}
+buildTree :: BuiltinByteString -> (BuiltinByteString, BuiltinByteString) -> (BuiltinByteString, BuiltinByteString) -> Node -> Bool -> Node
+buildTree _ _ _ _ _ = leaf
+
+{-# INLINEABLE checkUpdate #-}
+checkUpdate :: BuiltinByteString -> (BuiltinByteString, BuiltinByteString) -> (BuiltinByteString, BuiltinByteString) -> Node -> Bool -> Bool
+checkUpdate x nu na u add = do
+  -- add adatag when add is true
+  let bt = buildTree x nu na u add
+  True
+
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
 
 {-# INLINEABLE mkPolicy #-}
 mkPolicy :: MintParams -> MintRedeemer -> ScriptContext -> Bool
-mkPolicy mp r ctx = case mrAction r of
-  AddUser -> traceIfFalse "the username or cnft is invalid" checkUserName
-  -- ##### Validator and control NFT related rules
-  -- has valid control NFT datum
-  --  traceIfFalse "has valid control NFT datums and redeemer" checValidatorDatum
-  --  traceIfFalse "has valid control NFT datuma and redeemer" checValidatorDatum
-  --
-  -- traceError "Testing" -- IfFalse "minted amount must be exactly 1" checkNFTMint
-  --  && traceIfFalse "invalid datum at timeDeposit output" checkTimeDepositDatum
-  DeleteUser -> traceIfFalse "the username or cnft is invalid" checkUserName
-  -- traceError "error" -- IfFalse "burning amount must be exactly -1" checkNFTBurn -- FIXME: &&
-  --  traceIfFalse "owner's signature missing" checkColOwner &&
-  -- traceIfFalse "Minting instead of burning!" checkNFTBurn
+mkPolicy mp red ctx = do
+  let checkAdatagError = "invalid control nft or adatag"
+  let checkActionError = "wrong redemer action or mint amount"
+  let checkTreeState = "wrong redeemer submitted"
+
+  case mrAction red of
+    AddAdatag ->
+      traceIfFalse checkActionError checkNFTMint
+        && traceIfFalse checkAdatagError checkAdatag
+        && traceIfFalse "invalid time lock deposit output" checkTimeLockDeposit
+        && traceIfFalse checkTreeState hasValidTreeState
+    DeleteAdatag ->
+      traceIfFalse checkActionError checkNFTBurn
+        && traceIfFalse checkAdatagError checkAdatag
   where
+    -- && traceIfFalse checkTreeState hasValidTreeState
+
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-    --------- MINTING-RELATED FUNCTIONS ------------
+    --------- BASIC MINTING-RELATED FUNCTIONS ------------
 
     -- Get amount and the name of the minted/burned adatag in this transaction
-    -- It will fail later if the username in the redeemer and the datum are.
+    -- It ensured that adatag in the redeemer exist in the txInfoMint's value.
+    -- But, does not validate whether ther is any other own token names are burned/minted.
     mintedAmount :: Integer
-    mintedAmount = assetClassValueOf (txInfoMint info) (AssetClass (ownCurrencySymbol ctx, TokenName $ mrUserName r))
+    mintedAmount = assetClassValueOf (txInfoMint info) (AssetClass (ownCurrencySymbol ctx, TokenName $ mrAdatag red))
 
-    -- FIXME: -- Checks this to ensure no other tokens are minted
-    -- checkMintedAmount :: Bool
-    -- checkMintedAmount = case flattenValue (txInfoMint info) of
-    --    [(_, tn'', amt)] -> tn'' == tn && amt == 1
-    --    _                -> False
-
-    -- Check that the amount of username is exactly one minted is positive
+    -- Check that the amount of adatag minted is exactly one and positive,
+    -- and that the action in redeemer is AddTag
     checkNFTMint :: Bool
-    checkNFTMint = mintedAmount == 1
+    checkNFTMint =  mintedAmount == 1 && mrAction red == AddAdatag
 
-    -- Check that the amount of stablecoins burned is negative
+    -- Check that the amount of adatag burned is exactly one and negative
+    -- and that the action in redeemer is DeleteTag
     checkNFTBurn :: Bool
-    checkNFTBurn = mintedAmount == -1
+    checkNFTBurn = mintedAmount == -1 && mrAction red == DeleteAdatag
 
     --------- VALIDATOR & CONTROL NFT FUNCTIONS ------------
 
@@ -186,11 +227,13 @@ mkPolicy mp r ctx = case mrAction r of
     stateOutput :: (OutputDatum, Value)
     stateOutput = case scriptOutputsAt (mpValidator mp) info of
       [(h, v)] -> (h, v)
-      _ -> traceError "expected exactly one controlNFT output" -- It can happen as the minting scrip can run before the validator.
+      _ -> traceError "expected exactly one output" -- It can happen as the minting scrip can run before the validator.
 
     -- Get the validator's output datum
-    stateOutputDatum :: Maybe ValidatorDatum
-    stateOutputDatum = parseValidatorDatum d
+    stateOutputDatum :: ValidatorDatum
+    stateOutputDatum = case parseValidatorDatum d of
+      Nothing -> traceError "expected valid datum in validator output"
+      Just d' -> d'
       where
         (d, _) = stateOutput
 
@@ -202,97 +245,212 @@ mkPolicy mp r ctx = case mrAction r of
 
     -- Sanity checks
     -- It checks the followings:
-    -- 1. the redeemer's username == the new state's username
-    -- 2. the username is a valid @adatag
-    -- 3. cNFT == the username's 1st character
-    checkUserName :: Bool
-    checkUserName = do
-      case stateOutputDatum of
-        Nothing -> False
-        Just d -> do
-          let cnft = getTokenName (mpControlNFT mp) stateOutputValue
-          let u1 = mrUserName r
-          let u2 = vdUserName d
-          --
-          u1 == u2 && isValidUsername u2 && takeByteString 1 u2 == unTokenName cnft -- Due to the short-circuit evaluation it's not an empty string now.
+    -- 1. the redeemer's adatag == the new state's adatag
+    -- redeemer's adatag is already checked with checkNFTBurn & checkNFTMint functions
+    -- 2. the applied adatag is a valid @adatag
+    -- 3. cnft == the adatag's 1st character
+    checkAdatag :: Bool
+    checkAdatag = do
+      let dat = stateOutputDatum
+      -- In validator it's already checked that only 1 CNFT token in it's output value.
+      let cnft = getTokenNameOfSymbol stateOutputValue (mpControlNFT mp)
+      let ra = mrAdatag red
+      let da = vdAdatag dat
+      --
+      ra == da && isValidUsername da && takeByteString 1 da == unTokenName cnft -- Due to the short-circuit evaluation it's not an empty string now.
 
-    --------- VALIDATOR & CONTROL NFT INPUTS ------------
-    -- Get the validator's input
+    ---------------- TIME LOCK VALIDATION ------------------
+    -- No we're checking a valid Time-Lock deposit output, we can avoid checking when
+    -- 1. the feature is deactivated approx. 6 months after bootstrap
+    timelockOutput :: (OutputDatum, Value)
+    timelockOutput = case scriptOutputsAt (mpValidator mp) info of
+      [(h, v)] -> (h, v)
+      _ -> traceError "expected exactly one output" -- It can happen as the minting scrip can run before the validator.
+
+    -- Get the validator's output datum
+    timelockOutputDatum :: TimeDepositDatum
+    timelockOutputDatum = case parseTimeDepositDatum d of
+      Nothing -> traceError "expected valid datum in validator output"
+      Just d' -> d'
+      where
+        (d, _) = timelockOutput
+
+    -- Get the validators's output value
+    timelockOutputValue :: Value
+    timelockOutputValue = v
+      where
+        (_, v) = timelockOutput
+
+    deactivationReached :: Bool
+    deactivationReached = contains (from $ mpLockExpiry mp) $ txInfoValidRange info
+
+    checkTimeLockDeposit :: Bool
+    checkTimeLockDeposit = do
+      if deactivationReached then True else validateTimeLockDeposit
+
+    -- {-# INLINABLE closeInterval #-}
+    -- Convert a POSIXTimeRange into (POSIXTime,POSIXTime).
+    getLowerBoundTime :: POSIXTimeRange -> POSIXTime
+    getLowerBoundTime (Interval (LowerBound (Finite l) _) _) = l
+
+    -- The length of the adatag is already validated as 0 < x < 16
+    getLockingDeposit :: BuiltinByteString -> Integer
+    getLockingDeposit adatag =  do
+      let td = mpMaxDeposit mp
+      let l =  lengthOfByteString adatag
+      if l == 1 then 1000 else divide 40000 td 
+     -- 1 -> td
+     --  2 -> divide td 2
+     -- 3 -> divide td 4
+     -- 4 -> divide td 8
+     -- 5 -> divide td 16
+     -- 6 -> divide td 32
+     -- _ -> 5
+     -- where
+       
+    
+    -- The time-lock output must be more than mpUserLockingPeriod in the future and
+    -- its Value must be at least the
+    validateTimeLockDeposit :: Bool
+    validateTimeLockDeposit = do
+        -- Check whether the created user's deadline time-lock output is valid
+        -- user's deadline larger by 20 days than the current tx running time.
+        let tdat = timelockOutputDatum -- Get the user's time-lock output's datum
+        let dl = ddDeadline tdat
+        
+        let lb = getLowerBoundTime $ txInfoValidRange info -- het the current lowerbound time in POSIXTime
+        let ct = lb + POSIXTime (mpUserLockingPeriod mp) -- Construct a later lower-bound 
+
+        -- Check that that value of the time-lock deposit output has at least the required deposit
+        let tval = timelockOutputValue
+
+        let v = valueOf tval adaSymbol adaToken
+
+        let adatag = mrAdatag red
+        let d = getLockingDeposit adatag
+
+        let o = contains (from ct) $ from dl 
+
+        o && v >= d
+
+    --------- COMPLEX PROOF VALIDATION FUNCTIONS ------------
+    -- From now we need to focus on the tree proofs of the updated tree state (adatag added or deleted)
+    -- using only
+    -- 1. the user's submitted values in the redeemer.
+    -- 2. the vdTreeProof, and vdMintingPolicy fields of the old state (inpu datum of the validator), and
+    -- 3. all the fields from the new state, the in output datum of the validator.
+    --
+    -- Meaning some sanity and tree proof checks of the updated tree state,
+    -- which contains the following checks (' represents new state value):
+    -- vdOperationCount' == vdOperationCount + 1
+    -- vdAtatag' == is the adatag in the redeemer.
+    -- vdTreeState' == AdatagAdded, when redemeer's action is AddAdatag, AdatagDeleted otherwise
+    -- vdTreeSize' == vdTreSize +/- 1, depends on the redeemer's action
+    -- vdTreeProof' == the result of the checkUpdate function using the parameters retrieved from the redeemer.
+    -- vdTreeProof == same as above, as the checkUpdate returns with the calculated oldTreeProof and newTreeProof proofs.
+    -- vdMintingPolicy' == vdMintingPolicy, this is a mandatory check in the Validator and an optional check here in the minting policy.
+    checkStates :: ValidatorDatum -> ValidatorDatum -> Bool
+    checkStates s s' =
+      vdOperationCount s' == vdOperationCount s + 1
+        && vdAdatag s' == mrAdatag red
+        && vdMintingPolicy s' == vdMintingPolicy s -- Not required, as validator already checks it.
+        && case vdTreeState s' of
+          AdatagAdded -> vdTreeSize s + 1 == vdTreeSize s' && mrAction red == AddAdatag
+          AdatagRemoved -> vdTreeSize s - 1 == vdTreeSize s' && mrAction red == DeleteAdatag
+
+    -- Get the old state from validator's input
+    -- Get the collateral's input
     validatorInput :: TxOut
     validatorInput = case validatorInputs of
       [o] -> o
-      _ -> traceError "expected exactly one validator input"
+      _ -> traceError "expected exactly one collateral input"
       where
-        validatorInputs :: [TxOut]
         validatorInputs =
           [ o
-            | i <- txInfoReferenceInputs info,
+            | i <- txInfoInputs info,
               let o = txInInfoResolved i,
               txOutAddress o == scriptHashAddress (mpValidator mp)
           ]
 
-    -- Get the control NFT's token name
-    getTokenName :: CurrencySymbol -> Value -> TokenName
-    getTokenName symbol v = do
-      let xs = flattenValue v
-      let filtered = filter (\(c, _, _) -> c == symbol) xs
-      case filtered of
-        [(_, tn, _)] -> tn
-        _ -> traceError "expected exactly one token name"
-
     -- Get the collateral's input datum
-    validatorInputDatum :: Maybe ValidatorDatum
-    validatorInputDatum = parseValidatorDatum (txOutDatum validatorInput)
+    stateInputDatum :: ValidatorDatum
+    stateInputDatum = case parseValidatorDatum (txOutDatum validatorInput) of
+      Nothing -> traceError "old tree state cannot be found"
+      Just d -> d
+
+    -- FIXME: impelemt checkUpdate.
+    hasValidTreeState :: Bool
+    hasValidTreeState =
+      do
+        let state = stateInputDatum
+        let state' = stateOutputDatum
+
+        checkStates state state'
+        && case mrAction red of
+          AddAdatag -> checkUpdate (mrAdatag red) (fromVal $ mrUpdateLabel red) (fromVal $ mrAppendLabel red) (mrMinimalTree red) True
+          DeleteAdatag -> checkUpdate (mrAdatag red) (fromVal $ mrUpdateLabel red) (fromVal $ mrAppendLabel red) (mrMinimalTree red) False
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------ COMPILE AND SERIALIZE VALIDATOR ------------------------------------
 
 {-# INLINEABLE mkWrappedPolicy #-}
+--                  params        redeem         context
 mkWrappedPolicy :: MintParams -> BuiltinData -> BuiltinData -> ()
-mkWrappedPolicy = wrapPolicy . mkPolicy
+mkWrappedPolicy mp = wrapPolicy $ mkPolicy mp
 
 policy :: MintParams -> MintingPolicy
-policy np =
+policy mp =
   mkMintingPolicyScript $
     $$(compile [||mkWrappedPolicy||])
-      `applyCode` liftCode np
+      `applyCode` liftCode mp
 
 {-# INLINEABLE mkWrappedPolicyLucid #-}
 --                     oracle ValHash   coll ValHash   minPercent      redeemer       context
-mkWrappedPolicyLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedPolicyLucid tdv cv p = wrapPolicy $ mkPolicy mp
+mkWrappedPolicyLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedPolicyLucid cnft v tdv le ulp md ah = wrapPolicy $ mkPolicy mp
   where
     mp =
       MintParams
-        { mpTimeDeposit = unsafeFromBuiltinData tdv,
-          mpControlNFT = unsafeFromBuiltinData cv,
-          mpValidator = unsafeFromBuiltinData cv,
-          mpLockExpiry = unsafeFromBuiltinData cv,
-          mpUserLockingPeriod = unsafeFromBuiltinData cv,
-          mpDepositBase = unsafeFromBuiltinData cv,
-          mpAdaHandle = unsafeFromBuiltinData cv
+        { mpControlNFT = unsafeFromBuiltinData cnft,
+          mpValidator = unsafeFromBuiltinData v,
+          mpTimeDepositValidator = unsafeFromBuiltinData tdv,
+          mpLockExpiry = unsafeFromBuiltinData le,
+          mpUserLockingPeriod = unsafeFromBuiltinData ulp,
+          mpMaxDeposit = unsafeFromBuiltinData md,
+          mpAdaHandle = unsafeFromBuiltinData ah
         }
 
-policyCodeLucid :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
+policyCodeLucid :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 policyCodeLucid = $$(compile [||mkWrappedPolicyLucid||])
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
-saveAdatagMintingCode :: Prelude.IO ()
-saveAdatagMintingCode = writeCodeToFile "contracts/05-adatag-minting.plutus" policyCodeLucid
+saveAdatagMintingLucidCode :: IO ()
+saveAdatagMintingLucidCode = writeCodeToFile "contracts/05-adatag-minting-lucid.plutus" policyCodeLucid
 
-saveAdatagMintingPolicy :: TxOutRef -> [TokenName] -> IO ()
-saveAdatagMintingPolicy oref tn =
-  writePolicyToFile
-    ( printf
-        "contracts/05-adatag-minting-%s#%d-%s.plutus"
-        (show $ txOutRefId oref)
-        (txOutRefIdx oref)
-        tn'
-    )
-    $ nftPolicy oref tn
+saveAdatagMintingPolicy :: CurrencySymbol -> ValidatorHash -> ValidatorHash -> POSIXTime -> Integer -> Integer -> ValidatorHash -> IO ()
+saveAdatagMintingPolicy cnft valh tdv exp lp md ah = writePolicyToFile "contracts/05-adatag-minting.plutus" $ policy mp
   where
-    tn' :: String
-    tn' = case unTokenName $ head tn of
-      (BuiltinByteString bs) -> BS8.unpack $ bytesToHex bs
+    mp =
+      MintParams
+        { mpControlNFT = cnft,
+          mpValidator = valh,
+          mpTimeDepositValidator = tdv,
+          mpLockExpiry = exp,
+          mpUserLockingPeriod = lp,
+          mpMaxDeposit = md,
+          mpAdaHandle = ah
+        }
+
+{-
+      MintParams
+        { mpControlNFT = CurrencySymbol "3e52d74291cae1976d8d1d547aa60485747018079c04423b72d61d78",
+          mpValidator = ValidatorHash "4e3cfec0374862ce3afea511509de01cb4be4484827be7ba797a5535",
+          mpTimeDepositValidator = ValidatorHash "d9f85671159954a1c764aa63f859eebf4a753153754546f6d697e0ed",
+          mpLockExpiry = 1731325566000,
+          mpUserLockingPeriod = 1728000,
+          mpMaxDeposit = 1750,
+          mpAdaHandle = ValidatorHash "8d18d786e92776c824607fd8e193ec535c79dc61ea2405ddf3b09fe3"
+        }
+-}

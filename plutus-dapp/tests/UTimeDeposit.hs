@@ -1,37 +1,45 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-typed-holes #-}
 {-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Main where
 
+import Contracts.TimeDeposit
 import qualified Contracts.TimeDeposit as TD
 import Control.Monad (replicateM)
 import Plutus.Model
-import Plutus.Model.Fork.Ledger.Slot (Slot)
 import Plutus.V2.Ledger.Api
-  ( POSIXTime,
-    PubKeyHash,
+  ( POSIXTime (POSIXTime, getPOSIXTime),
     TxOut (txOutValue),
     TxOutRef,
-    Value (..),
+    Value (..), PubKeyHash,
   )
-import PlutusTx.Prelude (($), (.), (<>))
+import PlutusTx.Prelude (AdditiveSemigroup ((+)), Bool, Integer, ($), (.), (<>))
 import System.IO
 import Test.Tasty (TestTree, defaultMain, testGroup)
-import Prelude (mconcat, show)
+import Prelude (Bool (..), mconcat, show)
 
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------
 
-type TimeDepositScript = TypedValidator TD.TimeDepositParams TD.TimeDepositDatum 
+type TimeDepositScript = TypedValidator TD.TimeDepositDatum TD.TimeDepositRedeemer
 
-script :: TimeDepositScript
-script = TypedValidator $ toV2 TD.validator
+params :: PubKeyHash -> POSIXTime -> TimeDepositParams
+params pkh time = do
+  TimeDepositParams
+    { dpCollector = pkh,
+      dpCollectionTime = time
+    }
 
-setupTwoUsers :: Run [PubKeyHash]
-setupTwoUsers = replicateM 2 $ newUser $ ada (Lovelace 1_000)
+script :: TimeDepositParams -> TimeDepositScript
+script tp = TypedValidator $ toV2 $ TD.validator tp
+
+setupThreeUsers :: Run [PubKeyHash]
+setupThreeUsers = replicateM 3 $ newUser $ ada (Lovelace 1_000)
 
 main :: IO ()
 main = do
@@ -49,71 +57,96 @@ timeDeposit cfg = do
   testGroup
     "Testing timedeposit"
     [ testGroup
-        "Beneficiary signing"
-        {--
-        -- contains [deadline... infinite] [5000 ... 5999]   ----           deadline cMinT cMaxT slot
-        -- The used plutus-simple-model's `scSlotZeroTime` is 4999, meaning Slot0=4999, Slot1=5999, and so on.
-        -- 6 tests should be suitable:[bef,bef] [before, on deadline], [bef, after deadline], [on deadline, after],[after,after],[on,on]
-        -- The interval always must be (current - some time) and (current + some time), otherwise it will fail in Ledger.
-        -- E.g.: currslot in posix time 4999, tx intervall 5000<->5001 or even 4997<->4998
-        --}
-        [ bad "1. bad  -> (bef, bef); CurrSlot: 4999; Deadline: 5000; TxValidRange (4000, 4999)" $ testBeneficiary 5_000 (-999) 0 0,
-          bad "2. bad  -> (bef,  on); CurrSlot: 4999; Deadline: 5000; TxValidRange (4000, 5000)" $ testBeneficiary 5_000 (-999) 1 0,
-          bad "3. bad  -> (bef, aft); CurrSlot: 4999; Deadline: 5000; TxValidRange (4500, 5500)" $ testBeneficiary 5_000 (-499) 501 0,
-          good "4. good -> ( on,  on); CurrSlot: 5999; Deadline: 5000; TxValidRange (5000, 5000)" $ testBeneficiary 5_000 (-999) (-999) 1,
-          good "5. good -> ( on, aft); CurrSlot: 5999; Deadline: 5000; TxValidRange (5000, 6000)" $ testBeneficiary 5_000 (-999) 1 1,
-          good "6. good -> (aft, aft); CurrSlot: 5999; Deadline: 5000; TxValidRange (5500, 6500)" $ testBeneficiary 5_000 (-499) 501 1
+        "Redeems and Collections"
+        -- Test cases
+        -- Collection donations or unclaimed deposits:
+        -- 1. Donations         : UnitDatum or
+        -- 2. Unclaimed deposits: valid TimeDepositDatum and collection time reached
+        [ good "Donation |  unit Datum |  raeached | collect " $ testCollections True True True, -- unit datum, must pass.
+          good "Donation |  unit Datum | !raeached | collect " $ testCollections True False True, -- unit datum, must pass.
+          good "Donation | valid Datum |  raeached | collect " $ testCollections False True True, -- valid dat, must pass, coll time reached.
+          bad "Invalid  | valid Datum | !raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
+          bad "Invalid  |  unit Datum | raeached  |  redeem " $ testCollections True True False, -- unit datum, must fail.
+          bad "Invalid  |  unit Datum | !raeached |  redeem " $ testCollections True False False, -- unit datum, must fail.
+          good "Claim    | valid Datum | raeached  |  redeem " $ testCollections False True False, -- valid datum, must pass, deadline reached.
+          bad "Invalid  | valid Datum | !raeached |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
         ],
-      bad "None signing" $ testNoSigning 5_000 0 0 0
+      bad "None signing" testNoSigning
     ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors (adaValue 10_000_000) cfg
+    good = testNoErrors{-Trace-} (adaValue 10_000_000) cfg
 
-testBeneficiary :: POSIXTime -> POSIXTime -> POSIXTime -> Slot -> Run ()
-testBeneficiary d curMinT curMaxT wSlot = do
-  users <- setupTwoUsers
-  let [u1, u2] = users
-      adatag = "alma"
-      dat = TD.TimeDepositDatum u1 d adatag
-  testTimeDeposit u1 u2 dat curMinT curMaxT wSlot
+--
+testCollections :: Bool -> Bool -> Bool -> Run ()
+testCollections unit reached collect = do
+  users <- setupThreeUsers
+  c <- currentTime
+  let [u1, _, c1] = users
+      dlDays = 20
+      ctDays = 183
+      -- Curr time range is 5000, 7000, booth inclusive
+      -- Rule: the deadline/collection time must be lower or equal with lower bound of curr time range
+      dl = getPOSIXTime $ days dlDays -- 20 days
+      ct = getPOSIXTime $ days ctDays -- hals years
+      deadline = POSIXTime (getPOSIXTime c + dl)
+      colltime = POSIXTime (getPOSIXTime c + ct)
 
-testNoSigning :: POSIXTime -> POSIXTime -> POSIXTime -> Slot -> Run ()
-testNoSigning d curMinT curMaxT wSlot = do
-  users <- setupTwoUsers
-  let [u1, u2] = users
-      adatag = "alma"
-      dat = TD.TimeDepositDatum u1 d adatag
-  testTimeDeposit u2 u2 dat curMinT curMaxT wSlot
+      o = if reached then 1 else -1
+      day = if collect then ctDays else dlDays
+      waitFor = day + o
 
-testTimeDeposit :: PubKeyHash -> PubKeyHash -> TD.TimeDepositDatum -> POSIXTime -> POSIXTime -> Slot -> Run ()
-testTimeDeposit sigUser receiver dat curMinT curMaxT wSlot = do
+      dat = if unit then TD.UnitDatum () else vtd
+        where
+          vtd =
+            TimeDepositDatum
+              { ddBeneficiary = u1,
+                ddDeadline = deadline
+              }
+      collector = if collect then c1 else u1
+      red = if collect then TD.Collect else TD.Redeem
+  logInfo $ "Deadline: " <> show deadline <> "\nCollection Time: " <> show colltime
+  testTimeDepositColletion collector collector c1 dat red colltime waitFor
+
+testNoSigning :: Run ()
+testNoSigning = do
+  users <- setupThreeUsers
+  let [u1, u2, c1] = users
+  testTimeDepositColletion u1 u2 c1 (UnitDatum ()) TD.Collect (POSIXTime 0) 20
+
+testTimeDepositColletion :: PubKeyHash -> PubKeyHash -> PubKeyHash -> TD.TimeDepositDatum -> TD.TimeDepositRedeemer -> POSIXTime -> Integer -> Run ()
+testTimeDepositColletion sender receiver collector dat red colltime waitDays = do
   let val = adaValue 100
-  checkBalance (gives sigUser val script) $ do
-    sp <- spend sigUser val
-    submitTx sigUser $ lockingTx1 dat sp val
+  let s = script $ params collector colltime
 
-  waitNSlots wSlot
+  checkBalance (gives sender val s) $ do
+    sp <- spend sender val
+    let ltx = lockingTx1 s dat sp val
+    submitTx sender ltx
+    logInfo $ "Locking Tx: " <> show ltx
 
-  utxos <- utxoAt script
+  wait $ days waitDays
+
+  utxos <- utxoAt s
   let [(vestRef, vestOut)] = utxos
-  checkBalance (gives script (txOutValue vestOut) receiver) $ do
-    range <- currentTimeInterval curMinT curMaxT
-    tx <- validateIn range $ claimingTx1 receiver dat vestRef (txOutValue vestOut)
-    -- XXX: only for debugging slots, as the slotcfg could be changed in the future
-    -- logError $ show range <> "\n" <> show (TD.ddDeadline dat)
-    submitTx sigUser tx
+  checkBalance (gives s (txOutValue vestOut) receiver) $ do
+    -- It sets the valid range relative to current time, [curr-x ... curr ... curr++].
+    range <- currentTimeInterval (POSIXTime (-999)) (POSIXTime 1_000)
+    logInfo $ "Range: " <> show range
+    let ctx = claimingTx1 s receiver dat red vestRef (txOutValue vestOut)
+    tx <- validateIn range ctx
+    submitTx receiver tx
 
-lockingTx1 :: TD.TimeDepositDatum -> UserSpend -> Value -> Tx
-lockingTx1 dat usp val =
+lockingTx1 :: TimeDepositScript -> TD.TimeDepositDatum -> UserSpend -> Value -> Tx
+lockingTx1 scr dat usp val =
   mconcat
     [ userSpend usp,
-      payToScript script (HashDatum dat) val
+      payToScript scr (InlineDatum dat) val
     ]
 
-claimingTx1 :: PubKeyHash -> TD.TimeDepositDatum -> TxOutRef -> Value -> Tx
-claimingTx1 pkh dat vestRef vestVal =
+claimingTx1 :: TimeDepositScript -> PubKeyHash -> TD.TimeDepositDatum -> TD.TimeDepositRedeemer -> TxOutRef -> Value -> Tx
+claimingTx1 scr pkh dat red vestRef vestVal =
   mconcat
-    [ spendScript script vestRef () dat,
+    [ spendScript scr vestRef red dat,
       payToKey pkh vestVal
     ]

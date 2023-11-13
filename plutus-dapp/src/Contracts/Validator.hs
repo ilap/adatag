@@ -71,29 +71,36 @@ import Prelude (IO, Show (show))
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 -- ####### DATUM
-data TreeState = UserAdded | UserRemoved | Initial
+data TreeState = AdatagAdded | AdatagRemoved
 
 unstableMakeIsData ''TreeState
 
 -- Inline datum attached to the control NFT for carrying the state of the labeled tree.
+-- The state contains:
+-- 1. The last operation i.e. tag addedd or deleted.
+-- 2. The nr. of operations since bootsrap (initial state). It always increases.
+-- 3. The size of the tree i.e. the number of adatags. It can increse or decrease based on the operation.
+-- 4. The added or deleted adatag.
+-- 5. The root hash of the complete labeled binary tree.
+-- 6. The associated minting policy that mints or burns adatags.
 data ValidatorDatum = ValidatorDatum
-  { vdUserAction :: TreeState, -- The state of the Tree.
-    vdActionCount :: Integer, -- The number of actions. TODO: Do we need this?
-    vdUserNameCount :: Integer, -- The number of usernames in the tree.
-    vdUserName :: Plutus.V2.Ledger.Api.BuiltinByteString, -- The username added or removed from the tree
-    vdTreeRootHash :: Plutus.V2.Ledger.Api.BuiltinByteString, -- The tree root hash of the tree after the username/adatag is added or removed.
-    vdMintingPolicy :: CurrencySymbol -- This is used to avoid circular dependency between the control NFT validator and the minting policy script.
+  { vdOperationCount :: Integer, -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
+    vdAdatag :: BuiltinByteString, -- The username added or removed from the tree
+    vdTreeState :: TreeState, -- The state of the Tree.
+    vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
+    vdTreeProof :: BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
+    vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
   }
 
 unstableMakeIsData ''ValidatorDatum
 
 -- Only inline datums are allowed.
 {-# INLINEABLE parseValidatorDatum #-}
-parseValidatorDatum :: Plutus.V2.Ledger.Api.OutputDatum -> Maybe ValidatorDatum
+parseValidatorDatum :: OutputDatum -> Maybe ValidatorDatum
 parseValidatorDatum o = case o of
-  Plutus.V2.Ledger.Api.NoOutputDatum -> traceError "Found validator output but NoOutputDatum"
-  Plutus.V2.Ledger.Api.OutputDatum (Plutus.V2.Ledger.Api.Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
-  Plutus.V2.Ledger.Api.OutputDatumHash _ -> traceError "Found validator output but no Inline datum"
+  NoOutputDatum -> traceError "Found validator output but NoOutputDatum"
+  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
+  OutputDatumHash _ -> traceError "Found validator output but no Inline datum"
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
@@ -120,29 +127,29 @@ type ControlNFT = CurrencySymbol
    in the input's UTxO.
 -}
 {-# INLINEABLE mkValidator #-}
-mkValidator :: ControlNFT -> ValidatorDatum -> () -> Plutus.V2.Ledger.Api.ScriptContext -> Bool
-mkValidator cnft _ _ ctx =
-  traceIfFalse "invalid output datum" hasValidDatum -- As we assume the correct initial state
+mkValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
+mkValidator cnft dat _ ctx =
+  traceIfFalse "invalid output datum" hasValidDatum -- We assume that the correct initial state has been right fully implemented at bootstrap time.
     && traceIfFalse "token missing from output" hasValidMintingInfo
   where
-    info :: Plutus.V2.Ledger.Api.TxInfo
-    info = Plutus.V2.Ledger.Api.scriptContextTxInfo ctx
+    info :: TxInfo
+    info = scriptContextTxInfo ctx
 
     -- Find the input currently being validated.
-    ownInput :: Plutus.V2.Ledger.Api.TxOut
+    ownInput :: TxOut
     ownInput = case findOwnInput ctx of
       Nothing -> traceError "policy input missing"
-      Just i -> Plutus.V2.Ledger.Api.txInInfoResolved i
+      Just i -> txInInfoResolved i
 
     -- Get all the outputs that pay to the same script address we are currently spending from, if any.
-    ownOutput :: Plutus.V2.Ledger.Api.TxOut
+    ownOutput :: TxOut
     ownOutput = case getContinuingOutputs ctx of
       [o] -> o
       _ -> traceError "expected exactly one policy output"
 
     -- Get a valid inline datum from a TxOut, if any
-    ownDatum :: Plutus.V2.Ledger.Api.TxOut -> ValidatorDatum
-    ownDatum txout = case parseValidatorDatum (Plutus.V2.Ledger.Api.txOutDatum txout) of
+    ownDatum :: TxOut -> ValidatorDatum
+    ownDatum txout = case parseValidatorDatum (txOutDatum txout) of
       Just d -> d
       Nothing -> traceError "invalid or non-inline datum"
 
@@ -150,31 +157,27 @@ mkValidator cnft _ _ ctx =
     -- that the operations number is larger by 1 in the output datum
     hasValidDatum :: Bool
     hasValidDatum = do
-      let idat = ownDatum ownInput
-      let odat = ownDatum ownOutput
-      let imp = vdMintingPolicy idat
-      let omp = vdMintingPolicy odat
-      let ian = vdActionCount idat
-      let oan = vdActionCount odat
-      imp == omp && ian == oan + 1
+      let dat' = ownDatum ownOutput
+      vdMintingPolicy dat == vdMintingPolicy dat' && vdOperationCount dat + 1 == vdOperationCount dat'
+
 
     hasValidMintingInfo :: Bool
     hasValidMintingInfo = do
       -- Get only one token name of the currency symbol, if more exist then it trace error
-      let itn = getOnlyTokenBySymbol (Plutus.V2.Ledger.Api.txOutValue ownInput) cnft
+      let itn = getOnlyTokenBySymbol (txOutValue ownInput) cnft
       -- Get only one token name of the currency symbol, if more exist then it trace error
-      let otn = getOnlyTokenBySymbol (Plutus.V2.Ledger.Api.txOutValue ownOutput) cnft
+      let otn = getOnlyTokenBySymbol (txOutValue ownOutput) cnft
 
       let odat = ownDatum ownOutput
-      let adatag = vdUserName odat
+      let adatag = vdAdatag odat
       let mintingPolicy = vdMintingPolicy odat
 
-      let mintAdatag = getOnlyTokenBySymbol (Plutus.V2.Ledger.Api.txInfoMint info) mintingPolicy
+      let mintAdatag = getOnlyTokenBySymbol (txInfoMint info) mintingPolicy
 
       -- The input token name same as the output one it does not really necessary
-      -- as we have ansured that we have 1 input and 1 ouptut, meaning the normal Phase 1
-      -- acounting rules will fail if this is not the case.
-      -- The second one ensures that the adatag in the new tree state is the same
+      -- as we have ensured that there is only 1 input and 1 ouptut, meaning the normal Phase 1
+      -- validation (accounting rules) will fail if this is not the case.
+      -- The second one ensures that the adatag in the new tree state (adding/removing) is the same
       -- as in the minting policy.
       itn == otn && adatag == unTokenName mintAdatag
 
@@ -182,23 +185,23 @@ mkValidator cnft _ _ ctx =
 ------------------------------------ COMPILE VALIDATOR --------------------------------------------
 
 {-# INLINEABLE mkWrappedValidator #-}
-mkWrappedValidator :: ControlNFT -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> ()
+mkWrappedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkWrappedValidator = wrapValidator . mkValidator
 
-validator :: ControlNFT -> Plutus.V2.Ledger.Api.Validator
+validator :: ControlNFT -> Validator
 validator cnft =
-  Plutus.V2.Ledger.Api.mkValidatorScript $
+  mkValidatorScript $
     $$(PlutusTx.compile [||mkWrappedValidator||])
       `PlutusTx.applyCode` PlutusTx.liftCode cnft
 
 {-# INLINEABLE mkWrappedValidatorLucid #-}
 --                            CS                                      redeemer       context
-mkWrappedValidatorLucid :: Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> ()
+mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkWrappedValidatorLucid cs = wrapValidator $ mkValidator cnft
   where
-    cnft = CurrencySymbol $ Plutus.V2.Ledger.Api.unsafeFromBuiltinData cs
+    cnft = CurrencySymbol $ unsafeFromBuiltinData cs
 
-validatorCode :: CompiledCode (Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> ())
+validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 validatorCode = $$(compile [||mkWrappedValidatorLucid||])
 
 ---------------------------------------------------------------------------------------------------
@@ -223,7 +226,7 @@ savePolicyScript cnft = do
 parseSymbol :: String -> CurrencySymbol
 parseSymbol s = CurrencySymbol $ fromString s
 
-valHashBySymbol :: CurrencySymbol -> Plutus.V2.Ledger.Api.ValidatorHash
+valHashBySymbol :: CurrencySymbol -> ValidatorHash
 valHashBySymbol cnft = validatorHash' (validator cnft)
 
 -- Keep it for now

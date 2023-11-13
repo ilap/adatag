@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StrictData #-}
+-- {-# LANGUAGE StrictData #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -38,12 +38,12 @@ getTokenNamesOfSymbol (Value mp) cur =
 -- Just i  -> Map.keys i
 
 {-# INLINEABLE getTokenNameOfSymbol #-}
-getTokenNameOfSymbol :: Value -> CurrencySymbol -> Maybe TokenName
+getTokenNameOfSymbol :: Value -> CurrencySymbol ->  TokenName
 getTokenNameOfSymbol (Value mp) cur =
   case Map.lookup cur mp of
-    _ -> Nothing
+    _ -> traceError "expected valid currency symbole"
     Just i -> case Map.keys i of
-      [tn] -> Just tn
+      [tn] -> tn
       _ -> traceError "expected only one token name"
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-tx/src/PlutusTx/AssocMap.hs#L265
@@ -80,29 +80,36 @@ symbolToValidatorHash symbol = ValidatorHash $ unCurrencySymbol symbol
   4. last chars cannot be "-", "_"
   5. only contains "a".."z", "0".."9", "_", "-" letters.
 -}
+{-# INLINEABLE isValidUsername #-}
 isValidUsername :: BuiltinByteString -> Bool
 isValidUsername bs =
   let n = lengthOfByteString bs
    in n > 0 && n < 16 --  must have valid length
-        && isLowerCase (indexByteString bs 0) -- 1st char must be letter
-        && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
-        && hasOnlyAllowedChars bs -- otherwise only allowed chars.
+--        && isLowerCase (indexByteString bs 0) -- 1st char must be letter
+--        && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
+--        && hasOnlyAllowedChars bs -- otherwise only allowed chars.
 
+{-# INLINEABLE isLowerCase #-}
 isLowerCase :: Integer -> Bool
 isLowerCase ch = (ch >= 97) && (ch <= 122)
 
+{-# INLINEABLE isDigit #-}
 isDigit :: Integer -> Bool
 isDigit digit = (digit >= 48) && (digit <= 57)
 
+{-# INLINEABLE isLowerCaseOrDigit #-}
 isLowerCaseOrDigit :: Integer -> Bool
 isLowerCaseOrDigit ch = isLowerCase ch || isDigit ch
 
+{-# INLINEABLE isHyphen #-}
 isHyphen :: Integer -> Bool
 isHyphen char = char == 45
 
+{-# INLINEABLE isUnderscore #-}
 isUnderscore :: Integer -> Bool
 isUnderscore char = char == 95
 
+{-# INLINEABLE isValidChar #-}
 isValidChar :: Integer -> Bool
 isValidChar ch =
   isLowerCase ch
@@ -110,6 +117,7 @@ isValidChar ch =
     || isHyphen ch
     || isUnderscore ch
 
+{-# INLINEABLE hasOnlyAllowedChars #-}
 hasOnlyAllowedChars :: BuiltinByteString -> Bool
 hasOnlyAllowedChars bs =
   let n = lengthOfByteString bs

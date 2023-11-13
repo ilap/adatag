@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StrictData #-}
+-- {-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# LANGUAGE BlockArguments #-}
@@ -49,13 +49,13 @@ main :: IO ()
 main = do
   let datum =
         ValidatorDatum
-          { vdUserAction = UserAdded,
-            vdUserNameCount = 1,
-            vdUserName = stringToBuiltinByteString "ilap",
-            vdTreeRootHash = stringToBuiltinByteString "1234567890abcdef1234567890abcdef1234567890abcdef"
+          { vdTreeState = AdatagAdded,
+            vdTreeSize = 1,
+            vdAdatag = stringToBuiltinByteString "ilap",
+            vdTreeProof = stringToBuiltinByteString "1234567890abcdef1234567890abcdef1234567890abcdef"
           }
 
-  putStrLn $ "The tree root hash of the datum is: " ++ show (vdTreeRootHash datum)
+  putStrLn $ "The tree root hash of the datum is: " ++ show (vdTreeProof datum)
 
   let st = CurrencySymbol "symbol"
   let v = singleton st (TokenName "tokenname") 1

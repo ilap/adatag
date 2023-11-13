@@ -1,4 +1,4 @@
-{-# LANGUAGE StrictData #-}
+-- {-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Plutus.LabeledTree where
@@ -14,6 +14,37 @@ import Plutus.V1.Ledger.Api
 
 log2 :: Integer -> Integer
 log2 x = if odd x then 0 else (floor . logBase (2 :: Double) . fromIntegral) x
+
+
+------------------------------------ LABELED TREE MOCKS -------------------------------------------
+-- FIXME: These are vill be in the LabeledTree library
+
+-- | Node data structure represents a node of the Labeled Complete Binary Tree.
+{- newtype Val = Val (BuiltinByteString, BuiltinByteString)
+  -- data Val = Val (BuiltinByteString, BuiltinByteString)
+  deriving (Show)
+
+PlutusTx.unstableMakeIsData ''Val
+
+toVal :: BuiltinByteString -> BuiltinByteString -> Val
+toVal bs1 bs2 = Val (bs1, bs2)
+
+fromVal :: Val -> (BuiltinByteString, BuiltinByteString)
+fromVal (Val (bs1, bs2)) = (bs1, bs2)
+
+data Tag = Tag BuiltinInteger Val
+  deriving (Show)
+
+PlutusTx.unstableMakeIsData ''Tag
+
+data Node
+  = Leaf BuiltinByteString
+  | Node BuiltinInteger (BuiltinByteString, BuiltinByteString) Node Node
+  deriving (Show)
+
+PlutusTx.unstableMakeIsData ''Node
+
+-}
 
 newtype Hash = Hash BuiltinByteString
 

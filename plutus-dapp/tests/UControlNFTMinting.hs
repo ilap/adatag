@@ -32,34 +32,34 @@ main =
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
 -- Set many users at once
-setupUsers :: Run [Plutus.V2.Ledger.Api.PubKeyHash]
+setupUsers :: Run [PubKeyHash]
 setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
+
+-- NFT Minting Policy's script
+nftScript :: TxOutRef -> [TokenName] -> TypedPolicy ()
+nftScript ref tn = TypedPolicy . toV2 $ CM.nftPolicy ref tn
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- TESTING MINTING CONTROL NFT -----------------------------------------
 
--- NFT Minting Policy's script
-nftScript :: Plutus.V2.Ledger.Api.TxOutRef -> [Plutus.V2.Ledger.Api.TokenName] -> TypedPolicy ()
-nftScript ref tn = TypedPolicy . toV2 $ CM.nftPolicy ref tn
-
-mintNFTTx :: Plutus.V2.Ledger.Api.TxOutRef -> Plutus.V2.Ledger.Api.TxOut -> [Plutus.V2.Ledger.Api.TokenName] -> Plutus.V2.Ledger.Api.Value -> Plutus.V2.Ledger.Api.PubKeyHash -> Tx
+mintNFTTx :: TxOutRef -> TxOut -> [TokenName] -> Value -> PubKeyHash -> Tx
 mintNFTTx ref out tn val pkh =
   mconcat
     [ mintValue (nftScript ref tn) () val,
-      payToKey pkh $ val <> Plutus.V2.Ledger.Api.txOutValue out,
+      payToKey pkh $ val <> txOutValue out,
       spendPubKey ref
     ]
 
 -- Create a Plutus Value from a list of token names.
-createValueFromTokenNames :: CurrencySymbol -> [Plutus.V2.Ledger.Api.TokenName] -> Plutus.V2.Ledger.Api.Value
-createValueFromTokenNames cs = foldMap (\tn -> Plutus.V2.Ledger.Api.singleton cs tn 1)
+valueFromTokenNames :: CurrencySymbol -> [TokenName] -> Value
+valueFromTokenNames cs = foldMap (\tn -> singleton cs tn 1)
 
-mintNFT :: Plutus.V2.Ledger.Api.PubKeyHash -> Run Plutus.V2.Ledger.Api.Value
+mintNFT :: PubKeyHash -> Run Value
 mintNFT u = do
   utxos <- utxoAt u
   let [(ref, out)] = utxos
       currSymbol = scriptCurrencySymbol (nftScript ref CM.letters)
-      mintingValue = createValueFromTokenNames currSymbol CM.letters
+      mintingValue = valueFromTokenNames currSymbol CM.letters
   submitTx u $ mintNFTTx ref out CM.letters mintingValue u
   v1 <- valueAt u
   unless (v1 == adaValue 1_000_000_000 <> mintingValue) $
@@ -77,7 +77,7 @@ testMintControlNFTTwice = do
   utxos <- utxoAt u1
   let [(ref, out)] = utxos
       currSymbol = scriptCurrencySymbol (nftScript ref CM.letters)
-      mintingValue = createValueFromTokenNames currSymbol CM.letters
+      mintingValue = valueFromTokenNames currSymbol CM.letters
       tx = mintNFTTx ref out CM.letters mintingValue u1
   submitTx u1 tx
   submitTx u1 tx
