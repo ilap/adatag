@@ -50,8 +50,8 @@ mkWrappedNFTPolicy tid ix tn = wrapPolicy $ mkNFTPolicy oref tn'
 nftCode :: PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 nftCode = $$(PlutusTx.compile [||mkWrappedNFTPolicy||])
 
-nftPolicy :: TxOutRef -> [TokenName] -> MintingPolicy
-nftPolicy oref tns =
+cnftPolicy :: TxOutRef -> [TokenName] -> MintingPolicy
+cnftPolicy oref tns =
   mkMintingPolicyScript $
     nftCode
       `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData $ getTxId $ txOutRefId oref)
@@ -70,7 +70,7 @@ generateOutRef tx = TxOutRef (TxId $ hexToBS tx)
 
 -- Generate the currency symbol based on the parameters (UTxO ref, and the letters)
 controlNFTCurrencySymbol :: TxOutRef -> CurrencySymbol
-controlNFTCurrencySymbol oref = currencySymbol $ nftPolicy oref letters
+controlNFTCurrencySymbol oref = currencySymbol $ cnftPolicy oref letters
 
 saveControlNFTMintingScript :: IO ()
 saveControlNFTMintingScript = writeCodeToFile "contracts/02-control-nft-minting.plutus" nftCode
@@ -87,7 +87,7 @@ saveControlNFTMintingPolicy oref =
         (txOutRefIdx oref)
         tn'
     )
-    $ nftPolicy oref letters
+    $ cnftPolicy oref letters
   where
     tn' :: String
     tn' = case unTokenName $ head letters of -- It gets the first tokenname the "a"

@@ -26,6 +26,13 @@ import Plutus.V2.Ledger.Api -- ( ValidatorHash (ValidatorHash), ScriptContext (s
 import PlutusTx.AssocMap qualified as Map
 import PlutusTx.Builtins
 import PlutusTx.Prelude
+import qualified Data.ByteString.Char8 as BS8
+import qualified Data.String as Haskell
+import Utilities.Conversions
+import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+
+hexToBS :: Haskell.String -> BuiltinByteString
+hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
 
 ------- Value related functions
 {-# INLINEABLE getTokenNamesOfSymbol #-}

@@ -44,21 +44,18 @@ import Prelude (Show, String, show)
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
 
-data TimeDepositDatum = -- |
-                        TimeDepositDatum
-  { -- |
-    ddBeneficiary :: PubKeyHash, -- |
-
-                        -- beneficiary of the locked time deposit.
-    ddDeadline :: POSIXTime -- preferably ~20 days, the minting policy will validate the deadline at minting time.
-    -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
-    -- Minting policy handles this logic. It's not required for unlocking.
-    -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
-  }
-  -- Note: the unit type () has a different signature than the {} and therefore different PLC data
-  -- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
-  -- {} = {"constructor": 1, "fields": []}"
-  | UnitDatum ()
+data TimeDepositDatum
+  = TimeDepositDatum
+      { ddBeneficiary :: PubKeyHash, -- | beneficiary of the locked time deposit.
+        ddDeadline :: POSIXTime -- | deadline to claim deposits. Preferably ~20 days, the minting policy will validate the deadline at minting time.
+        -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
+        -- Minting policy handles this logic. It's not required for unlocking.
+        -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
+      }
+  | -- Note: the unit type () has a different signature than the {} and therefore different PLC data
+    -- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
+    -- {} = {"constructor": 1, "fields": []}"
+    UnitDatum ()
   deriving (Prelude.Show)
 
 unstableMakeIsData ''TimeDepositDatum
@@ -93,6 +90,7 @@ mkTimeDepositValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRe
 mkTimeDepositValidator params dat red ctx =
   case red of
     -- User can redeem only after the deadline has passed.
+    -- The false means it's not collection but redeem.
     Redeem -> validClaim info False dat (ddBeneficiary dat) (ddDeadline dat)
     -- Collector can collect donations (with no TimeDepositDatum) anytime or
     -- after the collection time with a TimeDepositDatum (unlcaimed time-lock deposits).
@@ -103,11 +101,13 @@ mkTimeDepositValidator params dat red ctx =
 
 {-# INLINEABLE validClaim #-}
 validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> Bool
-validClaim info iscoll dat pkh pt = do
-  case dat of
-    TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
-    UnitDatum {} -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
-  && traceIfFalse "signature is missing" signedByValidKey
+validClaim info iscoll dat pkh pt =
+  do
+    case dat of
+      TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
+      _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
+      -- It's anti pattern but we allow any wrongly formed datums for collections
+    && traceIfFalse "signature is missing" signedByValidKey
   where
     signedByValidKey :: Bool
     signedByValidKey = txSignedBy info pkh
@@ -120,8 +120,8 @@ validClaim info iscoll dat pkh pt = do
 mkWrappedTimeDepositValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkWrappedTimeDepositValidator = wrapValidator . mkTimeDepositValidator
 
-validator :: TimeDepositParams -> Validator
-validator params =
+timeDepositValidator :: TimeDepositParams -> Validator
+timeDepositValidator params =
   mkValidatorScript $
     $$(PlutusTx.compile [||mkWrappedTimeDepositValidator||])
       `PlutusTx.applyCode` PlutusTx.liftCode params
@@ -150,7 +150,7 @@ validatorCode = $$(compile [||mkWrappedValidatorLucid||])
 saveTimeDepositScript :: PubKeyHash -> POSIXTime -> IO ()
 saveTimeDepositScript pkh ct = do
   let
-  writeValidatorToFile fp $ validator op
+  writeValidatorToFile fp $ timeDepositValidator op
   where
     op =
       TimeDepositParams
@@ -164,7 +164,7 @@ saveTimeDepositScript pkh ct = do
 
 -- Get to script address the time lock deposit sent to.
 timeDepositAddressBech32 :: Network -> TimeDepositParams -> String
-timeDepositAddressBech32 network tdp = validatorAddressBech32 network (validator tdp)
+timeDepositAddressBech32 network tdp = validatorAddressBech32 network (timeDepositValidator tdp)
 
 -- Generate a datum to lock.
 printTimeDepositDatumJSON :: PubKeyHash -> String -> IO ()

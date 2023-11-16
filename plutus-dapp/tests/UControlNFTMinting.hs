@@ -37,7 +37,7 @@ setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
 
 -- NFT Minting Policy's script
 nftScript :: TxOutRef -> [TokenName] -> TypedPolicy ()
-nftScript ref tn = TypedPolicy . toV2 $ CM.nftPolicy ref tn
+nftScript ref tn = TypedPolicy . toV2 $ CM.cnftPolicy ref tn
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- TESTING MINTING CONTROL NFT -----------------------------------------

@@ -1,15 +1,11 @@
-{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-typed-holes #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Main where
 
 import Contracts.TimeDeposit
-import qualified Contracts.TimeDeposit as TD
 import Control.Monad (replicateM)
 import Plutus.Model
 import Plutus.V2.Ledger.Api
@@ -23,10 +19,44 @@ import System.IO
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Prelude (Bool (..), mconcat, show)
 
----------------------------------------------------------------------------------------------------
---------------------------------------- TESTING MAIN ----------------------------------------------
 
-type TimeDepositScript = TypedValidator TD.TimeDepositDatum TD.TimeDepositRedeemer
+main :: IO ()
+main = do
+  defaultMain $ do
+    timeDeposit defaultBabbage
+
+timeDeposit :: MockConfig -> TestTree
+timeDeposit cfg = do
+  testGroup
+    "Testing Time Locking Deposit Validator"
+    [ testGroup
+        "Testing redeems (user claims) and collections (donations and unclaimed deposits)"
+        -- Test cases
+        -- 1. Collection donations or unclaimed deposits:
+        --   1.1. Donations         : UnitDatum or
+        --   1.2. Unclaimed deposits: valid TimeDepositDatum and collection time reached
+        -- 2. Redeem/Claim time locked deposit:
+        --   2.1. It needs valid TimeDepositDatum and deadline reached.
+        [ good "Donation |  unit Datum | coll time raeached      | collect " $ testCollections True True True, -- unit datum, must pass.
+          good "Donation |  unit Datum | coll time not raeached  | collect " $ testCollections True False True, -- unit datum, must pass.
+          good "Donation | valid Datum | coll time raeached      | collect " $ testCollections False True True, -- valid dat, must pass, coll time reached.
+          bad  "Invalid  | valid Datum | coll time  not raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
+          bad  "Invalid  |  unit Datum | deadline raeached       |  redeem " $ testCollections True True False, -- unit datum, must fail.
+          bad  "Invalid  |  unit Datum | deadline not raeached   |  redeem " $ testCollections True False False, -- unit datum, must fail.
+          good "Claim    | valid Datum | deadline raeached       |  redeem " $ testCollections False True False, -- valid datum, must pass, deadline reached.
+          bad  "Invalid  | valid Datum | deadline not raeached   |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
+        ],
+      bad "None signing" testNoSigning
+    ]
+  where
+    bad msg = good msg . mustFail
+    good = testNoErrors{-Trace-} (adaValue 10_000_000) cfg
+
+
+---------------------------------------------------------------------------------------------------
+-------------------------------------- TEST PARAMETERS --------------------------------------------
+
+type TimeDepositScript = TypedValidator TimeDepositDatum TimeDepositRedeemer
 
 params :: PubKeyHash -> POSIXTime -> TimeDepositParams
 params pkh time = do
@@ -36,46 +66,11 @@ params pkh time = do
     }
 
 script :: TimeDepositParams -> TimeDepositScript
-script tp = TypedValidator $ toV2 $ TD.validator tp
+script tp = TypedValidator $ toV2 $ timeDepositValidator tp
 
 setupThreeUsers :: Run [PubKeyHash]
 setupThreeUsers = replicateM 3 $ newUser $ ada (Lovelace 1_000)
 
-main :: IO ()
-main = do
-  defaultMain $ do
-    testGroup
-      "Time lock deposit tests"
-      [ testGroup
-          "All times are in POSIXTime (Not slots)"
-          [ timeDeposit defaultBabbage
-          ]
-      ]
-
-timeDeposit :: MockConfig -> TestTree
-timeDeposit cfg = do
-  testGroup
-    "Testing timedeposit"
-    [ testGroup
-        "Redeems and Collections"
-        -- Test cases
-        -- Collection donations or unclaimed deposits:
-        -- 1. Donations         : UnitDatum or
-        -- 2. Unclaimed deposits: valid TimeDepositDatum and collection time reached
-        [ good "Donation |  unit Datum |  raeached | collect " $ testCollections True True True, -- unit datum, must pass.
-          good "Donation |  unit Datum | !raeached | collect " $ testCollections True False True, -- unit datum, must pass.
-          good "Donation | valid Datum |  raeached | collect " $ testCollections False True True, -- valid dat, must pass, coll time reached.
-          bad "Invalid  | valid Datum | !raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
-          bad "Invalid  |  unit Datum | raeached  |  redeem " $ testCollections True True False, -- unit datum, must fail.
-          bad "Invalid  |  unit Datum | !raeached |  redeem " $ testCollections True False False, -- unit datum, must fail.
-          good "Claim    | valid Datum | raeached  |  redeem " $ testCollections False True False, -- valid datum, must pass, deadline reached.
-          bad "Invalid  | valid Datum | !raeached |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
-        ],
-      bad "None signing" testNoSigning
-    ]
-  where
-    bad msg = good msg . mustFail
-    good = testNoErrors{-Trace-} (adaValue 10_000_000) cfg
 
 --
 testCollections :: Bool -> Bool -> Bool -> Run ()
@@ -96,7 +91,7 @@ testCollections unit reached collect = do
       day = if collect then ctDays else dlDays
       waitFor = day + o
 
-      dat = if unit then TD.UnitDatum () else vtd
+      dat = if unit then UnitDatum () else vtd
         where
           vtd =
             TimeDepositDatum
@@ -104,7 +99,7 @@ testCollections unit reached collect = do
                 ddDeadline = deadline
               }
       collector = if collect then c1 else u1
-      red = if collect then TD.Collect else TD.Redeem
+      red = if collect then Collect else Redeem
   logInfo $ "Deadline: " <> show deadline <> "\nCollection Time: " <> show colltime
   testTimeDepositColletion collector collector c1 dat red colltime waitFor
 
@@ -112,9 +107,9 @@ testNoSigning :: Run ()
 testNoSigning = do
   users <- setupThreeUsers
   let [u1, u2, c1] = users
-  testTimeDepositColletion u1 u2 c1 (UnitDatum ()) TD.Collect (POSIXTime 0) 20
+  testTimeDepositColletion u1 u2 c1 (UnitDatum ()) Collect (POSIXTime 0) 20
 
-testTimeDepositColletion :: PubKeyHash -> PubKeyHash -> PubKeyHash -> TD.TimeDepositDatum -> TD.TimeDepositRedeemer -> POSIXTime -> Integer -> Run ()
+testTimeDepositColletion :: PubKeyHash -> PubKeyHash -> PubKeyHash -> TimeDepositDatum -> TimeDepositRedeemer -> POSIXTime -> Integer -> Run ()
 testTimeDepositColletion sender receiver collector dat red colltime waitDays = do
   let val = adaValue 100
   let s = script $ params collector colltime
@@ -137,14 +132,14 @@ testTimeDepositColletion sender receiver collector dat red colltime waitDays = d
     tx <- validateIn range ctx
     submitTx receiver tx
 
-lockingTx1 :: TimeDepositScript -> TD.TimeDepositDatum -> UserSpend -> Value -> Tx
+lockingTx1 :: TimeDepositScript -> TimeDepositDatum -> UserSpend -> Value -> Tx
 lockingTx1 scr dat usp val =
   mconcat
     [ userSpend usp,
       payToScript scr (InlineDatum dat) val
     ]
 
-claimingTx1 :: TimeDepositScript -> PubKeyHash -> TD.TimeDepositDatum -> TD.TimeDepositRedeemer -> TxOutRef -> Value -> Tx
+claimingTx1 :: TimeDepositScript -> PubKeyHash -> TimeDepositDatum -> TimeDepositRedeemer -> TxOutRef -> Value -> Tx
 claimingTx1 scr pkh dat red vestRef vestVal =
   mconcat
     [ spendScript scr vestRef red dat,

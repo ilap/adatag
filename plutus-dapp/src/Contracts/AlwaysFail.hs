@@ -22,14 +22,14 @@ mkAFValidator _ _ _ = error ()
 -- Customised AFV.
 -- traceError "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
-validator :: PlutusV2.Validator
-validator = PlutusV2.mkValidatorScript $$(PlutusTx.compile [||mkAFValidator||])
+alwaysFailValidator :: PlutusV2.Validator
+alwaysFailValidator = PlutusV2.mkValidatorScript $$(PlutusTx.compile [||mkAFValidator||])
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
 saveScript :: IO ()
-saveScript = writeValidatorToFile "contracts/01_afv.plutus" validator
+saveScript = writeValidatorToFile "contracts/01_afv.plutus" alwaysFailValidator
 
 -- Generate the address to send the validators and minting scripts to referencing them from.
 -- Network details, from Shelley genesis file, at
@@ -50,4 +50,4 @@ saveScript = writeValidatorToFile "contracts/01_afv.plutus" validator
 -- "addr1w9gexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g5740fw"
 
 referenceAddressBech32 :: Network -> String
-referenceAddressBech32 network = validatorAddressBech32 network validator
+referenceAddressBech32 network = validatorAddressBech32 network alwaysFailValidator

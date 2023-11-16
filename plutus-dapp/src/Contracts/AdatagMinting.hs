@@ -116,14 +116,14 @@ data MintParams = MintParams
     --  The user's `lockEndDate` in the datum, created by the front-end is currentTime + userLockingPeriod
     -- Note: the script would fail if the user's lock end date time in the output datum is larger than the currentTime + 2 * lockingPeriod
     -- to prevent any accidental over locking.
-    mpMaxDeposit :: BuiltinInteger, -- The user's max deposit for locking an @adatag.
+    mpMaxDeposit :: BuiltinInteger -- The user's max deposit for locking an @adatag.
     {-
       The formula of calculating the user's time lock deposit is `floor (maxPrice / 2 ^ (strLen - 1))` when it's > 5 otherwise 5ADA.
       Therefore, mpMaxDeposit = 1750 means, that locked value for a 1 length username is 1750ADA and for a 10 length one is 5.
       Note: We should have an different one when only the max 4 length adatags hav high time-lock deposits, the others the len > 5
       will only have 10 or 5 ADA.
     -}
-    mpAdaHandle :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
+    -- TODO: in later version mpAdaHandle :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
   }
   deriving (Prelude.Show)
 
@@ -398,16 +398,16 @@ mkPolicy mp red ctx = do
 mkWrappedPolicy :: MintParams -> BuiltinData -> BuiltinData -> ()
 mkWrappedPolicy mp = wrapPolicy $ mkPolicy mp
 
-policy :: MintParams -> MintingPolicy
-policy mp =
+adatagPolicy :: MintParams -> MintingPolicy
+adatagPolicy mp =
   mkMintingPolicyScript $
     $$(compile [||mkWrappedPolicy||])
       `applyCode` liftCode mp
 
 {-# INLINEABLE mkWrappedPolicyLucid #-}
 --                     oracle ValHash   coll ValHash   minPercent      redeemer       context
-mkWrappedPolicyLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedPolicyLucid cnft v tdv le ulp md ah = wrapPolicy $ mkPolicy mp
+mkWrappedPolicyLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedPolicyLucid cnft v tdv le ulp md = wrapPolicy $ mkPolicy mp
   where
     mp =
       MintParams
@@ -416,11 +416,11 @@ mkWrappedPolicyLucid cnft v tdv le ulp md ah = wrapPolicy $ mkPolicy mp
           mpTimeDepositValidator = unsafeFromBuiltinData tdv,
           mpLockExpiry = unsafeFromBuiltinData le,
           mpUserLockingPeriod = unsafeFromBuiltinData ulp,
-          mpMaxDeposit = unsafeFromBuiltinData md,
-          mpAdaHandle = unsafeFromBuiltinData ah
+          mpMaxDeposit = unsafeFromBuiltinData md
+          -- mpAdaHandle = unsafeFromBuiltinData ah
         }
 
-policyCodeLucid :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
+policyCodeLucid :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 policyCodeLucid = $$(compile [||mkWrappedPolicyLucid||])
 
 ---------------------------------------------------------------------------------------------------
@@ -429,8 +429,8 @@ policyCodeLucid = $$(compile [||mkWrappedPolicyLucid||])
 saveAdatagMintingLucidCode :: IO ()
 saveAdatagMintingLucidCode = writeCodeToFile "contracts/05-adatag-minting-lucid.plutus" policyCodeLucid
 
-saveAdatagMintingPolicy :: CurrencySymbol -> ValidatorHash -> ValidatorHash -> POSIXTime -> Integer -> Integer -> ValidatorHash -> IO ()
-saveAdatagMintingPolicy cnft valh tdv exp lp md ah = writePolicyToFile "contracts/05-adatag-minting.plutus" $ policy mp
+saveAdatagMintingPolicy :: CurrencySymbol -> ValidatorHash -> ValidatorHash -> POSIXTime -> Integer -> Integer -> IO ()
+saveAdatagMintingPolicy cnft valh tdv exp lp md = writePolicyToFile "contracts/05-adatag-minting.plutus" $ adatagPolicy mp
   where
     mp =
       MintParams
@@ -439,8 +439,8 @@ saveAdatagMintingPolicy cnft valh tdv exp lp md ah = writePolicyToFile "contract
           mpTimeDepositValidator = tdv,
           mpLockExpiry = exp,
           mpUserLockingPeriod = lp,
-          mpMaxDeposit = md,
-          mpAdaHandle = ah
+          mpMaxDeposit = md
+         --  mpAdaHandle = ah
         }
 
 {-

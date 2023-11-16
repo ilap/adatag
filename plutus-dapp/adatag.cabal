@@ -55,7 +55,7 @@ library
                         Utilities.PlutusTx 
                         Utilities.Serialise
                         Utilities.Utils
-   
+
 executable            bootstrap
     import:           common-all
     hs-source-dirs:   app
@@ -74,7 +74,7 @@ executable            functions
     main-is:          TestFunctions.hs
     build-depends:    adatag
 
-test-suite              control-nft-minting
+test-suite              test-control-nft-minting
     import:             common-all
     type:               exitcode-stdio-1.0
     main-is:            UControlNFTMinting.hs
@@ -82,7 +82,7 @@ test-suite              control-nft-minting
     hs-source-dirs:     tests
     build-depends:      adatag
 
-test-suite              time-deposit
+test-suite              test-time-deposit
     import:             common-all
     type:               exitcode-stdio-1.0
     main-is:            UTimeDeposit.hs
@@ -90,10 +90,18 @@ test-suite              time-deposit
     hs-source-dirs:     tests
     build-depends:      adatag
 
-test-suite              validator
+test-suite              test-validator
     import:             common-all
     type:               exitcode-stdio-1.0
     main-is:            UValidator.hs
+    --                  ^ U means Unit test, P means Property tests
+    hs-source-dirs:     tests
+    build-depends:      adatag
+
+test-suite              test-adatag
+    import:             common-all
+    type:               exitcode-stdio-1.0
+    main-is:            UAdatagTesting.hs
     --                  ^ U means Unit test, P means Property tests
     hs-source-dirs:     tests
     build-depends:      adatag

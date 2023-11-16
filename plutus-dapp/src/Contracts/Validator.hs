@@ -62,7 +62,7 @@ import PlutusTx
     liftCode,
     unstableMakeIsData,
   )
-import PlutusTx.Prelude (Bool, Eq (..), Integer, Maybe (..), take, traceError, traceIfFalse, ($), (&&), (+), (.))
+import PlutusTx.Prelude (Bool, Eq (..), Integer, Maybe (..), take, traceError, traceIfFalse, ($), (&&), (+), (.), (>=))
 import Text.Printf (printf)
 import Utilities (validatorHash', wrapValidator, writeValidatorToFile)
 import Utilities.Utils
@@ -71,8 +71,8 @@ import Prelude (IO, Show (show))
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 -- ####### DATUM
-data TreeState = AdatagAdded | AdatagRemoved
-
+data TreeState = AdatagAdded | AdatagRemoved | InitialState
+  deriving (Prelude.Show)
 unstableMakeIsData ''TreeState
 
 -- Inline datum attached to the control NFT for carrying the state of the labeled tree.
@@ -90,8 +90,11 @@ data ValidatorDatum = ValidatorDatum
     vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
     vdTreeProof :: BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
     vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
-  }
-
+  } -- TODO: Only for testing, removed it from releases
+  | UnitDatum ()
+  | EmptyDatum {}
+  | WrongDatum { mock :: Integer }
+  deriving (Prelude.Show)
 unstableMakeIsData ''ValidatorDatum
 
 -- Only inline datums are allowed.
@@ -99,7 +102,7 @@ unstableMakeIsData ''ValidatorDatum
 parseValidatorDatum :: OutputDatum -> Maybe ValidatorDatum
 parseValidatorDatum o = case o of
   NoOutputDatum -> traceError "Found validator output but NoOutputDatum"
-  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
+  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d-- Inline datum
   OutputDatumHash _ -> traceError "Found validator output but no Inline datum"
 
 ---------------------------------------------------------------------------------------------------
@@ -129,7 +132,8 @@ type ControlNFT = CurrencySymbol
 {-# INLINEABLE mkValidator #-}
 mkValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
 mkValidator cnft dat _ ctx =
-  traceIfFalse "invalid output datum" hasValidDatum -- We assume that the correct initial state has been right fully implemented at bootstrap time.
+    -- We assume that the system is properly bootstrapped
+    traceIfFalse "invalid output datum" hasValidDatum 
     && traceIfFalse "token missing from output" hasValidMintingInfo
   where
     info :: TxInfo
@@ -148,17 +152,21 @@ mkValidator cnft dat _ ctx =
       _ -> traceError "expected exactly one policy output"
 
     -- Get a valid inline datum from a TxOut, if any
+    -- TODO: This is just for unit tests
     ownDatum :: TxOut -> ValidatorDatum
     ownDatum txout = case parseValidatorDatum (txOutDatum txout) of
-      Just d -> d
+      Just (ValidatorDatum a b c d e f)   -> ValidatorDatum a b c d e f
+      Just _ -> traceError "TEMPORARY: invalid datums"
       Nothing -> traceError "invalid or non-inline datum"
 
-    -- It checks that the minting policy Id is same in both datum &
-    -- that the operations number is larger by 1 in the output datum
+    -- It checks that the minting policy Ids are same in both datums &
+    -- that the operations number is larger by 1 in the output datum.
+    -- It also validates that the TreeSize newer be a negative number.
     hasValidDatum :: Bool
     hasValidDatum = do
       let dat' = ownDatum ownOutput
-      vdMintingPolicy dat == vdMintingPolicy dat' && vdOperationCount dat + 1 == vdOperationCount dat'
+      -- it validates that
+      vdMintingPolicy dat == vdMintingPolicy dat' && vdOperationCount dat + 1 == vdOperationCount dat' && vdTreeSize dat' >= 0
 
 
     hasValidMintingInfo :: Bool
@@ -174,12 +182,12 @@ mkValidator cnft dat _ ctx =
 
       let mintAdatag = getOnlyTokenBySymbol (txInfoMint info) mintingPolicy
 
-      -- The input token name same as the output one it does not really necessary
-      -- as we have ensured that there is only 1 input and 1 ouptut, meaning the normal Phase 1
-      -- validation (accounting rules) will fail if this is not the case.
-      -- The second one ensures that the adatag in the new tree state (adding/removing) is the same
-      -- as in the minting policy.
-      itn == otn && adatag == unTokenName mintAdatag
+      -- It is not necessary to check that the input token name is the same as the output one,
+      -- because we have ensured that there is only one input and one output.
+      -- This means that the normal Phase 1 validation (accounting rules) will fail if the input
+      -- token name is not the same as the output one. The second rule ensures that the data tag
+      -- in the new tree state (adding/removing) is the same as in the minting policy.
+      traceIfFalse "the output token name altered" (itn == otn) && traceIfFalse "minted token name is different" (adatag == unTokenName mintAdatag)
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------ COMPILE VALIDATOR --------------------------------------------
@@ -188,8 +196,8 @@ mkValidator cnft dat _ ctx =
 mkWrappedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkWrappedValidator = wrapValidator . mkValidator
 
-validator :: ControlNFT -> Validator
-validator cnft =
+stateHolderValidator :: ControlNFT -> Validator
+stateHolderValidator cnft =
   mkValidatorScript $
     $$(PlutusTx.compile [||mkWrappedValidator||])
       `PlutusTx.applyCode` PlutusTx.liftCode cnft
@@ -215,7 +223,7 @@ validatorCode = $$(compile [||mkWrappedValidatorLucid||])
 savePolicyScript :: CurrencySymbol -> IO ()
 savePolicyScript cnft = do
   let
-  writeValidatorToFile fp $ validator cnft
+  writeValidatorToFile fp $ stateHolderValidator cnft
   where
     -- cnft = parseSymbol symbol
     fp = printf "contracts/04-control-nft-validator-%s.plutus" $ take 10 (show cnft)
@@ -227,16 +235,16 @@ parseSymbol :: String -> CurrencySymbol
 parseSymbol s = CurrencySymbol $ fromString s
 
 valHashBySymbol :: CurrencySymbol -> ValidatorHash
-valHashBySymbol cnft = validatorHash' (validator cnft)
+valHashBySymbol cnft = validatorHash' (stateHolderValidator cnft)
 
 -- Keep it for now
 -- valHash :: String -> ValidatorHash
 -- valHash symbol = do
 --  let
---  validatorHash' ( validator vp )
+--  validatorHash' ( stateHolderValidator vp )
 --  where
 --    cnft = parseSymbol symbol
 --    vp = cnft
 --
 -- scrAddress :: Address
--- scrAddress = scriptAddress validator
+-- scrAddress = scriptAddress stateHolderValidator

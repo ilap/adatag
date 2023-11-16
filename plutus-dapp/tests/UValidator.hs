@@ -1,216 +1,271 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Main where
 
-import qualified Contracts.AdatagMinting as AM
-import qualified Contracts.ControlNFTMinting as CM
-import qualified Contracts.TimeDeposit as TD
-import qualified Contracts.Validator as TV
-import Control.Monad (Monad (return), replicateM, unless, void)
-import Plutus.Model
-import Plutus.Model.Fork.Ledger.Slot (Slot)
-import Plutus.V1.Ledger.Value (AssetClass, CurrencySymbol, TokenName (TokenName), assetClass, assetClassValue, symbols)
+import qualified Contracts.ControlNFTMinting as CNFT
+import Contracts.Validator
+import Control.Monad (Monad (return))
+import Plutus.Model.V2
+import Plutus.V1.Ledger.Value (CurrencySymbol (..), TokenName (unTokenName))
 import Plutus.V2.Ledger.Api
-  ( PubKeyHash,
-    ScriptHash,
-    TokenName,
+  ( BuiltinByteString,
+    ScriptContext,
+    TokenName (TokenName),
     TxOut (txOutValue),
     TxOutRef,
-    Value (..),
+    Value,
     singleton,
   )
-import PlutusTx.Prelude (Eq ((==)), Integer, Maybe (Just, Nothing), Semigroup ((<>)), encodeUtf8, foldMap, ($), (.))
-import System.IO
+import qualified PlutusTx
+import PlutusTx.Builtins (Integer)
+import PlutusTx.Prelude (Bool (..), Maybe (..), fst, head, map, take, ($), (*), (.), (<))
 import Test.Tasty (TestTree, defaultMain, testGroup)
-import Prelude (mconcat, show)
+import Prelude (IO, Semigroup ((<>)), mconcat)
+import qualified Prelude as Haskell
 
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------
+
 main :: IO ()
-main = defaultMain $ do
+main = do
+  defaultMain $ do
+    timeDeposit defaultBabbage
+
+timeDeposit :: MockConfig -> TestTree
+timeDeposit cfg = do
   testGroup
-    "Testing validator with some sensible values"
-    [ good "Testing minting control NFTs      " testMintControlNFT
-    -- ,good "Deploying the Validator works      " testDeployValidator
-    --  , xxx "Accepts only 1 input & ouput       " xxx
-    --  , xxx "" xxx
+    -- The validator only verifies that the output (only inline) datum has the following characteristics:
+    --
+    -- The vdAdatag field matches the minting policy's only token name.
+    -- The operation is one greater than the input datum's operation value.
+    -- The vdTreeSize is non-negative.
+    -- The vdMintingPolicy is identical to the input datum's minting policy.
+    --
+    -- Additionally, the output and minting's value must only contain a CNFT token and no any other tokens
+    --
+    -- This simple rules will also satisfy the following constraints based on the Phase 1 validation pass:
+    -- 1. There is only one input and output in the transaction.
+    -- 2. Only one NFT is minted in the transaction.
+    -- 3. The input's and output's token is the same.
+    -- 4. The input is not a reference input.
+    "Testing state holder (Control NFT) Validator"
+    [ testGroup
+        "Deploying tests"
+        [good "Test Deploy validator" testInitValidator],
+      testGroup
+        -- These tests using valid datums,
+        "Input, output and minting tests (with correct states)"
+        [ bad "Invalid - Two inputs/outputs" $ testInputsOutputs 2 1, -- Only one input/ouput is allowed in the MVP's tx.
+          good "Valid   - One input and output" $ testInputsOutputs 1 1, -- 1 input, 1 output and 1 minting
+          bad "Invalid - Valid input output but two mintings" $ testInputsOutputs 1 2 -- 1 input/output and 2 mintings
+        ],
+      -- We assume a proper bootstrap, so the inputs must always be correct.
+      -- Therefore, if there is any wrong input datum for a correct control NFT
+      -- then the adatag is exploited, making it useless.
+      -- Therefore we do not check input datums as they're assumed to be correct.
+      testGroup
+        "Output datum's sanity checks"
+        [ bad "Invalid - wrong inline output datum (Unit)" $ testDatum "adatag" (dat1 "ab") datU, -- Constr 1 [Constr 0 []]
+          bad "Invalid - malformed inline output datum ({ m = 1})" $ testDatum "adatag" (dat1 "adatag") datW, -- Constr 3 [I 1]
+          bad "Invalid - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE, -- Constr 2 []
+          bad "Invalid - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa"),
+          bad "Invalid - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata"),
+          good "Valid   - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
+        ]
     ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors (adaValue 10_000_000_000) defaultBabbage
+    good = testNoErrors{-Trace-} (adaValue 100_000_000) cfg
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
--- Set many users at once
-setupUsers :: Run [PubKeyHash]
-setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
+goodTags :: [TokenName]
+goodTags = ["adam", "brenda", "cecilia", "dennis"]
 
-type TagValidator = TypedValidator CurrencySymbol
+twoAda :: Value
+twoAda = adaValue 2
 
-mintingScript :: AM.MintParams -> TypedPolicy AM.MintRedeemer
-mintingScript = TypedPolicy . toV2 . AM.policy
+datW :: ValidatorDatum
+datW = WrongDatum {mock = 1}
 
--- Time Deposit validator
+datU :: ValidatorDatum
+datU = UnitDatum ()
 
-type TimeDepositScript = TypedValidator TD.TimeDepositDatum ()
+datE :: ValidatorDatum
+datE = EmptyDatum {}
 
-tdScript :: TimeDepositScript
-tdScript = TypedValidator $ toV2 TD.validator
+datI :: ValidatorDatum
+datI = createDat 0 "" 0 mintSymbol
+
+dat1 :: BuiltinByteString -> ValidatorDatum
+dat1 a = createDat 1 a 1 mintSymbol
+
+-- Validator only checks the op count, adatag, treesize and minting policy
+createDat :: Integer -> BuiltinByteString -> Integer -> CurrencySymbol -> ValidatorDatum
+createDat opc tag size mp =
+  ValidatorDatum
+    { vdOperationCount = opc,
+      vdAdatag = tag,
+      vdTreeState = AdatagAdded,
+      vdTreeSize = size,
+      vdTreeProof = "000000000000",
+      vdMintingPolicy = mp
+    }
 
 ---------------------------------------------------------------------------------------------------
-------------------------------------- CONTROL NFT FUNCTIONS --------------------------------------------
--- NFT Minting Policy's script
-nftScript :: Plutus.V2.Ledger.Api.TxOutRef -> [Plutus.V2.Ledger.Api.TokenName] -> TypedPolicy ()
-nftScript ref tn = TypedPolicy . toV2 $ CM.nftPolicy ref tn
+------------------------------------- MOCK/REAL VALIDATORS ----------------------------------------
 
-mintNFTTx :: Plutus.V2.Ledger.Api.TxOutRef -> Plutus.V2.Ledger.Api.TxOut -> [Plutus.V2.Ledger.Api.TokenName] -> Plutus.V2.Ledger.Api.Value -> Plutus.V2.Ledger.Api.PubKeyHash -> Tx
-mintNFTTx ref out tn val pkh =
-  mconcat
-    [ mintValue (nftScript ref tn) () val,
-      payToKey pkh $ val <> Plutus.V2.Ledger.Api.txOutValue out,
-      spendPubKey ref
-    ]
+-- Always success minting policy for testing validator
+{-# INLINEABLE mockContract #-}
+mockContract :: () -> ScriptContext -> Bool
+mockContract _ _ = True
 
--- Create a Plutus Value from a list of token names.
-createValueFromTokenNames :: CurrencySymbol -> [Plutus.V2.Ledger.Api.TokenName] -> Plutus.V2.Ledger.Api.Value
-createValueFromTokenNames cs = foldMap (\tn -> Plutus.V2.Ledger.Api.singleton cs tn 1)
+mockMintPolicy :: TypedPolicy ()
+mockMintPolicy = mkTypedPolicy $$(PlutusTx.compile [||toBuiltinPolicy mockContract||])
 
-mintNFT :: Plutus.V2.Ledger.Api.PubKeyHash -> Run Plutus.V2.Ledger.Api.Value
-mintNFT u = do
+mintSymbol :: CurrencySymbol
+mintSymbol = scriptCurrencySymbol mockMintPolicy
+
+-- Validator
+type ValidatorScript = TypedValidator ValidatorDatum () -- No redeemer
+
+validatorScript :: ControlNFT -> ValidatorScript
+validatorScript c = TypedValidator $ toV2 $ stateHolderValidator c
+
+-- Controlo NFT
+
+cnftScript :: TxOutRef -> TypedPolicy ()
+cnftScript ref = TypedPolicy . toV2 $ CNFT.cnftPolicy ref CNFT.letters
+
+---------------------------------------------------------------------------------------------------
+---------------------------------------- UNIT TESTS -----------------------------------------------
+
+-- Deploy Validator script
+-- 1. Mint cnfts
+-- 2. Send cnfts to the validator
+-- 3. Load refscript to the refuser (Always Fail validator, but now it's a simple user)
+-- Returns cnft symbol, and ref address holding validator and minting script
+initValidator :: ValidatorDatum -> Run (ValidatorScript, CurrencySymbol)
+initValidator idat = do
+  -- minter
+  u <- newUser $ adaValue 26 -- 1 ada for each cnft
   utxos <- utxoAt u
+
   let [(ref, out)] = utxos
-      currSymbol = scriptCurrencySymbol (nftScript ref CM.letters)
-      mintingValue = createValueFromTokenNames currSymbol CM.letters
-  submitTx u $ mintNFTTx ref out CM.letters mintingValue u
-  v1 <- valueAt u
-  unless (v1 == adaValue 1_000_000_000 <> mintingValue) $
-    logError "Final balances are incorrect"
-  -- logError $ show mintingValue
-  return mintingValue
+      cnft = CNFT.controlNFTCurrencySymbol ref
+      script = validatorScript cnft
+      mintingValue = mconcat [singleton cnft tn 1 | tn <- CNFT.letters]
 
-testMintControlNFT :: Run ()
-testMintControlNFT = do
-  [u1, _, _, _] <- setupUsers
-  void $ mintNFT u1
+  -- mint cnft
+  -- the received user has 26 ada and 26 cnfts
+  submitTx u $ mintCnftTx ref out mintingValue u
 
---------------------------------------VALIDATOR FUNCTIONS --------------------------------------------
+  -- 2. Load validators reference address
+  -- The current PSM loads only to the same script address instead of any individual address.
+  -- ref user (not really true)
+  u1 <- newUser twoAda
+  sp1 <- spend u1 twoAda
 
--- Validator's script
-validatorScript :: TV.ControlNFT -> TagValidator
-validatorScript validator = TypedValidator . toV2 $ TV.validator validator
+  submitTx u1 $ loadScriptsTx sp1 script
 
-deployValidatorTx :: UserSpend -> TV.ControlNFT -> () -> Value -> Tx
-deployValidatorTx sp op r val =
-  mconcat
-    [ userSpend sp,
-      payToScript (validatorScript op) (InlineDatum 1) (adaValue 1 <> val)
-    ]
+  -- 3. Send cnfts fot the policy script
+  v <- valueAt u
+  sp <- spend u v
 
-nftTokenName :: TokenName
-nftTokenName = TokenName $ encodeUtf8 "a"
+  -- send
+  -- All init datum can be the same as no state check only sanity checks
+  submitTx u $ deployTx sp script cnft idat
 
-deployValidator :: PubKeyHash -> () -> Run (TagValidator, AssetClass)
-deployValidator u or = do
-  -- Mint NFT
-  nftAC <- mintNFT u
-  -- Get users utxo to parameterize the control NFT validator
-  utxos <- utxoAt u
-  let [(ref, out)] = utxos
-  let cn = Plutus.Model.validatorHash $ nftScript ref CM.letters
+  return (script, cnft)
+  where
+    mintCnftTx ref out val pkh =
+      mconcat
+        [ mintValue (cnftScript ref) () val,
+          payToKey pkh $ val <> txOutValue out,
+          spendPubKey ref
+        ]
+    loadScriptsTx lsp scr =
+      mconcat
+        [ userSpend lsp,
+          loadRefScript scr twoAda
+        ]
+    deployTx dsp scr curr dat =
+      Haskell.mconcat
+        [ userSpend dsp,
+          Haskell.mconcat
+            [ payToRef scr (InlineDatum dat) (adaValue 1 <> singleton curr tn 1) | tn <- CNFT.letters
+            ]
+        ]
 
-  -- cnftSymbols ....
-  let s = case symbols nftAC of
-        [o] -> o
-  -- _   -> logError "expected exactly one oracle input"
-  logError $ "AAAAAAAAAAA" <> show cn
-  let a = assetClass s nftTokenName
-  let nftV = assetClassValue a 1
-  sp <- spend u $ adaValue 1 <> nftV
-  -------
-  let tvParams = cn
-  --    oracleVH     = validatorHash' $ Oracle.validator oracleParams
-  --    tdVH = validatorHash' TD.validator
-
-  --    stablecoinMP = stableCoinScript $ Minting.MintParams tvVH tdVH
-  ------
-
-  -- let mintingVH = validatorHash' $ Oracle.validator op
-  -- stableCoinScript $ Minting.MintParams oracleVH collateralVH 150
-  let validator = cn
-      validatorTx = deployValidatorTx sp validator or nftV
-  submitTx u validatorTx
-  return (validatorScript validator, a)
-
-testDeployValidator :: Run ()
-testDeployValidator = do
-  [u1, _, _, _] <- setupUsers
-  -- Deploy Validator
-  (ov, _) <- deployValidator u1 ()
-  logError "EXIT"
+-- Test deploying validator
+testInitValidator :: Run ()
+testInitValidator = do
   -- Check that the validator deployed correctly
-  [(ref, _)] <- utxoAt ov
-  dat <- datumAt ref :: Run (Maybe Integer)
+  (vs, _) <- initValidator datI
+  utxos <- utxoAt vs
+
+  let (outref, _) = head utxos
+
+  dat <- datumAt outref :: Run (Maybe ValidatorDatum)
   case dat of
-    Just r -> logError "Some datum exists" -- unless (r == 25) $ logError "Datum doesn't match!"
-    _ -> logError "asdfsdf" --Nothing -- logError "Validator is not deployed correctly: Could not find datum"
+    Just _ -> logInfo "Datum is good."
+    _ -> logError "Validator is not deployed correctly: could not find datum"
 
-{-
-updateValidatorTx :: TV.ValidatorParams -> TV.Rate -> TV.Rate -> TxOutRef -> Value -> Tx
-updateValidatorTx op last new oRef nft =
-  mconcat
-    [ spendScript (validatorScript op) oRef TV.Update last
-    , payToScript (validatorScript op) (InlineDatum new) (adaValue 1 <> nft)
-    ]
+-- Output datum related tests
+testDatum :: BuiltinByteString -> ValidatorDatum -> ValidatorDatum -> Run ()
+testDatum adatag idat odat = do
+  u1 <- newUser $ adaValue 1_000
 
-updateValidator :: PubKeyHash -> TV.Rate ->  TV.Rate -> TagValidator -> AssetClass -> Run ()
-updateValidator u last new ov nftAC = do
-  [(ref,_)] <- utxoAt ov
-  let validator = TV.ValidatorParams nftAC u
-      validatorTx = updateValidatorTx validator last new ref (assetClassValue nftAC 1)
-  signed <- signTx u validatorTx
-  submitTx u signed
-  --return $ validatorScript validator
+  (script, cnft) <- initValidator idat -- Initialize with the datum from parameter
+  utxos <- utxoAt script
+  sp <- spend u1 (adaValue 1)
 
-testUpdateValidator :: Run ()
-testUpdateValidator = do
-  [u1,_,_,_] <- setupUsers
-  -- Deploy Validator
-  (ov, ac) <- deployValidator u1 25
-  -- Update Validator
-  updateValidator u1 25 26 ov ac
-  -- Check that the validator updated correctly
-  [(ref,_)] <- utxoAt ov
-  dat <- datumAt ref :: Run (Maybe TV.Rate)
-  case dat of
-    Just r -> unless (r == 26) $ logError "Datum doesn't match!"
-    _ -> logError "Validator is not deployed correctly: Could not find datum"
+  let (ref, _) = head utxos
 
-testUpdateValidatorNoMintingPolicy :: Run ()
-testUpdateValidatorNoMintingPolicy = do
-  [u1,u2,_,_] <- setupUsers
-  -- Deploy Validator
-  (ov, ac) <- deployValidator u1 25
-  -- Update Validator
-  ov' <-  updateValidatorNMP u2 u1 25 26 ov ac
-  -- Check that the validator updated correctly
-  [(ref,_)] <- utxoAt ov'
-  dat <- datumAt ref :: Run (Maybe TV.Rate)
-  case dat of
-    Just r -> unless (r == 26) $ logError "Datum doesn't match!"
-    _ -> logError "Validator is not deployed correctly: Could not find datum"
+  let tx = datumTx script ref cnft u1 sp (TokenName adatag)
+  logInfo $ "Transaction details: \n" <> Haskell.show tx
+  submitTx u1 tx
+  where
+    datumTx scr ref cnft pkh sp at =
+      mconcat
+        [ mintValue mockMintPolicy () (singleton mintSymbol at 1),
+          spendScript scr ref () idat,
+          userSpend sp,
+          payToScript scr (InlineDatum odat) (adaValue 1 <> singleton cnft "a" 1),
+          payToKey pkh (adaValue 1 <> singleton mintSymbol at 1)
+        ]
 
-updateValidatorNMP :: PubKeyHash -> PubKeyHash -> TV.Rate ->  TV.Rate -> TagValidator -> AssetClass -> Run TagValidator
-updateValidatorNMP signer u last new ov nftAC = do
-  [(ref,_)] <- utxoAt ov
-  let validator = TV.ValidatorParams nftAC u
-      validatorTx = updateValidatorTx validator last new ref (assetClassValue nftAC 1)
-  signed <- signTx signer validatorTx
-  submitTx signer validatorTx
-  return $ validatorScript validator
--}
+-- Sanity checks of inputs/ouptus of MVP. Only one input and putput is allowed
+-- in the current version of @adatag.
+testInputsOutputs :: Integer -> Integer -> Run ()
+testInputsOutputs nri mnri = do
+  u1 <- newUser $ adaValue 1_000
+
+  (script, cnft) <- initValidator datI -- Initialize with the proper init datum
+  utxos <- utxoAt script
+
+  let refs = map fst $ take nri utxos
+  let tns = take nri goodTags
+  let mtns = take mnri goodTags
+  let nms = if nri < mnri then mnri else nri
+
+  sp <- spend u1 (adaValue $ 1 * nms)
+
+  let tx = inputTx script refs cnft u1 sp (take nri CNFT.letters) tns mtns
+  logInfo $ "Transaction details: \n" <> Haskell.show refs
+  submitTx u1 tx
+  where
+    inputTx scr refs cnft pkh sp ls tns mtns =
+      mconcat
+        [ mconcat [mintValue mockMintPolicy () (singleton mintSymbol tn 1) | tn <- mtns], -- The minting's adatag can be the same with tokenname.
+          mconcat [spendScript scr r () datI | r <- refs],
+          userSpend sp,
+          mconcat [payToScript scr (InlineDatum (dat1 $ unTokenName tn)) (adaValue 1 <> singleton cnft l 1) | l <- ls, tn <- tns],
+          mconcat [payToKey pkh (adaValue 1 <> singleton mintSymbol tn 1) | tn <- mtns]
+        ]
