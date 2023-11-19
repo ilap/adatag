@@ -114,7 +114,7 @@ createDat opc tag size mp =
       vdAdatag = tag,
       vdTreeState = AdatagAdded,
       vdTreeSize = size,
-      vdTreeProof = "000000000000",
+      vdTreeProof = hash "",
       vdMintingPolicy = mp
     }
 

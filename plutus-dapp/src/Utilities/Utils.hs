@@ -17,6 +17,7 @@
 {-# OPTIONS_GHC -fno-spec-constr #-}
 {-# OPTIONS_GHC -fno-specialise #-}
 
+
 module Utilities.Utils where
 
 import Plutus.V1.Ledger.Value -- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
@@ -44,11 +45,11 @@ getTokenNamesOfSymbol (Value mp) cur =
 -- -> Nothing -> []
 -- Just i  -> Map.keys i
 
-{-# INLINEABLE getTokenNameOfSymbol #-}
-getTokenNameOfSymbol :: Value -> CurrencySymbol ->  TokenName
-getTokenNameOfSymbol (Value mp) cur =
+{-# INLINEABLE getTokenNameOfSymbolx #-}
+getTokenNameOfSymbolx :: Value -> CurrencySymbol ->  TokenName
+getTokenNameOfSymbolx (Value mp) cur =
   case Map.lookup cur mp of
-    _ -> traceError "expected valid currency symbole"
+    _ -> traceError "expected valid currency symbol"
     Just i -> case Map.keys i of
       [tn] -> tn
       _ -> traceError "expected only one token name"
@@ -133,3 +134,13 @@ hasOnlyAllowedChars bs =
 --  case lengthOfByteString bs of
 --    0 -> True
 --    n -> all (isValidChar . indexByteString bs) [0 .. n -1]
+
+{-# INLINABLE closeInterval #-}
+closeInterval :: POSIXTimeRange -> Maybe (POSIXTime, POSIXTime)
+closeInterval (Interval (LowerBound (Finite (POSIXTime l)) lc) (UpperBound (Finite (POSIXTime h)) hc)) =
+  Just
+    (
+      POSIXTime $ l + 1 - fromEnum lc  -- Add one millisecond if the interval was open.
+    , POSIXTime $ h - 1 + fromEnum hc  -- Subtract one millisecond if the interval was open.
+    )
+closeInterval _ = Nothing

@@ -46,8 +46,10 @@ import Prelude (Show, String, show)
 
 data TimeDepositDatum
   = TimeDepositDatum
-      { ddBeneficiary :: PubKeyHash, -- | beneficiary of the locked time deposit.
-        ddDeadline :: POSIXTime -- | deadline to claim deposits. Preferably ~20 days, the minting policy will validate the deadline at minting time.
+      { ddBeneficiary :: PubKeyHash, -- Beneficiary of the locked time deposit.
+        ddDeadline :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter) 
+        -- from submitting the adatag minting transaction
+        -- Note:  The minting policy will validate the deadline at minting time.
         -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
         -- Minting policy handles this logic. It's not required for unlocking.
         -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
@@ -157,7 +159,7 @@ saveTimeDepositScript pkh ct = do
         { dpCollector = pkh,
           dpCollectionTime = ct
         }
-    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (take 8 (show pkh)) -- (show pkh) $ show (getPOSIXTime ct)
+    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (take 8 (show pkh)) $ show (getPOSIXTime ct)
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------

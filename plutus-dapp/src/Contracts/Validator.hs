@@ -10,6 +10,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use newtype instead of data" #-}
+{-# LANGUAGE InstanceSigs #-}
 
 {- This is a simple parameterized validator designed for handling control
 NFTs, which store the state of a tree used for minting and burning usernames.
@@ -48,7 +49,7 @@ import Plutus.V2.Ledger.Api
     UnsafeFromData (unsafeFromBuiltinData),
     Validator,
     ValidatorHash,
-    mkValidatorScript,
+    mkValidatorScript, fromBuiltin,
   )
 import Plutus.V2.Ledger.Contexts
   ( findOwnInput,
@@ -62,15 +63,43 @@ import PlutusTx
     liftCode,
     unstableMakeIsData,
   )
-import PlutusTx.Prelude (Bool, Eq (..), Integer, Maybe (..), take, traceError, traceIfFalse, ($), (&&), (+), (.), (>=))
+import PlutusTx.Prelude (Bool, Eq (..), Integer, Maybe (..), take, traceError, traceIfFalse, ($), (&&), (+), (.), (>=), takeByteString, appendByteString, sha2_256)
 import Text.Printf (printf)
 import Utilities (validatorHash', wrapValidator, writeValidatorToFile)
 import Utilities.Utils
 import Prelude (IO, Show (show))
-
+import qualified Prelude as Haskell
+import qualified Data.ByteString.Base16  as Haskell.Base16
+import qualified Data.Text  as Haskell.Text
+import qualified Data.Text.Encoding  as Haskell.Text.Encoding
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 -- ####### DATUM
+-- | A type for representing hash digests.
+newtype Hash = Hash BuiltinByteString
+  deriving (Haskell.Eq)
+unstableMakeIsData ''Hash
+instance Eq Hash where
+  (==) :: Hash -> Hash -> Bool
+  Hash h == Hash h' = h == h'
+
+instance Haskell.Show Hash where
+  show (Hash bs) =
+    Haskell.Text.unpack
+      . Haskell.Text.Encoding.decodeUtf8
+      . Haskell.Base16.encode
+      . fromBuiltin
+      . takeByteString 4
+      $ bs
+
+{-# INLINEABLE hash #-}
+hash :: BuiltinByteString -> Hash
+hash = Hash . sha2_256
+
+{-# INLINEABLE combineHash #-}
+combineHash :: Hash -> Hash -> Hash
+combineHash (Hash h) (Hash h') = hash (appendByteString h h')
+
 data TreeState = AdatagAdded | AdatagRemoved | InitialState
   deriving (Prelude.Show)
 unstableMakeIsData ''TreeState
@@ -88,13 +117,14 @@ data ValidatorDatum = ValidatorDatum
     vdAdatag :: BuiltinByteString, -- The username added or removed from the tree
     vdTreeState :: TreeState, -- The state of the Tree.
     vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
-    vdTreeProof :: BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
+    vdTreeProof :: Hash, -- BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
     vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
   } -- TODO: Only for testing, removed it from releases
   | UnitDatum ()
   | EmptyDatum {}
   | WrongDatum { mock :: Integer }
   deriving (Prelude.Show)
+
 unstableMakeIsData ''ValidatorDatum
 
 -- Only inline datums are allowed.

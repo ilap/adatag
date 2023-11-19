@@ -6,9 +6,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+-- {-# LANGUAGE Strict #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -Wno-unused-local-binds #-} -- FIXME: remove it on release
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+{-# HLINT ignore "Use if" #-}
+-- {-# HLINT ignore "Use if" #-}
 
 module Contracts.AdatagMinting where
 
@@ -23,7 +27,7 @@ import Plutus.V2.Ledger.Api
     BuiltinData,
     MintingPolicy,
     OutputDatum (..),
-    POSIXTime (POSIXTime),
+    POSIXTime (..),
     POSIXTimeRange,
     ScriptContext (scriptContextTxInfo),
     TxInInfo (txInInfoResolved),
@@ -54,7 +58,7 @@ import PlutusTx.Prelude
   ( Bool (False, True),
     Eq ((==)),
     Maybe (..),
-    Ord ((>=)),
+    Ord (..),
     divide,
     lengthOfByteString,
     takeByteString,
@@ -64,11 +68,14 @@ import PlutusTx.Prelude
     (&&),
     (+),
     (-),
+    (*), otherwise
   )
+
 import Utilities (wrapPolicy)
 import Utilities.Serialise
 import Utilities.Utils
 import Prelude (IO, Show)-- (show))
+
 
 
 ---------------------------------------------------------------------------------------------------
@@ -100,7 +107,6 @@ data Node
 
 PlutusTx.unstableMakeIsData ''Node
 
-
 ---------------------------------------------------------------------------------------------------
 ------------------------------------ ON-CHAIN: VALIDATOR ------------------------------------------
 
@@ -108,19 +114,19 @@ PlutusTx.unstableMakeIsData ''Node
 data MintParams = MintParams
   { -- | AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
     mpControlNFT :: CurrencySymbol, -- The control NFT that's carrying the state of the @adatag tree.
-    mpValidator :: PlutusV2.ValidatorHash, -- ControlNFT validator hash the control NFT resides on.
+    mpStateHolderValidator :: PlutusV2.ValidatorHash, -- ControlNFT validator hash the control NFT resides on.
     mpTimeDepositValidator :: PlutusV2.ValidatorHash, -- TimeDeposit validator hash. -- for checking time-lock deposits
-    mpLockExpiry :: PlutusV2.POSIXTime, -- The POSIXTime until the Lock Time Deposit Feature is active
+    mpUserDepositFeatureExpiry :: PlutusV2.POSIXTime, -- The POSIXTime (in ms) until the Lock Time Deposit Feature is active
     --  (e.g. ~6-9 months form the @adatag bootstrapping).
-    mpUserLockingPeriod :: Integer, -- The days in seconds the deposit is locked from minting, if required. i.e. 86400 * days
-    --  The user's `lockEndDate` in the datum, created by the front-end is currentTime + userLockingPeriod
-    -- Note: the script would fail if the user's lock end date time in the output datum is larger than the currentTime + 2 * lockingPeriod
+    mpUserDepositLockingDays :: Integer, -- The users deposit locked in days, if the feature is active. Preferably 20 days.
+    --  The user's `deadline` in the datum - created by the front-end is currentTime + userDepositLockingDays * dayInseconds
+    -- Note: the script would fail if the user's lock end date time in the output datum is larger than the currentTime + 2 * userDepositLockingDays * 86400
     -- to prevent any accidental over locking.
-    mpMaxDeposit :: BuiltinInteger -- The user's max deposit for locking an @adatag.
+    mpDepositBase :: BuiltinInteger -- The user's min deposit for locking an @adatag.
     {-
-      The formula of calculating the user's time lock deposit is `floor (maxPrice / 2 ^ (strLen - 1))` when it's > 5 otherwise 5ADA.
-      Therefore, mpMaxDeposit = 1750 means, that locked value for a 1 length username is 1750ADA and for a 10 length one is 5.
-      Note: We should have an different one when only the max 4 length adatags hav high time-lock deposits, the others the len > 5
+      The formula of calculating the user's time lock deposit is `floor (minPrice / 2 ^ (strLen - 1))` when it's > 5 otherwise 5ADA.
+      Therefore, mpDepositBase = 1750 means, that locked value for a 1 length username is 1750ADA and for a 10 length one is 5.
+      Note: We should have an different one when only the min 4 length adatags hav high time-lock deposits, the others the len > 5
       will only have 10 or 5 ADA.
     -}
     -- TODO: in later version mpAdaHandle :: ValidatorHash -- For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
@@ -155,6 +161,11 @@ unstableMakeIsData ''MintRedeemer
 
 -- FIXME: -- These are just mock proover.
 
+{-# INLINEABLE val #-}
+val :: BuiltinByteString -> BuiltinByteString -> Val
+val a b = Val (a, b)
+
+
 {-# INLINEABLE leaf #-}
 leaf :: Node
 leaf = Leaf (fromString "")
@@ -173,22 +184,36 @@ checkUpdate x nu na u add = do
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
 
+-- The length of the adatag is already validated as 0 < x < 16
+{-# INLINEABLE getMinLockingDeposit #-}
+getMinLockingDeposit :: Integer -> Integer -> Integer
+getMinLockingDeposit md i
+  | i == 1  = md
+  | i == 2  = divide md 2
+  | i == 3  = divide md 4
+  | i == 4  = divide md 8
+  | i == 5  = divide md 16
+  | otherwise  = 5
+
+
 {-# INLINEABLE mkPolicy #-}
 mkPolicy :: MintParams -> MintRedeemer -> ScriptContext -> Bool
 mkPolicy mp red ctx = do
   let checkAdatagError = "invalid control nft or adatag"
   let checkActionError = "wrong redemer action or mint amount"
-  let checkTreeState = "wrong redeemer submitted"
+  -- let checkTreeState = "wrong redeemer submitted"
+  let checkTimeLockDepositError = "time lock-deposit needs proper interval"
 
   case mrAction red of
     AddAdatag ->
       traceIfFalse checkActionError checkNFTMint
         && traceIfFalse checkAdatagError checkAdatag
-        && traceIfFalse "invalid time lock deposit output" checkTimeLockDeposit
-        && traceIfFalse checkTreeState hasValidTreeState
+        && traceIfFalse checkTimeLockDepositError checkTimeLockDeposit
+        -- && traceIfFalse checkTreeState hasValidTreeState
     DeleteAdatag ->
       traceIfFalse checkActionError checkNFTBurn
         && traceIfFalse checkAdatagError checkAdatag
+
   where
     -- && traceIfFalse checkTreeState hasValidTreeState
 
@@ -225,9 +250,9 @@ mkPolicy mp red ctx = do
 
     -- Get the controlNFT's output datum (value is validated in the validator script)
     stateOutput :: (OutputDatum, Value)
-    stateOutput = case scriptOutputsAt (mpValidator mp) info of
+    stateOutput = case scriptOutputsAt (mpStateHolderValidator mp) info of
       [(h, v)] -> (h, v)
-      _ -> traceError "expected exactly one output" -- It can happen as the minting scrip can run before the validator.
+      _ -> traceError "expected exactly one state-holder output" -- It can happen as the minting scrip can run before the validator.
 
     -- Get the validator's output datum
     stateOutputDatum :: ValidatorDatum
@@ -253,7 +278,7 @@ mkPolicy mp red ctx = do
     checkAdatag = do
       let dat = stateOutputDatum
       -- In validator it's already checked that only 1 CNFT token in it's output value.
-      let cnft = getTokenNameOfSymbol stateOutputValue (mpControlNFT mp)
+      let cnft = getOnlyTokenBySymbol stateOutputValue (mpControlNFT mp)
       let ra = mrAdatag red
       let da = vdAdatag dat
       --
@@ -261,16 +286,16 @@ mkPolicy mp red ctx = do
 
     ---------------- TIME LOCK VALIDATION ------------------
     -- No we're checking a valid Time-Lock deposit output, we can avoid checking when
-    -- 1. the feature is deactivated approx. 6 months after bootstrap
+    -- 1. the feature is deactivated approx 6 months after bootstrap
     timelockOutput :: (OutputDatum, Value)
-    timelockOutput = case scriptOutputsAt (mpValidator mp) info of
+    timelockOutput = case scriptOutputsAt (mpTimeDepositValidator mp) info of
       [(h, v)] -> (h, v)
-      _ -> traceError "expected exactly one output" -- It can happen as the minting scrip can run before the validator.
+      _ -> traceError "expected exactly one time-deposit output" -- It can happen as the minting scrip can run before the validator.
 
     -- Get the validator's output datum
     timelockOutputDatum :: TimeDepositDatum
     timelockOutputDatum = case parseTimeDepositDatum d of
-      Nothing -> traceError "expected valid datum in validator output"
+      Nothing -> traceError "expected valid datum in time-lock validator output"
       Just d' -> d'
       where
         (d, _) = timelockOutput
@@ -282,56 +307,51 @@ mkPolicy mp red ctx = do
         (_, v) = timelockOutput
 
     deactivationReached :: Bool
-    deactivationReached = contains (from $ mpLockExpiry mp) $ txInfoValidRange info
+    deactivationReached = contains (from $ mpUserDepositFeatureExpiry mp) $ txInfoValidRange info
 
     checkTimeLockDeposit :: Bool
     checkTimeLockDeposit = do
-      if deactivationReached then True else validateTimeLockDeposit
+      
+      -- Check valid POSIXTime interval first. 
+      -- It's important that the user must set up a proper interval to use @adatag,
+      -- as it is required to always check the deactivation time and a valid deadline when it's still active.
+      let ct = case getUpperBoundTime $ txInfoValidRange info of -- get the current upper bound time in POSIXTime
+                Just u -> u
+                Nothing -> traceError "invalid upperbound in interval (probably PosInf)"
 
-    -- {-# INLINABLE closeInterval #-}
+      case deactivationReached of
+        True ->  True
+        False -> validateTimeLockDeposit ct
+
     -- Convert a POSIXTimeRange into (POSIXTime,POSIXTime).
-    getLowerBoundTime :: POSIXTimeRange -> POSIXTime
-    getLowerBoundTime (Interval (LowerBound (Finite l) _) _) = l
+    getUpperBoundTime :: POSIXTimeRange -> Maybe POSIXTime
+    getUpperBoundTime (Interval _ (UpperBound (Finite l) _)) = Just l
+    getUpperBoundTime _ = Nothing
 
-    -- The length of the adatag is already validated as 0 < x < 16
-    getLockingDeposit :: BuiltinByteString -> Integer
-    getLockingDeposit adatag =  do
-      let td = mpMaxDeposit mp
-      let l =  lengthOfByteString adatag
-      if l == 1 then 1000 else divide 40000 td 
-     -- 1 -> td
-     --  2 -> divide td 2
-     -- 3 -> divide td 4
-     -- 4 -> divide td 8
-     -- 5 -> divide td 16
-     -- 6 -> divide td 32
-     -- _ -> 5
-     -- where
-       
-    
-    -- The time-lock output must be more than mpUserLockingPeriod in the future and
-    -- its Value must be at least the
-    validateTimeLockDeposit :: Bool
-    validateTimeLockDeposit = do
-        -- Check whether the created user's deadline time-lock output is valid
-        -- user's deadline larger by 20 days than the current tx running time.
-        let tdat = timelockOutputDatum -- Get the user's time-lock output's datum
-        let dl = ddDeadline tdat
-        
-        let lb = getLowerBoundTime $ txInfoValidRange info -- het the current lowerbound time in POSIXTime
-        let ct = lb + POSIXTime (mpUserLockingPeriod mp) -- Construct a later lower-bound 
+    -- The time-lock output must be more than mpUserDepositLockingDays in the future and
+    -- its value must be at least the min lock-time deposit calculated from the length of the adatag.
+    validateTimeLockDeposit :: POSIXTime -> Bool
+    validateTimeLockDeposit ct = do
 
-        -- Check that that value of the time-lock deposit output has at least the required deposit
-        let tval = timelockOutputValue
+        -- Get the deadline from time-lock deposit's output datum. It must be at least `mpUserDepositLockingDays` days in the future
+        let udl = ddDeadline timelockOutputDatum
 
-        let v = valueOf tval adaSymbol adaToken
+  
 
-        let adatag = mrAdatag red
-        let d = getLockingDeposit adatag
+            -- add 20 days - 3 hours in milliseconds. The user needs to build a valid transaction
+            -- with a valid interval [-Infinite, valid upper bound]. 
+            -- We assume that the valid upper bound  + 20 days - 3 hours is less than deadline.
+            -- If not, then the user did not build a valid transaction.
+            mdl = ct + POSIXTime (mpUserDepositLockingDays mp * 86400000 - 10800000) -- 20 days - 3 hours in ms.                      
 
-        let o = contains (from ct) $ from dl 
+            -- Check that that value of the time-lock deposit output has at least the required deposit
+            tval = timelockOutputValue
+            v = valueOf tval adaSymbol adaToken
 
-        o && v >= d
+            adatag = mrAdatag red
+            d = getMinLockingDeposit (mpDepositBase mp) (lengthOfByteString adatag)
+
+        mdl <= udl && v >= d
 
     --------- COMPLEX PROOF VALIDATION FUNCTIONS ------------
     -- From now we need to focus on the tree proofs of the updated tree state (adatag added or deleted)
@@ -369,7 +389,7 @@ mkPolicy mp red ctx = do
           [ o
             | i <- txInfoInputs info,
               let o = txInInfoResolved i,
-              txOutAddress o == scriptHashAddress (mpValidator mp)
+              txOutAddress o == scriptHashAddress (mpStateHolderValidator mp)
           ]
 
     -- Get the collateral's input datum
@@ -412,11 +432,11 @@ mkWrappedPolicyLucid cnft v tdv le ulp md = wrapPolicy $ mkPolicy mp
     mp =
       MintParams
         { mpControlNFT = unsafeFromBuiltinData cnft,
-          mpValidator = unsafeFromBuiltinData v,
+          mpStateHolderValidator = unsafeFromBuiltinData v,
           mpTimeDepositValidator = unsafeFromBuiltinData tdv,
-          mpLockExpiry = unsafeFromBuiltinData le,
-          mpUserLockingPeriod = unsafeFromBuiltinData ulp,
-          mpMaxDeposit = unsafeFromBuiltinData md
+          mpUserDepositFeatureExpiry = unsafeFromBuiltinData le,
+          mpUserDepositLockingDays = unsafeFromBuiltinData ulp,
+          mpDepositBase = unsafeFromBuiltinData md
           -- mpAdaHandle = unsafeFromBuiltinData ah
         }
 
@@ -435,22 +455,22 @@ saveAdatagMintingPolicy cnft valh tdv exp lp md = writePolicyToFile "contracts/0
     mp =
       MintParams
         { mpControlNFT = cnft,
-          mpValidator = valh,
+          mpStateHolderValidator = valh,
           mpTimeDepositValidator = tdv,
-          mpLockExpiry = exp,
-          mpUserLockingPeriod = lp,
-          mpMaxDeposit = md
+          mpUserDepositFeatureExpiry = exp,
+          mpUserDepositLockingDays = lp, -- in days
+          mpDepositBase = md
          --  mpAdaHandle = ah
         }
 
 {-
       MintParams
         { mpControlNFT = CurrencySymbol "3e52d74291cae1976d8d1d547aa60485747018079c04423b72d61d78",
-          mpValidator = ValidatorHash "4e3cfec0374862ce3afea511509de01cb4be4484827be7ba797a5535",
+          mpStateHolderValidator = ValidatorHash "4e3cfec0374862ce3afea511509de01cb4be4484827be7ba797a5535",
           mpTimeDepositValidator = ValidatorHash "d9f85671159954a1c764aa63f859eebf4a753153754546f6d697e0ed",
-          mpLockExpiry = 1731325566000,
-          mpUserLockingPeriod = 1728000,
-          mpMaxDeposit = 1750,
+          mpUserDepositFeatureExpiry = 1731325566000,
+          mpUserDepositLockingDays = 1728000,
+          mpDepositBase = 1750,
           mpAdaHandle = ValidatorHash "8d18d786e92776c824607fd8e193ec535c79dc61ea2405ddf3b09fe3"
         }
 -}

@@ -47,7 +47,7 @@ stringToNumber str =
 
 main :: IO ()
 main = do
-  let datum =
+  {-let datum =
         ValidatorDatum
           { vdTreeState = AdatagAdded,
             vdTreeSize = 1,
@@ -56,7 +56,7 @@ main = do
           }
 
   putStrLn $ "The tree root hash of the datum is: " ++ show (vdTreeProof datum)
-
+-}
   let st = CurrencySymbol "symbol"
   let v = singleton st (TokenName "tokenname") 1
   let b = stringToBuiltinByteString "t"

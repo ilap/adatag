@@ -54,7 +54,7 @@ mintNFTTx ref out tn val pkh =
 valueFromTokenNames :: CurrencySymbol -> [TokenName] -> Value
 valueFromTokenNames cs = foldMap (\tn -> singleton cs tn 1)
 
-mintNFT :: PubKeyHash -> Run Value
+mintNFT :: PubKeyHash -> Run (CurrencySymbol, Value)
 mintNFT u = do
   utxos <- utxoAt u
   let [(ref, out)] = utxos
@@ -64,7 +64,7 @@ mintNFT u = do
   v1 <- valueAt u
   unless (v1 == adaValue 1_000_000_000 <> mintingValue) $
     logError "Final balances are incorrect"
-  return mintingValue -- assetClass currSymbol "NFT"
+  return (currSymbol, mintingValue) -- assetClass currSymbol "NFT"
 
 testMintControlNFT :: Run ()
 testMintControlNFT = do

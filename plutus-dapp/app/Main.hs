@@ -5,6 +5,7 @@
 -- {-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 
 module Main where
 
@@ -18,12 +19,10 @@ import qualified Contracts.Validator as ATV
 import qualified Data.Text as Text
 import Data.Time.Clock
 import Data.Time.Format
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, unAssetClass)
-import Plutus.V2.Ledger.Api (CurrencySymbol (CurrencySymbol), POSIXTime (POSIXTime), PubKeyHash, ValidatorHash (..))
-import PlutusTx.Prelude (fromMaybe, takeByteString, traceError)
+import Plutus.V2.Ledger.Api (PubKeyHash, ValidatorHash (..))
+import PlutusTx.Prelude (fromMaybe)
 import System.IO ()
-import Utilities (Network (..), policyHash, posixTimeFromIso8601, posixTimeToIso8601, validatorHash', bytesFromHex)
-import qualified Contracts.AdatagMinting as CNM
+import Utilities (Network (..), policyHash, posixTimeFromIso8601, validatorHash', bytesFromHex)
 import qualified Data.ByteString.Char8 as BS8
 import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
 
@@ -88,7 +87,7 @@ main = do
   putStrLn ""
 
   let refAddress = AFV.referenceAddressBech32 network
-  let afvPolicyId = validatorHash' AFV.validator
+  let afvPolicyId = validatorHash' AFV.alwaysFailValidator
   putStrLn "----------- 1. Always Fail Validator -----------"
   putStrLn $ "Reference address : " ++ refAddress -- Address the Validator and Minting scripts are sent as reference scripts.
   putStrLn $ "Url               : " ++ url ++ "/address/" ++ refAddress
@@ -101,7 +100,7 @@ main = do
 
   let oref = CNM.generateOutRef txId idx
   let cnftSymbol = CNM.controlNFTCurrencySymbol oref
-  let cnftPolicyID = policyHash $ CNM.nftPolicy oref CNM.letters
+  let cnftPolicyID = policyHash $ CNM.cnftPolicy oref CNM.letters
   putStrLn "----- 2. Control NFT (CNFT) Minting Script -----"
   putStrLn $ "One-shot UTxO     : " ++ txId ++ "#" ++ show idx
   putStrLn $ "Own-hot UTxO Url  : " ++ show txIdUrl
@@ -121,7 +120,7 @@ main = do
   let ct = fromMaybe (error "Invalid Time string.") $ posixTimeFromIso8601 collectionTime
   let tdp = TDV.TimeDepositParams {TDV.dpCollector = cp, TDV.dpCollectionTime = ct}
 
-  let timdedepositValidator = validatorHash' $ TDV.validator tdp
+  let timdedepositValidator = validatorHash' $ TDV.timeDepositValidator tdp
   let receiveAddress = TDV.timeDepositAddressBech32 network tdp
   putStrLn "----------- 3. Time Deposit Validator ----------"
   putStrLn $ "Own addr (deposit to send) : " ++ receiveAddress
@@ -152,7 +151,7 @@ main = do
   putStrLn "-----------------------------------------------"
   putStrLn ""
 
-  let maxDeposit = 1750 :: Integer
+  let minDeposit = 1750 :: Integer
   let dt = fromMaybe (error "Invalid Time string.") $ posixTimeFromIso8601 deactivationTime
   let ah = ValidatorHash $ hexToBS adahandle
   putStrLn "---------- 5. Adatag Minting Script ----------"
@@ -166,9 +165,9 @@ main = do
   putStrLn $ "3. Time Deposit policy Id   : " ++ show timdedepositValidator
   putStrLn $ "4. Time Deposit Lock expiry : " ++ show deactivationTime
   putStrLn $ "5. Time Deposit Lock period : " ++ show lockPeriod
-  putStrLn $ "6. Time Deposit max deposit : " ++ show maxDeposit
+  putStrLn $ "6. Time Deposit max deposit : " ++ show minDeposit
   putStrLn $ "7. Adahandle policy id      : " ++ show ah
   putStrLn "------------------- Saving --------------------"
     -- Save script
-  CNM.saveAdatagMintingPolicy cnftSymbol cnftValidator timdedepositValidator dt lockPeriod maxDeposit ah
+  ATM.saveAdatagMintingPolicy cnftSymbol cnftValidator timdedepositValidator dt lockPeriod minDeposit -- ah
   putStrLn "-----------------------------------------------"
