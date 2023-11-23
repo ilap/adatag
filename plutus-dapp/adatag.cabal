@@ -33,7 +33,6 @@ common common-all
                     , SHA               ^>= 1.6.4
                     , utf8-string
 
-
     default-language: Haskell2010
     ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
                  -fno-omit-interface-pragmas -fno-strictness
@@ -53,7 +52,7 @@ library
   import:               common-all
   hs-source-dirs:       src lib
   exposed-modules:
-                        -- TODO: Enable this too Contracts.AdatagMinting
+                        Contracts.AdatagMinting
                         Contracts.AlwaysFail
                         Contracts.ControlNFTMinting
                         Contracts.TimeDeposit
@@ -85,7 +84,6 @@ executable            functions
     main-is:          TestFunctions.hs
     build-depends:    adatag
 
-
 test-suite              test-control-nft-minting
     import:             common-all
                         , common-test
@@ -106,9 +104,9 @@ test-suite              test-validator
     main-is:            UValidator.hs
     --                  ^ U means Unit test, P means Property tests
 
---
---test-suite              test-adatag
---    import:             common-all
---                        , common-test
---    main-is:            UAdatagTesting.hs
---    --                  ^ U means Unit test, P means Property tests
+test-suite              test-adatag
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            UAdatagTesting.hs
+    --                  ^ U means Unit test, P means Property tests

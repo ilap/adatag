@@ -4,21 +4,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Main where
 
 import Contracts.AdatagMinting
-import Contracts.AlwaysFail
 import Contracts.ControlNFTMinting
 import Contracts.TimeDeposit
 import Contracts.Validator
 import Control.Monad (Monad (return), replicateM)
 import Plutus.Model
+import Plutus.Model.V2 (mkTypedPolicy)
+import Plutus.Model.Validator.V2 (mkTypedValidator)
 import PlutusLedgerApi.V1.Value (flattenValue)
 import PlutusLedgerApi.V2
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
@@ -30,30 +30,30 @@ import qualified Prelude as Haskell
 
 main :: IO ()
 main =
-  defaultMain $
-    testGroup
+  defaultMain
+    $ testGroup
       "Testing @adatag's NFT minting logic"
       [ testGroup
           "Deploying and basic input/output tests"
-          [ good "Must pass - deploy @adatag with defaults (365, 183, 20, 1750)" testBootstrapping, 
+          [ good "Must pass - deploy @adatag with defaults (365, 183, 20, 1750)" testBootstrapping,
             --                                                                      vinp  tinp   validrange active deadline deposit
-            bad  "Must fail - no state holder validator output"    $ testMintAdatag False  True   True        True   True    True,
-            bad  "Must fail - no any validator output"             $ testMintAdatag False False   True        True   True    True,
-            bad  "Must fail - active but no time-deposit output"   $ testMintAdatag  True False   True        True   True    True,
-            good "Must pass - deactivated and no time-lock output" $ testMintAdatag  True False   True       False   True    True
+            bad "Must fail - no state holder validator output" $ testMintAdatag False True True True True True,
+            bad "Must fail - no any validator output" $ testMintAdatag False False True True True True,
+            bad "Must fail - active but no time-deposit output" $ testMintAdatag True False True True True True,
+            good "Must pass - deactivated and no time-lock output" $ testMintAdatag True False True False True True
           ],
         testGroup
-          "Parameters and interval unit tests"                  --     vinp   tinp   validrange  active deadline deposit
-          [ good "Must pass - all valid"                $ testMintAdatag True  True   True        True   True     True,
-            bad  "Must fail - always interval ([-,+])"  $ testMintAdatag True  True  False        True   True     True,
-            bad  "Must fail - invalid deadline"         $ testMintAdatag True  True   True        True   False    True,
-            bad  "Must fail - invalid time-deposit"     $ testMintAdatag True  True   True        True   False   False,
-            good "Must pass - deactivated"              $ testMintAdatag True  True   True       False   False   False
+          "Parameters and interval unit tests" --     vinp   tinp   validrange  active deadline deposit
+          [ good "Must pass - all valid" $ testMintAdatag True True True True True True,
+            bad "Must fail - always interval ([-,+])" $ testMintAdatag True True False True True True,
+            bad "Must fail - invalid deadline" $ testMintAdatag True True True True False True,
+            bad "Must fail - invalid time-deposit" $ testMintAdatag True True True True False False,
+            good "Must pass - deactivated" $ testMintAdatag True True True False False False
           ]
       ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors{-Trace-} (adaValue 10_000_000_000) defaultBabbage
+    good = testNoErrors {-Test-} (adaValue 10_000_000_000) defaultBabbage
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
@@ -120,22 +120,15 @@ createMintRedeemer at ma =
 
 ---------------------------------------------------------------------------------------------------
 -------------------------------------- @adatag VALIDATORS -----------------------------------------
--- Always Fail Validator
-type AlwaysFailScript = TypedValidator () () -- No datum/redeemer
-
-afvScript :: AlwaysFailScript
-afvScript = TypedValidator $ toV2 alwaysFailValidator
-
 -- Controlo NFT
-
 cnftScript :: TxOutRef -> TypedPolicy ()
-cnftScript ref = TypedPolicy . toV2 $ cnftPolicy ref letters
+cnftScript ref = mkTypedPolicy $ cnftPolicy ref letters
 
 -- State Holder Validator
 type ValidatorScript = TypedValidator ValidatorDatum () -- No redeemer
 
 validatorScript :: ControlNFT -> ValidatorScript
-validatorScript cnft = TypedValidator $ toV2 $ stateHolderValidator cnft
+validatorScript cnft = mkTypedValidator $ stateHolderValidator cnft
 
 -- Time Deposit Validator
 type TimeDepositScript = TypedValidator TimeDepositDatum ()
@@ -148,13 +141,13 @@ timeDepositParams pkh time = do
     }
 
 timeDepositScript :: TimeDepositParams -> TimeDepositScript
-timeDepositScript tp = TypedValidator $ toV2 $ timeDepositValidator tp
+timeDepositScript tp = mkTypedValidator $ timeDepositValidator tp
 
 -- Adatag Minting Policy
 
 type MintingScript = TypedPolicy MintRedeemer
 
-adatagPolicyParams :: CurrencySymbol -> ValidatorHash -> ValidatorHash -> POSIXTime -> Integer -> Integer -> MintParams
+adatagPolicyParams :: CurrencySymbol -> ScriptHash -> ScriptHash -> POSIXTime -> Integer -> Integer -> MintParams
 adatagPolicyParams cnft shv tdv exp lp md =
   MintParams
     { mpControlNFT = cnft,
@@ -166,7 +159,7 @@ adatagPolicyParams cnft shv tdv exp lp md =
     }
 
 mintingScript :: MintParams -> MintingScript
-mintingScript mp = TypedPolicy . toV2 $ adatagPolicy mp
+mintingScript mp = mkTypedPolicy $ adatagMintingScript mp
 
 deadline :: POSIXTime
 deadline = POSIXTime 20
@@ -196,7 +189,7 @@ bootstrapAdatag collt expt deadl maxd = do
   utxos <- utxoAt developer
 
   let [(ref, out)] = utxos
-      cnft = controlNFTCurrencySymbol ref
+      cnft = scriptCurrencySymbol $ cnftScript ref
       shv = validatorScript cnft
       mintingValue = Haskell.mconcat [singleton cnft tn 1 | tn <- letters]
 
@@ -221,7 +214,7 @@ bootstrapAdatag collt expt deadl maxd = do
       lockexpiry = POSIXTime (getPOSIXTime c + le)
       dl = deadl -- 20 -- deadline in days
       maxdeposit = maxd --  1_750
-      mp = adatagPolicyParams cnft (validatorHash shv) (validatorHash tdv) lockexpiry dl maxdeposit
+      mp = adatagPolicyParams cnft (scriptHash shv) (scriptHash tdv) lockexpiry dl maxdeposit
       amp = mintingScript mp
 
   --------------------------------------------------------------------------
@@ -237,17 +230,12 @@ bootstrapAdatag collt expt deadl maxd = do
   -- logInfo $ "Deploying CNFTs to state holder validator's address" <> Haskell.show dtx
   submitTx developer dtx
   --------------------------------------------------------------------------
+  -- TODO: Make it to use reference scripts
   -- 5. Send all three validator (state-holder, time-deposit, adatag-minting a ref addres (AFV)
   -- This version of PSM does not support sending scripts to a ref addres, so we jsut use the scripts
   -- address until supports sending script to any reference address.
   -- But this mean that minting policies cannot be used as they do not have datums.
   --------------------------------------------------------------------------
-  u1 <- newUser $ adaValue 2
-  sp1 <- spend u1 $ adaValue 2
-
-  let ltx = loadScriptsRefTx sp1 shv tdv --  amp
-  -- logInfo $ "Deploying validators to reference address (mocking only)" <> Haskell.show ltx
-  submitTx u1 ltx
 
   return (amp, mp, shv, tdv, cnft)
   where
@@ -257,18 +245,11 @@ bootstrapAdatag collt expt deadl maxd = do
           payToKey pkh $ v <> txOutValue out,
           spendPubKey ref
         ]
-    loadScriptsRefTx sp vscr tscr =
-      Haskell.mconcat
-        [ userSpend sp,
-          loadRefScript vscr $ adaValue 1,
-          loadRefScript tscr $ adaValue 1
-          -- loadRefScript mscr $ adaValue 1
-        ]
     deployCnftsTx dsp scr curr mintpol =
       Haskell.mconcat
         [ userSpend dsp,
           Haskell.mconcat
-            [ payToRef scr (InlineDatum $ createInitialStateDatum (unTokenName tn) (scriptCurrencySymbol mintpol)) (adaValue 1 <> singleton curr tn 1) | tn <- letters
+            [ payToScript scr (InlineDatum $ createInitialStateDatum (unTokenName tn) (scriptCurrencySymbol mintpol)) (adaValue 1 <> singleton curr tn 1) | tn <- letters
             ]
         ]
 
@@ -281,8 +262,7 @@ bootstrapAdatag collt expt deadl maxd = do
 -- 3. adatag minting policy:
 testMintAdatag :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Run ()
 -- valid validator output, valid deposit output, valid interval, active, valid deadlin and valid deposit
-testMintAdatag vout  tout vint  act vdl vdep = do
-
+testMintAdatag vout tout vint act vdl vdep = do
   -- Bootstrap parameters.
   let collectionStart = 365
       depositExpiry = 183
@@ -293,29 +273,28 @@ testMintAdatag vout  tout vint  act vdl vdep = do
 
   c <- currentTime
 
-
   let cnftToken = "i"
       adatag = "ilap"
       vdat = copyWith (createInitialStateDatum cnftToken (scriptCurrencySymbol amp)) adatag AdatagAdded
 
       -- Create deadline
-      d = if vdl then 0 else -86_400_000 -- minus one day 
+      d = if vdl then 0 else -86_400_000 -- minus one day
       t = getPOSIXTime $ days userDeadline
       dl = POSIXTime (getPOSIXTime c + t + d)
 
       -- Create deposit --
       v = if vdep then 0 else -1
-      ld = getMinLockingDeposit (mpDepositBase mp) (lengthOfByteString adatag)  - v
+      ld = getMinLockingDeposit (mpDepositBase mp) (lengthOfByteString adatag) - v
       dep = if tout then ld else 0
 
   beneficiary <- newUser $ adaValue (dep + 10) -- deposit plus some for fees
-
   let tdat = createTimeDepositDatum beneficiary dl
--- logInfo $   "######## DAYS: \n" <> Haskell.show (days userDeadline) <>  "\n##### DEADLINE ######\n" <> Haskell.show dl <> "\n##### DL: " <> Haskell.show mp
+  -- logInfo $   "######## DAYS: \n" <> Haskell.show (days userDeadline) <>  "\n##### DEADLINE ######\n" <> Haskell.show dl <> "\n##### DL: " <> Haskell.show mp
 
   sp <- spend beneficiary $ singleton adaSymbol adaToken dep
   utxos <- utxoAt shv
 
+  logInfo $ "###### REEEEEEEEF #######\n\n" <> Haskell.show utxos
   -- Find the required CNFT in utxos
   let [(ref, _)] =
         filter
@@ -330,8 +309,7 @@ testMintAdatag vout  tout vint  act vdl vdep = do
       cnft = singleton cnftSymbol (TokenName cnftToken) 1
       mtx = mintAdatagTx beneficiary sp ref amp mtr mval shv (createInitialStateDatum adatag cnftSymbol) vdat cnft tdv tdat (adaValue dep) vout tout
 
-  --logError $ "All Tn.\n" <> Haskell.show mtx  <> " \nmpControlNFT \n: " <> Haskell.show (mpControlNFT mp) <> "Value:\n" <> Haskell.show cnft-- Haskell.show mtx
-
+  -- logError $ "All Tn.\n" <> Haskell.show mtx  <> " \nmpControlNFT \n: " <> Haskell.show (mpControlNFT mp) <> "Value:\n" <> Haskell.show cnft-- Haskell.show mtx
 
   -- Wait till deactivation dat
   let waitfor = if act then POSIXTime 0 else days (depositExpiry + 250)
@@ -341,24 +319,22 @@ testMintAdatag vout  tout vint  act vdl vdep = do
   r1 <- validateIn range mtx
   r2 <- validateIn always mtx
 
-  logInfo $  "@@@@@ Range: " <>  Haskell.show range <> "\nmpUserLockingExpiry (minting params): " <> Haskell.show mp <> "\n### WAITFOR\n" <> Haskell.show waitfor
+  logInfo $ "@@@@@ Range: " <> Haskell.show range <> "\nmpUserLockingExpiry (minting params): " <> Haskell.show mp <> "\n### WAITFOR\n" <> Haskell.show waitfor
   let tx = if vint then r1 else r2
   submitTx beneficiary tx
 
 -- mintAdatagTx
 --              user          us           ref         mpol             mred            adatag   vpol               vidat             vodat              cnft     tpol                 tdat               deposit
 mintAdatagTx :: PubKeyHash -> UserSpend -> TxOutRef -> MintingScript -> MintRedeemer -> Value -> ValidatorScript -> ValidatorDatum -> ValidatorDatum -> Value -> TimeDepositScript -> TimeDepositDatum -> Value -> Bool -> Bool -> Tx
-mintAdatagTx u us ref mpol mred adatag vpol vidat vodat cnft tpol tdat deposit hasv hast = 
+mintAdatagTx u us ref mpol mred adatag vpol vidat vodat cnft tpol tdat deposit hasv hast =
   Haskell.mconcat
-  [ mintValue mpol mred adatag,
-    Haskell.mconcat [payToScript tpol (InlineDatum tdat) deposit | hast],
-    Haskell.mconcat [spendScript vpol ref () vidat | hasv],
-    Haskell.mconcat [payToScript vpol (InlineDatum vodat) (adaValue 1 <> cnft) | hasv],
-    payToKey u adatag,
-    userSpend us
-  ]
-
-
+    [ mintValue mpol mred adatag,
+      Haskell.mconcat [payToScript tpol (InlineDatum tdat) deposit | hast],
+      Haskell.mconcat [spendScript vpol ref () vidat | hasv],
+      Haskell.mconcat [payToScript vpol (InlineDatum vodat) (adaValue 1 <> cnft) | hasv],
+      payToKey u adatag,
+      userSpend us
+    ]
 
 mintAdatag :: Run ()
 mintAdatag = do

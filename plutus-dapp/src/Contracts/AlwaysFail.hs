@@ -1,17 +1,16 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE  InstanceSigs #-}
-{-# LANGUAGE  ScopedTypeVariables #-}
-
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Contracts.AlwaysFail where
 
-import PlutusTx (BuiltinData, compile, CompiledCode)
+import PlutusTx (BuiltinData, CompiledCode, compile)
 import PlutusTx.Prelude (error)
 import Utilities ({-- FIXME: -- validatorAddressBech32,-} writeCodeToFile)
 import Prelude (IO)
@@ -28,8 +27,7 @@ mkAFValidator _ _ _ = error ()
 -- traceError "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 alwaysFailValidator :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
-alwaysFailValidator =  $$(PlutusTx.compile [||mkAFValidator||])
-
+alwaysFailValidator = $$(PlutusTx.compile [||mkAFValidator||])
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------

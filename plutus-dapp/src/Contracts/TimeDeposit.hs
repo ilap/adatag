@@ -1,18 +1,17 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
-
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-
 module Contracts.TimeDeposit where
 
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V1.Interval (contains)
 import PlutusLedgerApi.V2
   ( Datum (Datum),
     OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
@@ -24,13 +23,11 @@ import PlutusLedgerApi.V2
   )
 import PlutusLedgerApi.V2.Contexts (txSignedBy)
 import PlutusTx (CompiledCode, FromData (fromBuiltinData), compile, liftCode, makeLift, unstableMakeIsData)
-import PlutusTx.Builtins.Internal
 import qualified PlutusTx
+import PlutusTx.Builtins.Internal
 import PlutusTx.Prelude (Bool (..), Maybe (..), traceError, traceIfFalse, ($), (&&), (.))
-import Utilities ( wrapValidator,)
+import Utilities (wrapValidator)
 import Prelude (Show)
-import PlutusCore.Version (plcVersion100)
-import PlutusLedgerApi.V1.Interval (contains)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
@@ -38,7 +35,7 @@ import PlutusLedgerApi.V1.Interval (contains)
 data TimeDepositDatum
   = TimeDepositDatum
       { ddBeneficiary :: PubKeyHash, -- Beneficiary of the locked time deposit.
-        ddDeadline :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter) 
+        ddDeadline :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter)
         -- from submitting the adatag minting transaction
         -- Note:  The minting policy will validate the deadline at minting time.
         -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
@@ -94,11 +91,11 @@ timeDepositTypedValidator params dat red ctx =
 
 {-# INLINEABLE validClaim #-}
 validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> Bool
-validClaim info iscoll dat pkh pt = 
+validClaim info iscoll dat pkh pt =
   case dat of
-      TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
-      _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
-      -- It's anti pattern but we allow any wrongly formed datums for collections
+    TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
+    _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
+    -- It's anti pattern but we allow any wrongly formed datums for collections
     && traceIfFalse "signature is missing" signedByValidKey
   where
     signedByValidKey :: Bool
@@ -107,15 +104,14 @@ validClaim info iscoll dat pkh pt =
     timeReached :: Bool
     timeReached = contains (from pt) $ txInfoValidRange info
 
-
 {-# INLINEABLE timeDepositUntypedValidator #-}
 timeDepositUntypedValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 timeDepositUntypedValidator = wrapValidator . timeDepositTypedValidator
 
-timeDepositValidator :: TimeDepositParams -> PlutusTx.CompiledCode ( BuiltinData -> BuiltinData ->  BuiltinData -> ())
-timeDepositValidator params =  $$(PlutusTx.compile [||timeDepositUntypedValidator||])
-     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
-
+timeDepositValidator :: TimeDepositParams -> PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+timeDepositValidator params =
+  $$(PlutusTx.compile [||timeDepositUntypedValidator||])
+    `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
 
 {-
 {-# INLINEABLE timeDepositUntypedValidator #-}
@@ -128,11 +124,6 @@ timeDepositUntypedValidator params datum redeemer ctx =
         (PlutusTx.unsafeFromBuiltinData redeemer)
         (PlutusTx.unsafeFromBuiltinData ctx)
     )
-
-
-
-
-
 
 timedepositValidatorScript :: TimeDepositParams -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
 timedepositValidatorScript params =
@@ -151,7 +142,6 @@ timeDepositUntypedValidator tid ix tn = wrapPolicy $ cnftTypedPolicy oref tn'
 
     tn' :: [TokenName]
     tn' = PlutusTx.unsafeFromBuiltinData tn
-
 
 ------------------
 {-# INLINEABLE mkWrappedTimeDepositValidator #-}

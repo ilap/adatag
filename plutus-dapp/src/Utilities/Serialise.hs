@@ -25,7 +25,6 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Short as BSS
 import PlutusLedgerApi.V1 (ToData)
-import qualified PlutusLedgerApi.V1
 import qualified PlutusLedgerApi.V2 as PlutusV2
 import PlutusTx (CompiledCode)
 import Text.Printf (printf)
@@ -44,7 +43,6 @@ validatorToScript = serializableToScript . PlutusV2.serialiseCompiledCode
 -- Serialize minting policy
 policyToScript :: CompiledCode a -> PlutusScript PlutusScriptV2
 policyToScript = serializableToScript . PlutusV2.serialiseCompiledCode
-
 
 -- Create file with Plutus script
 writeScriptToFile :: FilePath -> PlutusScript PlutusScriptV2 -> IO ()
