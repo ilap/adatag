@@ -1,45 +1,39 @@
 {-# LANGUAGE DataKinds #-}
-{-# HLINT ignore "Use if" #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fno-strictness #-}
+{-# OPTIONS_GHC -fno-ignore-interface-pragmas #-}
+{-# OPTIONS_GHC -fno-omit-interface-pragmas #-}
+{-# OPTIONS_GHC -fobject-code #-}
+
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
 
 module Contracts.TimeDeposit where
 
-import qualified Data.ByteString.Char8 as BS8 (pack)
-import Data.Maybe (fromJust)
-import Plutus.V1.Ledger.Interval (contains)
-import Plutus.V2.Ledger.Api
+import PlutusLedgerApi.V2
   ( Datum (Datum),
     OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
     POSIXTime (..),
     PubKeyHash (..),
     ScriptContext (scriptContextTxInfo),
     TxInfo (txInfoValidRange),
-    Validator,
     from,
-    mkValidatorScript,
-    unsafeFromBuiltinData,
   )
-import Plutus.V2.Ledger.Contexts (txSignedBy)
-import PlutusTx (CompiledCode, FromData (fromBuiltinData), applyCode, compile, liftCode, makeLift, unstableMakeIsData)
+import PlutusLedgerApi.V2.Contexts (txSignedBy)
+import PlutusTx (CompiledCode, FromData (fromBuiltinData), compile, liftCode, makeLift, unstableMakeIsData)
 import PlutusTx.Builtins.Internal
-import PlutusTx.Prelude (Bool (..), Maybe (..), take, traceError, traceIfFalse, ($), (&&), (.))
-import System.IO
-import Text.Printf (printf)
-import Utilities
-  ( printDataToJSON,
-    wrapValidator,
-    writeDataToFile,
-    writeValidatorToFile,
-  )
-import Utilities.Conversions
-import Prelude (Show, String, show)
+import qualified PlutusTx
+import PlutusTx.Prelude (Bool (..), Maybe (..), traceError, traceIfFalse, ($), (&&), (.), (<>))
+import Utilities ( wrapValidator,)
+import Prelude (Show)
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V1.Interval (contains)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
@@ -87,9 +81,9 @@ parseTimeDepositDatum o = case o of
 
 -- TimeDeposit validator for locking a certain amount of ADA for some time (20 days) at minting time
 -- to prevent for buying a lot of the rare usernames and sell them on the market for high price.
-{-# INLINEABLE mkTimeDepositValidator #-}
-mkTimeDepositValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRedeemer -> ScriptContext -> Bool
-mkTimeDepositValidator params dat red ctx =
+{-# INLINEABLE timeDepositTypedValidator #-}
+timeDepositTypedValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRedeemer -> ScriptContext -> Bool
+timeDepositTypedValidator params dat red ctx =
   case red of
     -- User can redeem only after the deadline has passed.
     -- The false means it's not collection but redeem.
@@ -103,9 +97,8 @@ mkTimeDepositValidator params dat red ctx =
 
 {-# INLINEABLE validClaim #-}
 validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> Bool
-validClaim info iscoll dat pkh pt =
-  do
-    case dat of
+validClaim info iscoll dat pkh pt = 
+  case dat of
       TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
       _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
       -- It's anti pattern but we allow any wrongly formed datums for collections
@@ -117,10 +110,56 @@ validClaim info iscoll dat pkh pt =
     timeReached :: Bool
     timeReached = contains (from pt) $ txInfoValidRange info
 
+
+{-# INLINEABLE timeDepositUntypedValidator #-}
+timeDepositUntypedValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+timeDepositUntypedValidator = wrapValidator . timeDepositTypedValidator
+
+timeDepositValidator :: TimeDepositParams -> PlutusTx.CompiledCode ( BuiltinData -> BuiltinData ->  BuiltinData -> ())
+timeDepositValidator params =  $$(PlutusTx.compile [||timeDepositUntypedValidator||])
+     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
+
+
+{-
+{-# INLINEABLE timeDepositUntypedValidator #-}
+timeDepositUntypedValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+timeDepositUntypedValidator params datum redeemer ctx =
+  PlutusTx.check
+    ( auctionTypedValidator
+        params
+        (PlutusTx.unsafeFromBuiltinData datum)
+        (PlutusTx.unsafeFromBuiltinData redeemer)
+        (PlutusTx.unsafeFromBuiltinData ctx)
+    )
+
+
+
+
+
+
+timedepositValidatorScript :: TimeDepositParams -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+timedepositValidatorScript params =
+  $$(PlutusTx.compile [||timeDepositUntypedValidator||])
+    `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
+
+-}
+{-
+timeDepositUntypedValidator tid ix tn = wrapPolicy $ cnftTypedPolicy oref tn'
+  where
+    oref :: TxOutRef
+    oref =
+      TxOutRef
+        (TxId $ PlutusTx.unsafeFromBuiltinData tid)
+        (PlutusTx.unsafeFromBuiltinData ix)
+
+    tn' :: [TokenName]
+    tn' = PlutusTx.unsafeFromBuiltinData tn
+
+
 ------------------
 {-# INLINEABLE mkWrappedTimeDepositValidator #-}
 mkWrappedTimeDepositValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedTimeDepositValidator = wrapValidator . mkTimeDepositValidator
+mkWrappedTimeDepositValidator = wrapValidator . timeDepositTypedValidator
 
 timeDepositValidator :: TimeDepositParams -> Validator
 timeDepositValidator params =
@@ -131,7 +170,7 @@ timeDepositValidator params =
 {-# INLINEABLE mkWrappedValidatorLucid #-}
 --                         Coll PKH       Coll time      datum          redeemer       context
 mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidatorLucid pkh ct = wrapValidator $ mkTimeDepositValidator tdp
+mkWrappedValidatorLucid pkh ct = wrapValidator $ timeDepositTypedValidator tdp
   where
     tdp =
       TimeDepositParams
@@ -194,11 +233,11 @@ writeUnit :: IO ()
 writeUnit = writeDataToFile fp ()
   where
     fp = printf "contracts/03-time-deposit-unit.json"
-
+-}
 {-
 > import qualified Data.ByteString.Char8 as BS8 (pack)
 > import Data.Maybe (fromJust)
-> import Plutus.V2.Ledger.Api
+> import PlutusLedgerApi.V2
 > import PlutusTX.Builtins.Internal
 > import PlutusTx.Builtins.Internal
 > TimeDepositDatum (PubKeyHash "alma") (fromJust $ posixTimeFromIso8601 "2022-09-09T08:06:21.630747Z") (BuiltinByteString $ BS8.pack "adatag")
@@ -206,7 +245,7 @@ TimeDepositDatum {ddBeneficiary = 616c6d61, ddDeadline = POSIXTime {getPOSIXTime
 -}
 
 {- See an exampe below, how to use it
-Repl> import Plutus.V2.Ledger.Api
+Repl> import PlutusLedgerApi.V2
 Repl> :set -XOverloadedStrings
 Repl> printTimeDepositDatumJSON (PubKeyHash "alma") "2022-09-09T08:06:21.630747Z" "adatag"
 {

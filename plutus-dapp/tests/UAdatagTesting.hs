@@ -17,8 +17,8 @@ import Contracts.TimeDeposit
 import Contracts.Validator
 import Control.Monad (Monad (return), replicateM)
 import Plutus.Model
-import Plutus.V1.Ledger.Value (flattenValue)
-import Plutus.V2.Ledger.Api
+import PlutusLedgerApi.V1.Value (flattenValue)
+import PlutusLedgerApi.V2
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 import PlutusTx.Prelude (AdditiveGroup (..), Bool, Eq ((==)), Integer, Semigroup ((<>)), filter, indexByteString, lengthOfByteString, ($), (+), (.))
 import System.IO

@@ -4,13 +4,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
--- FIXME: -- Do not use strict Data {-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use newtype instead of data" #-}
 {-# LANGUAGE InstanceSigs #-}
+
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
+
 
 {- This is a simple parameterized validator designed for handling control
 NFTs, which store the state of a tree used for minting and burning usernames.
@@ -32,46 +32,41 @@ of its addresses.
 -}
 module Contracts.Validator where
 
-import Data.String (IsString (fromString), String)
-import Plutus.V1.Ledger.Value
-  ( CurrencySymbol (CurrencySymbol),
-    TokenName (unTokenName),
-  )
-import Plutus.V2.Ledger.Api
-  ( BuiltinByteString,
-    BuiltinData,
-    Datum (Datum),
-    OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
-    ScriptContext (scriptContextTxInfo),
-    TxInInfo (txInInfoResolved),
-    TxInfo (txInfoMint),
-    TxOut (txOutDatum, txOutValue),
-    UnsafeFromData (unsafeFromBuiltinData),
-    Validator,
-    ValidatorHash,
-    mkValidatorScript, fromBuiltin,
-  )
-import Plutus.V2.Ledger.Contexts
+import PlutusLedgerApi.V2.Contexts
   ( findOwnInput,
     getContinuingOutputs,
   )
 import PlutusTx
   ( CompiledCode,
     FromData (fromBuiltinData),
-    applyCode,
     compile,
     liftCode,
     unstableMakeIsData,
   )
-import PlutusTx.Prelude (Bool, Eq (..), Integer, Maybe (..), take, traceError, traceIfFalse, ($), (&&), (+), (.), (>=), takeByteString, appendByteString, sha2_256)
-import Text.Printf (printf)
-import Utilities (validatorHash', wrapValidator, writeValidatorToFile)
-import Utilities.Utils
-import Prelude (IO, Show (show))
+import PlutusTx.Prelude
+    ( Eq(..),
+      Integer,
+      Maybe(..),
+      traceError,
+      traceIfFalse,
+      ($),
+      (&&),
+      (+),
+      (.),
+      (>=),
+      takeByteString,
+      appendByteString,
+      sha2_256,
+      Bool )
+import Utilities -- (validatorHash', wrapValidator, writeValidatorToFile)
+import Prelude (Show (show))
 import qualified Prelude as Haskell
 import qualified Data.ByteString.Base16  as Haskell.Base16
 import qualified Data.Text  as Haskell.Text
 import qualified Data.Text.Encoding  as Haskell.Text.Encoding
+import qualified PlutusTx
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V2
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 -- ####### DATUM
@@ -159,11 +154,11 @@ type ControlNFT = CurrencySymbol
   - the new state's (output's UTxO) username, proof, and username count (based on minting action) differs from the previous state
    in the input's UTxO.
 -}
-{-# INLINEABLE mkValidator #-}
-mkValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
-mkValidator cnft dat _ ctx =
+{-# INLINEABLE stateHolderTypedValidator #-}
+stateHolderTypedValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
+stateHolderTypedValidator cnft dat _ ctx =
     -- We assume that the system is properly bootstrapped
-    traceIfFalse "invalid output datum" hasValidDatum 
+    traceIfFalse "invalid output datum" hasValidDatum
     && traceIfFalse "token missing from output" hasValidMintingInfo
   where
     info :: TxInfo
@@ -222,29 +217,43 @@ mkValidator cnft dat _ ctx =
 ---------------------------------------------------------------------------------------------------
 ------------------------------------ COMPILE VALIDATOR --------------------------------------------
 
+{-# INLINEABLE stateHolderUntypedValidator #-}
+stateHolderUntypedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+stateHolderUntypedValidator = wrapValidator . stateHolderTypedValidator
+
+stateHolderValidator :: ControlNFT -> PlutusTx.CompiledCode ( BuiltinData -> BuiltinData ->  BuiltinData -> ())
+stateHolderValidator cnft =  $$(PlutusTx.compile [||stateHolderUntypedValidator||])
+     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 cnft
+
+{-
+
+
+
+
 {-# INLINEABLE mkWrappedValidator #-}
 mkWrappedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidator = wrapValidator . mkValidator
+mkWrappedValidator = wrapValidator . stateHolderTypedValidator
 
 stateHolderValidator :: ControlNFT -> Validator
 stateHolderValidator cnft =
-  mkValidatorScript $
+  stateHolderTypedValidatorScript $
     $$(PlutusTx.compile [||mkWrappedValidator||])
       `PlutusTx.applyCode` PlutusTx.liftCode cnft
 
 {-# INLINEABLE mkWrappedValidatorLucid #-}
 --                            CS                                      redeemer       context
 mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidatorLucid cs = wrapValidator $ mkValidator cnft
+mkWrappedValidatorLucid cs = wrapValidator $ stateHolderTypedValidator cnft
   where
     cnft = CurrencySymbol $ unsafeFromBuiltinData cs
 
 validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
 validatorCode = $$(compile [||mkWrappedValidatorLucid||])
 
+-}
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- SAVE VALIDATOR -------------------------------------------
-
+{-
 -- savePolicyCode :: IO ()
 -- savePolicyCode = writeCodeToFile "contracts/04-nft-validator.plutus" validatorCode
 
@@ -278,3 +287,4 @@ valHashBySymbol cnft = validatorHash' (stateHolderValidator cnft)
 --
 -- scrAddress :: Address
 -- scrAddress = scriptAddress stateHolderValidator
+-}

@@ -3,10 +3,9 @@
 module Utilities.PlutusTx
   ( wrapValidator
   , wrapPolicy
-  , wrapStakeValidator
   ) where
 
-import           Plutus.V2.Ledger.Api (ScriptContext, UnsafeFromData,
+import           PlutusLedgerApi.V2 (ScriptContext, UnsafeFromData,
                                        unsafeFromBuiltinData)
 import           PlutusTx.Prelude     (Bool, BuiltinData, check, ($))
 
@@ -30,9 +29,3 @@ wrapPolicy f a ctx =
   check $ f
       (unsafeFromBuiltinData a)
       (unsafeFromBuiltinData ctx)
-
-{-# INLINABLE wrapStakeValidator #-}
-wrapStakeValidator :: UnsafeFromData a
-                     => (a -> ScriptContext -> Bool)
-                     -> (BuiltinData -> BuiltinData -> ())
-wrapStakeValidator = wrapPolicy

@@ -8,13 +8,14 @@ license:                Apache-2.0
 build-type:             Simple
 
 common common-all
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base
                     , aeson
                     , bytestring
                     , containers
                     , cardano-api
                     , cardano-crypto-class
                     , data-default
+                    , plutus-core
                     , plutus-ledger-api
                     , plutus-tx-plugin
                     , plutus-tx
@@ -23,7 +24,6 @@ common common-all
                     , QuickCheck
                     , tasty
                     , tasty-quickcheck
-                    , plutus-simple-model
                     , mtl
                     , base16-bytestring
                     , bytestring
@@ -36,14 +36,22 @@ common common-all
 
     default-language: Haskell2010
     ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
-                 -fno-omit-interface-pragmas -fno-strictness 
+                 -fno-omit-interface-pragmas -fno-strictness
                  -fno-spec-constr -fno-specialise -fexpose-all-unfoldings
                  -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
+                 -- -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
+                 -- -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations=3
+
+common common-test
+    build-depends:      adatag
+                        , plutus-simple-model
+    hs-source-dirs:     tests
 
 library
   import:               common-all
   hs-source-dirs:       src lib
-  exposed-modules:      Contracts.AdatagMinting
+  exposed-modules:
+                        -- TODO: Enable this too Contracts.AdatagMinting
                         Contracts.AlwaysFail
                         Contracts.ControlNFTMinting
                         Contracts.TimeDeposit
@@ -51,22 +59,23 @@ library
                         Plutus.LabeledTree
                         Utilities
 
-  other-modules:        Utilities.Conversions 
-                        Utilities.PlutusTx 
+  other-modules:
+                        Utilities.Conversions
+                        Utilities.PlutusTx
                         Utilities.Serialise
                         Utilities.Utils
 
-executable            bootstrap
-    import:           common-all
-    hs-source-dirs:   app
-    main-is:          Main.hs
-    build-depends:    adatag
+-- executable            bootstrap
+--     import:           common-all
+--     hs-source-dirs:   app
+--     main-is:          Main.hs
+--     build-depends:    adatag
 
-executable            labeled-tree
-    import:           common-all
-    hs-source-dirs:   examples
-    main-is:          TestLabeledTree.hs
-    build-depends:    adatag
+-- executable            labeled-tree
+--     import:           common-all
+--     hs-source-dirs:   examples
+--     main-is:          TestLabeledTree.hs
+--     build-depends:    adatag
 
 executable            functions
     import:           common-all
@@ -74,34 +83,30 @@ executable            functions
     main-is:          TestFunctions.hs
     build-depends:    adatag
 
+
 test-suite              test-control-nft-minting
     import:             common-all
+                        , common-test
     type:               exitcode-stdio-1.0
     main-is:            UControlNFTMinting.hs
     --                  ^ U means Unit test, P means Property tests
-    hs-source-dirs:     tests
-    build-depends:      adatag
 
 test-suite              test-time-deposit
     import:             common-all
+                        , common-test
     type:               exitcode-stdio-1.0
     main-is:            UTimeDeposit.hs
-    --                  ^ U means Unit test, P means Property tests
-    hs-source-dirs:     tests
-    build-depends:      adatag
 
 test-suite              test-validator
     import:             common-all
+                        , common-test
     type:               exitcode-stdio-1.0
     main-is:            UValidator.hs
     --                  ^ U means Unit test, P means Property tests
-    hs-source-dirs:     tests
-    build-depends:      adatag
 
-test-suite              test-adatag
-    import:             common-all
-    type:               exitcode-stdio-1.0
-    main-is:            UAdatagTesting.hs
-    --                  ^ U means Unit test, P means Property tests
-    hs-source-dirs:     tests
-    build-depends:      adatag
+--
+--test-suite              test-adatag
+--    import:             common-all
+--                        , common-test
+--    main-is:            UAdatagTesting.hs
+--    --                  ^ U means Unit test, P means Property tests

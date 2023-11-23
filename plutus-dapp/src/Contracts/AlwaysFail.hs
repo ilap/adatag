@@ -2,14 +2,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Contracts.AlwaysFail where
 
-import qualified Plutus.V2.Ledger.Api as PlutusV2
-import PlutusTx (BuiltinData, compile)
+import PlutusTx (BuiltinData, compile, CompiledCode)
 import PlutusTx.Prelude (error)
-import Utilities (Network (..), validatorAddressBech32, writeValidatorToFile)
-import Prelude (IO, String)
+import Utilities ({-- FIXME: -- validatorAddressBech32,-} writeCodeToFile)
+import Prelude (IO)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
@@ -22,19 +23,20 @@ mkAFValidator _ _ _ = error ()
 -- Customised AFV.
 -- traceError "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
-alwaysFailValidator :: PlutusV2.Validator
-alwaysFailValidator = PlutusV2.mkValidatorScript $$(PlutusTx.compile [||mkAFValidator||])
+alwaysFailValidator :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+alwaysFailValidator =  $$(PlutusTx.compile [||mkAFValidator||])
+
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
 saveScript :: IO ()
-saveScript = writeValidatorToFile "contracts/01_afv.plutus" alwaysFailValidator
+saveScript = writeCodeToFile "contracts/01_afv.plutus" alwaysFailValidator
 
 -- Generate the address to send the validators and minting scripts to referencing them from.
 -- Network details, from Shelley genesis file, at
 -- https://book.world.dev.cardano.org/environments.html
--- Network IDs and magics:
+-- Network IDs and magics:sa
 -- Sancho   = (Testnet,4)
 -- Preview  = (Testnet,2)
 -- Pre-Prod = (Testnet,1)
@@ -49,5 +51,5 @@ saveScript = writeValidatorToFile "contracts/01_afv.plutus" alwaysFailValidator
 -- Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Mainnet
 -- "addr1w9gexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g5740fw"
 
-referenceAddressBech32 :: Network -> String
-referenceAddressBech32 network = validatorAddressBech32 network alwaysFailValidator
+--  FIXME: --  referenceAddressBech32 :: Network -> String
+-- referenceAddressBech32 network = validatorAddressBech32 network alwaysFailValidator
