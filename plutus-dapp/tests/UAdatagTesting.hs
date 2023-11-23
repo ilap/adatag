@@ -1,12 +1,14 @@
 {-# LANGUAGE DataKinds #-}
-{-# HLINT ignore "Use if" #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Main where
 
@@ -17,8 +19,8 @@ import Contracts.TimeDeposit
 import Contracts.Validator
 import Control.Monad (Monad (return), replicateM)
 import Plutus.Model
-import Plutus.V1.Ledger.Value (flattenValue)
-import Plutus.V2.Ledger.Api
+import PlutusLedgerApi.V1.Value (flattenValue)
+import PlutusLedgerApi.V2
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 import PlutusTx.Prelude (AdditiveGroup (..), Bool, Eq ((==)), Integer, Semigroup ((<>)), filter, indexByteString, lengthOfByteString, ($), (+), (.))
 import System.IO

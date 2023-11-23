@@ -9,181 +9,189 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
--- See CONTRIBUTING.adoc for how to update index-state
-index-state: 2022-11-14T00:20:02Z
+-- repeating the index-state for hackage to work around hackage.nix parsing limitation
+index-state: 2023-06-06T00:00:00Z
 
--- See CONTRIBUTING.adoc for how to update index-state
 index-state:
-  , hackage.haskell.org 2022-11-14T00:20:02Z
-  , cardano-haskell-packages 2022-11-17T04:56:26Z
+  , hackage.haskell.org 2023-06-06T00:00:00Z
+  , cardano-haskell-packages 2023-06-05T06:39:32Z
 
 packages:
-    plutus-dapp
+  ./plutus-dapp
 
--- We never, ever, want this.
-write-ghc-environment-files: never
-
--- Always build tests and benchmarks.
-tests: true
-benchmarks: false
-
--- The only sensible test display option, since it allows us to have colourized
--- 'tasty' output.
+-- TODO: Default value should be @direct@ in upcoming 3.10 version of cabal, omit this line then.
 test-show-details: direct
 
+-- Using 0.7.1.0, which is already on hackage; but bumping the index state will break everything.
+source-repository-package
+  type: git
+  location: https://github.com/blockfrost/blockfrost-haskell
+  tag: v0.7.1.0
+  --sha256: sha256-hCT0yp3dnNTm7PRDXqrW9zYyUtALMqQNMxS7IZsNoe4=
+  subdir:
+    blockfrost-api
+    blockfrost-client
+    blockfrost-client-core
+
 allow-newer:
-  -- cardano-ledger packages need aeson >2, the following packages have a
-  -- too restictive upper bounds on aeson, so we relax them here. The hackage
-  -- trustees can make a revision to these packages cabal file to solve the
-  -- issue permanently.
-  *:aeson
+  , cardano-wallet:blockfrost-api
+  , cardano-wallet:blockfrost-client
+  , cardano-wallet:blockfrost-client-core
 
+-- TODO: This is fixed for in their later version, omit this when we update to it.
+package strict-containers
+  ghc-options: -Wwarn=noncanonical-monad-instances
+
+source-repository-package
+  type: git
+  location: https://github.com/maestro-org/haskell-sdk
+  tag: deb1e133cd7de989e9e85c2b44e9361f52e93776
+  --sha256: sha256-k4OoAAUFdYkKDSTDeM2dwC/DrJrPotiz0EIeU0xccXY=
+
+-- Unfortunately, cardano-node 8.1.2 is constrained with plutus-ledger-api 1.5.0.0 and we would like at least 1.6.0.0.
+-- This is done in accordance with changes in https://github.com/input-output-hk/cardano-ledger/pull/3430/files.
 constraints:
-  -- cardano-prelude-0.1.0.0 needs
-  , protolude <0.3.1
+    plutus-ledger-api == 1.6.0.0
+  , plutus-core == 1.6.0.0
 
-  -- cardano-ledger-byron-0.1.0.0 needs
-  , cardano-binary <1.5.0.1
+allow-newer:
+  , cardano-ledger-alonzo:plutus-ledger-api
+  , cardano-ledger-alonzo:plutus-core
+  , cardano-ledger-alonzo-test:plutus-ledger-api
+  , cardano-ledger-alonzo-test:plutus-ledger-api-testlib
+  , cardano-ledger-babbage:plutus-ledger-api
+  , cardano-ledger-conway:plutus-ledger-api
+  , cardano-ledger-binary:plutus-ledger-api
+  , cardano-api:plutus-ledger-api
+  , cardano-api:plutus-ledger-api-testlib
+  , cardano-api:prettyprinter-configurable
 
-  -- plutus-core-1.0.0.1 needs
-  , cardano-crypto-class >2.0.0.0
-  , algebraic-graphs <0.7
 
-  -- cardano-ledger-core-0.1.0.0 needs
-  , cardano-crypto-class <2.0.0.1
+-- Everything below is essentially copied from cardano-wallet's cabal.project.
+-------- Begin contents from @cardano-wallet@'s @cabal.project@ file. --------
 
-  -- cardano-crypto-class-2.0.0.0.1 needs
-  , cardano-prelude <0.1.0.1
-
-  -- dbvar from cardano-wallet needs
-  , io-classes <0.3.0.0
-
-  -- newer typed-protocols need io-classes>=0.3.0.0 which is incompatible with dbvar's constraint above
-  , typed-protocols==0.1.0.0
-
--- The plugin will typically fail when producing Haddock documentation. However,
--- in this instance you can simply tell it to defer any errors to runtime (which
--- will never happen since you're building documentation).
---
--- So, any package using 'PlutusTx.compile' in the code for which you need to
--- generate haddock documentation should use the following 'haddock-options'.
-package plutus-ledger
-  haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
-package plutus-script-utils
-  haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
-package plutus-contract
-  haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
-
--- These packages appear in our dependency tree and are very slow to build.
--- Empirically, turning off optimization shaves off ~50% build time.
--- It also mildly improves recompilation avoidance.
--- For dev work we don't care about performance so much, so this is okay.
-package cardano-ledger-alonzo
-  optimization: False
-package ouroboros-consensus-shelley
-  optimization: False
-package ouroboros-consensus-cardano
-  optimization: False
-package cardano-api
-  optimization: False
-package cardano-wallet
-  optimization: False
-package cardano-wallet-core
-  optimization: False
-package cardano-wallet-cli
-  optimization: False
-package cardano-wallet-launcher
-  optimization: False
-package cardano-wallet-core-integration
-  optimization: False
-
--- Direct dependency.
--- Compared to others, cardano-wallet doesn't bump dependencies very often.
--- Making it a good place to start when bumping dependencies.
--- As, for example, bumping the node first highly risks breaking API with the wallet.
--- Unless early bug fixes are required, this is fine as the wallet tracks stable releases of the node.
--- And it is indeed nice for plutus-apps to track stable releases of the node too.
---
--- The current version is dated 2022/08/10
 source-repository-package
-    type: git
-    location: https://github.com/input-output-hk/cardano-wallet
-    tag: 18a931648550246695c790578d4a55ee2f10463e
-    subdir:
-      lib/cli
-      lib/core
-      lib/core-integration
-      lib/dbvar
-      lib/launcher
-      lib/numeric
-      lib/shelley
-      lib/strict-non-empty-containers
-      lib/test-utils
-      lib/text-class
+  type: git
+  location: https://github.com/input-output-hk/cardano-wallet
+  tag: v2023-07-18
+  --sha256: sha256-ijflgIw+1FpLoxM4Rksf4MJvNqnEPAv3gNWE8zMuefU=
+  subdir:
+    lib/balance-tx/
+    lib/coin-selection/
+    lib/delta-store/
+    lib/delta-table
+    lib/delta-types/
+    lib/launcher/
+    lib/numeric/
+    lib/primitive/
+    lib/test-utils/
+    lib/text-class/
+    lib/wai-middleware-logging/
+    lib/wallet/
+    lib/wallet-benchmarks/
 
--- Direct dependency.
+-- Using RDRAND instead of /dev/urandom as an entropy source for key
+-- generation is dubious. Set the flag so we use /dev/urandom by default.
+package cryptonite
+  flags: -support_rdrand
+
+-- Using a fork until our patches can be merged upstream
+
+-- TODO: ADP-1713
 source-repository-package
-    type: git
-    location: https://github.com/input-output-hk/servant-purescript
-    tag: 44e7cacf109f84984cd99cd3faf185d161826963
+  type: git
+  location: https://github.com/biocad/servant-openapi3
+  tag: 4165b837d3a71debd1059c3735460075840000b5
+  --sha256: 1dngrr353kjhmwhn0b289jzqz5rf32llwcv79zcyq15ldpqpbib9
 
--- Direct dependency.
-source-repository-package
-    type: git
-    location: https://github.com/input-output-hk/purescript-bridge
-    tag: 47a1f11825a0f9445e0f98792f79172efef66c00
-
--- Direct dependency.
-source-repository-package
-    type: git
-    location: https://github.com/input-output-hk/quickcheck-dynamic
-    tag: c272906361471d684440f76c297e29ab760f6a1e
-
--- Should follow cardano-wallet.
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/cardano-addresses
-    tag: b7273a5d3c21f1a003595ebf1e1f79c28cd72513
-    subdir:
-      -- cardano-addresses-cli
-      command-line
-      -- cardano-addresses
-      core
+    tag: 6b55f96d57a181f898eb2a50531d3ae4280c549c
+    --sha256: 0yygam995i3mawk6hfgxb6v918phvqzyipzhjflff0l6zfrldy7f
+    subdir: command-line
+            core
 
--- This is needed because we rely on an unreleased feature
--- https://github.com/input-output-hk/cardano-ledger/pull/3111
+package cardano-addresses
+  ghc-options: -Wno-incomplete-uni-patterns
+
 source-repository-package
     type: git
-    location: https://github.com/input-output-hk/cardano-ledger
-    tag: da3e9ae10cf9ef0b805a046c84745f06643583c2
-    subdir:
-      eras/alonzo/impl
-      eras/alonzo/test-suite
-      eras/babbage/impl
-      eras/babbage/test-suite
-      eras/byron/chain/executable-spec
-      eras/byron/crypto
-      eras/byron/crypto/test
-      eras/byron/ledger/executable-spec
-      eras/byron/ledger/impl
-      eras/byron/ledger/impl/test
-      eras/shelley/impl
-      eras/shelley/test-suite
-      eras/shelley-ma/impl
-      eras/shelley-ma/test-suite
-      libs/cardano-ledger-core
-      libs/cardano-ledger-pretty
-      libs/cardano-protocol-tpraos
-      libs/cardano-data
-      libs/vector-map
-      libs/set-algebra
-      libs/small-steps
-      libs/small-steps-test
-      libs/non-integral
+    location: https://github.com/input-output-hk/cardano-sl-x509
+    tag: a91add165152fa36f08e95fafe7da24f1dba4690
+    --sha256: 1ia8vlqghis92cla8qmqa6kh8f3jn29b01fshyk5hmgy5373s684
 
--- library for unit tests of Plutus scripts                                                                                       
+source-repository-package
+    type: git
+    location: https://github.com/input-output-hk/bech32.git
+    tag: e341e7f83d7b73f10baa87e946818b2c493cc5f5
+    --sha256: 1d891bpc1q1m1gqj02b4iv3kr4g9w7knlkq43hwbl9dn5k78aydc
+    subdir: bech32
+
+-- -------------------------------------------------------------------------
+-- Constraints tweaking
+
+-- cardano-addresses unit tests bring in some version constraint conflicts.
+--
+-- 1. hjsonschema and hjsonpointer deps have overly strict bounds.
+-- 2. it has strict aeson < 1.5 dep - this will be fixed in the next release.
+allow-newer:
+    hjsonschema:*
+  , hjsonpointer:*
+  , *:aeson
+  , *:hashable
+  , async-timer:unliftio-core
+  , ekg:*
+  , ntp-client:*
+  , libsystemd-journal:base
+  , size-based:template-haskell
+
+constraints:
+    bimap >= 0.4.0
+  , openapi3 >= 3.2.0
+  , libsystemd-journal >= 1.4.4
+  , systemd >= 2.3.0
+  -- dependency of systemd-2.3.0
+  , network >= 3.1.1.1
+  -- choose versions that work with base >= 4.12
+  , hjsonpointer >= 1.5.0
+  , hjsonschema >= 1.10.0
+  , Cabal >= 3.4.0.0
+  , async-timer >= 0.2.0.0
+  , unliftio-core >= 0.2.0.1
+  , generic-arbitrary >= 0.2.2
+  , iohk-monitoring >= 0.1.11
+
+  -- lower versions of katip won't build with the Win32-2.12.0.1
+  -- which is shipped with the ghc-9.2.8
+  , katip >= 0.8.7.4
+
+  -- Cardano Node dependencies:
+  , cardano-api ^>=8.2
+  , cardano-slotting >= 0.1
+  , ouroboros-network ^>= 0.8.1.0
+
+  -- TH Name shadowing warnings need to be addressed when bumping to 2.13.3.5
+  , persistent == 2.13.3.3
+
+  -- Haddock is broken in this release. Waiting for the next release
+
+-- ----------------------------------------------------------------
+-- Flags for dependencies
+
+package cardano-config
+  flags: -systemd
+package cardano-node
+  flags: -systemd
+
+-- -------------------------------------------------------------------------
+-------- End contents from @cardano-wallet@'s @cabal.project@ file. --------
+-- Using node-8.1.1-compat branch.
 source-repository-package
    type: git
    location: https://github.com/geniusyield/plutus-simple-model
-   tag: d710c4c5400ff7072fe89c337c1cdd0128dc5d99
+   tag: 0cb63af903a835c73aec662092eb67d228bba9b0
+   subdir:
+      psm
+      cardano-simple
 

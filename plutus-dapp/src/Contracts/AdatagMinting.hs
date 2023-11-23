@@ -1,28 +1,24 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
--- {-# LANGUAGE Strict #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# LANGUAGE  InstanceSigs #-}
+{-# LANGUAGE  ScopedTypeVariables #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -Wno-unused-local-binds #-} -- FIXME: remove it on release
-{-# OPTIONS_GHC -Wno-unused-do-bind #-}
-{-# HLINT ignore "Use if" #-}
--- {-# HLINT ignore "Use if" #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Contracts.AdatagMinting where
 
 import Contracts.TimeDeposit
 import Contracts.Validator
 import Data.String (IsString (fromString))
-import Plutus.V1.Ledger.Address (scriptHashAddress)
-import Plutus.V1.Ledger.Interval hiding (singleton)
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass), CurrencySymbol, TokenName (TokenName), adaSymbol, adaToken, assetClassValueOf, valueOf)
-import Plutus.V2.Ledger.Api
+import PlutusLedgerApi.V1.Address (scriptHashAddress)
+import PlutusLedgerApi.V1.Interval hiding (singleton)
+import PlutusLedgerApi.V1.Value (AssetClass (AssetClass), CurrencySymbol, TokenName (TokenName), adaSymbol, adaToken, assetClassValueOf, valueOf)
+import PlutusLedgerApi.V2
   ( BuiltinByteString,
     BuiltinData,
     MintingPolicy,
@@ -42,8 +38,8 @@ import Plutus.V2.Ledger.Api
     txOutDatum,
     unTokenName,
   )
-import Plutus.V2.Ledger.Api qualified as PlutusV2
-import Plutus.V2.Ledger.Contexts (ownCurrencySymbol, scriptOutputsAt)
+import PlutusLedgerApi.V2 qualified as PlutusV2
+import PlutusLedgerApi.V2.Contexts (ownCurrencySymbol, scriptOutputsAt)
 import PlutusTx
   ( CompiledCode,
     applyCode,

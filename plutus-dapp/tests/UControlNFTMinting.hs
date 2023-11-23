@@ -1,16 +1,26 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
+
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Main where
 
 import qualified Contracts.ControlNFTMinting as CM
-import Control.Monad (Monad (return), replicateM, unless, void)
+import Control.Monad (Monad (return), replicateM, unless)
 import Plutus.Model
-import Plutus.V1.Ledger.Value (CurrencySymbol)
-import Plutus.V2.Ledger.Api (PubKeyHash, TokenName, TxOut (txOutValue), TxOutRef, Value (..), singleton)
+import qualified Plutus.Model.Validator.V2 as MV2
+
+import PlutusLedgerApi.V1.Value (CurrencySymbol)
+import PlutusLedgerApi.V2 (PubKeyHash, TokenName, TxOut (txOutValue), TxOutRef, Value (..), singleton)
+
 import PlutusTx.Prelude (Eq ((==)), Semigroup ((<>)), foldMap, ($), (.))
 import System.IO
 import Test.Tasty (defaultMain, testGroup)
@@ -26,7 +36,7 @@ main =
       ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors (adaValue 10_000_000_000) defaultBabbage
+    good = testNoErrors{-Trace-} (adaValue 10_000_000_000) defaultBabbage
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
@@ -37,7 +47,7 @@ setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
 
 -- NFT Minting Policy's script
 nftScript :: TxOutRef -> [TokenName] -> TypedPolicy ()
-nftScript ref tn = TypedPolicy . toV2 $ CM.cnftPolicy ref tn
+nftScript ref tn = MV2.mkTypedPolicy $  CM.cnftPolicy ref tn
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- TESTING MINTING CONTROL NFT -----------------------------------------
@@ -64,13 +74,16 @@ mintNFT u = do
   v1 <- valueAt u
   unless (v1 == adaValue 1_000_000_000 <> mintingValue) $
     logError "Final balances are incorrect"
+  -- logError $ "######SYMBOL: " <> show currSymbol <> "##### Ref: " <> show ref
   return (currSymbol, mintingValue) -- assetClass currSymbol "NFT"
 
 testMintControlNFT :: Run ()
 testMintControlNFT = do
   [u1, _, _, _] <- setupUsers
-  void $ mintNFT u1
+  (_, _) <-  mintNFT u1
 
+  wait $ days 20
+  
 testMintControlNFTTwice :: Run ()
 testMintControlNFTTwice = do
   [u1, _, _, _] <- setupUsers

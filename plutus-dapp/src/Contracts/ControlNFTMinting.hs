@@ -2,27 +2,60 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# LANGUAGE  InstanceSigs #-}
+{-# LANGUAGE  ScopedTypeVariables #-}
+
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Contracts.ControlNFTMinting where
 
-import qualified Data.ByteString.Char8 as BS8 (pack, unpack)
-import Plutus.V1.Ledger.Value (flattenValue)
-import Plutus.V2.Ledger.Api (BuiltinData, CurrencySymbol, MintingPolicy, ScriptContext (scriptContextTxInfo), TokenName (unTokenName), TxId (TxId, getTxId), TxInInfo (txInInfoOutRef), TxInfo (txInfoInputs, txInfoMint), TxOutRef (TxOutRef, txOutRefId, txOutRefIdx), mkMintingPolicyScript)
+import PlutusCore.Version (plcVersion100)
+import qualified Data.ByteString.Char8 as BS8 (unpack)
+import PlutusLedgerApi.V1.Value (flattenValue)
+import PlutusLedgerApi.V2 (BuiltinData, ScriptContext (scriptContextTxInfo), TokenName (unTokenName), TxId (TxId, getTxId), TxInInfo (txInInfoOutRef), TxInfo (txInfoInputs, txInfoMint), TxOutRef (TxOutRef, txOutRefId, txOutRefIdx), CurrencySymbol)
 import qualified PlutusTx
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
-import PlutusTx.Prelude (Bool, Eq ((==)), all, any, elem, head, traceIfFalse, ($), (&&))
+import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString), traceAll)
+import PlutusTx.Prelude (Bool (True), Eq ((==)), all, any, elem, head, traceIfFalse, ($), (&&), (<>), traceBool, trace, traceIfTrue)
 import Text.Printf (printf)
-import Utilities (bytesFromHex, currencySymbol, wrapPolicy, writeCodeToFile, writePolicyToFile)
-import Prelude (Bool (False), IO, Integer, Show (show), String)
+import Utilities ( currencySymbol, policyToScript )
+import Utilities.PlutusTx ( wrapPolicy )
+import Utilities.Serialise ( writeCodeToFile )
+import Prelude (Bool (False), IO, Show (show), String)
+import PlutusLedgerApi.Common (serialiseCompiledCode)
+import qualified PlutusTx.Show  as PlutusTx
+import qualified PlutusTx.Trace as PlutusTx
+import qualified PlutusTx.Prelude  as PlutusTx
+import PlutusLedgerApi.V2.Contexts
+import PlutusLedgerApi.V2
+-- import PlutusLedgerApi.V1.Contexts (ownCurrencySymbol)
+
+
+newtype Cn = Cn BuiltinByteString
+PlutusTx.deriveShow ''Cn
+
+-- b2Cn :: BuiltinByteString -> Cn
+-- b2Cn a =  Cn a
+
+{-# INLINEABLE c2b #-}
+c2b :: CurrencySymbol -> Cn
+c2b c = Cn $ unCurrencySymbol c 
 
 -- One-shot NFT minting policy for generating 26 control NFTs for @adatag namely "a" to "z"
-{-# INLINEABLE mkNFTPolicy #-}
-mkNFTPolicy :: TxOutRef -> [TokenName] -> () -> ScriptContext -> Bool
-mkNFTPolicy oref tnList () ctx =
+{-# INLINEABLE cnftTypedPolicy #-}
+cnftTypedPolicy :: TxOutRef -> [TokenName] -> () -> ScriptContext -> Bool
+cnftTypedPolicy oref tnList () ctx = do
+  -- Tracing values
+  -- let ownSymbol = ownCurrencySymbol ctx
+  -- let c = c2b ownSymbol
+  -- traceIfFalse "@@@@@@@@@@@@@@@@@@@ Owncurrency symbol @@@@@@@@@@@@" False
+  -- && 
   traceIfFalse "UTxO not consumed" (hasUTxO oref ctx)
-    && traceIfFalse "wrong amount minted" (checkMintedAmount tnList ctx)
+  && traceIfFalse "wrong amount minted" (checkMintedAmount tnList ctx)
   where
+    
     -- Check if the UTxO is consumed.
     hasUTxO :: TxOutRef -> ScriptContext -> Bool
     hasUTxO o c = any (\i -> txInInfoOutRef i == o) (txInfoInputs (scriptContextTxInfo c))
@@ -34,9 +67,9 @@ mkNFTPolicy oref tnList () ctx =
         xs -> all (\(_, tn, amt) -> tn `elem` tns && amt == 1) xs
         _ -> False
 
-{-# INLINEABLE mkWrappedNFTPolicy #-}
-mkWrappedNFTPolicy :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedNFTPolicy tid ix tn = wrapPolicy $ mkNFTPolicy oref tn'
+{-# INLINEABLE cnftUntypedPolicy #-}
+cnftUntypedPolicy :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+cnftUntypedPolicy tid ix tn = wrapPolicy $ cnftTypedPolicy oref tn'
   where
     oref :: TxOutRef
     oref =
@@ -47,40 +80,26 @@ mkWrappedNFTPolicy tid ix tn = wrapPolicy $ mkNFTPolicy oref tn'
     tn' :: [TokenName]
     tn' = PlutusTx.unsafeFromBuiltinData tn
 
-nftCode :: PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
-nftCode = $$(PlutusTx.compile [||mkWrappedNFTPolicy||])
-
-cnftPolicy :: TxOutRef -> [TokenName] -> MintingPolicy
-cnftPolicy oref tns =
-  mkMintingPolicyScript $
-    nftCode
-      `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData $ getTxId $ txOutRefId oref)
-      `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData $ txOutRefIdx oref)
-      `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData tns)
+cnftPolicy :: TxOutRef -> [TokenName] -> PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> ())
+cnftPolicy oref tns = $$(PlutusTx.compile [||cnftUntypedPolicy||])
+     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 (PlutusTx.toBuiltinData $ getTxId $ txOutRefId oref)
+     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 (PlutusTx.toBuiltinData $ txOutRefIdx oref)
+     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 (PlutusTx.toBuiltinData tns)
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
--- It does not require handling utf-8, as these are ASCII letters.
-hexToBS :: String -> BuiltinByteString
-hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
-
-generateOutRef :: String -> Integer -> TxOutRef
-generateOutRef tx = TxOutRef (TxId $ hexToBS tx)
-
 -- Generate the currency symbol based on the parameters (UTxO ref, and the letters)
+-- FIXME: It does not work...
 controlNFTCurrencySymbol :: TxOutRef -> CurrencySymbol
-controlNFTCurrencySymbol oref = currencySymbol $ cnftPolicy oref letters
-
-saveControlNFTMintingScript :: IO ()
-saveControlNFTMintingScript = writeCodeToFile "contracts/02-control-nft-minting.plutus" nftCode
+controlNFTCurrencySymbol oref =  currencySymbol $ cnftPolicy oref letters
 
 letters :: [TokenName]
 letters = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
 saveControlNFTMintingPolicy :: TxOutRef -> IO ()
 saveControlNFTMintingPolicy oref =
-  writePolicyToFile
+  writeCodeToFile
     ( printf
         "contracts/02-control-nft-minting-%s#%d-%s.plutus"
         (show $ txOutRefId oref)

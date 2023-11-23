@@ -20,8 +20,8 @@
 
 module Utilities.Utils where
 
-import Plutus.V1.Ledger.Value -- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
-import Plutus.V2.Ledger.Api -- ( ValidatorHash (ValidatorHash), ScriptContext (scriptContextTxInfo), TxInfo (txInfoMint), to)
+import PlutusLedgerApi.V1.Value -- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
+import PlutusLedgerApi.V2 -- ( ValidatorHash (ValidatorHash), ScriptContext (scriptContextTxInfo), TxInfo (txInfoMint), to)
 
 -- (map, mapMaybe, take, takeByteString, traceError)
 import PlutusTx.AssocMap qualified as Map
@@ -31,7 +31,12 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.String as Haskell
 import Utilities.Conversions
 import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import qualified Prelude as Haskell
 
+-- FIXME: hexToBS :: Haskell.String -> BuiltinByteString
+-- hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
+
+-- It does not require handling utf-8, as these are ASCII letters.
 hexToBS :: Haskell.String -> BuiltinByteString
 hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
 
@@ -64,15 +69,15 @@ getOnlyTokenBySymbol (Value v) s =
       [tn] -> tn
       _ -> traceError "expected only one token name"
 
--- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-ledger-api/src/PlutusLedgerApi/V1/Value.hs#L256
+-- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-ledger-api/src/PlutusLedgerApi.V1/V1/Value.hs#L256
 {-# INLINEABLE hasSymbol #-}
 hasSymbol :: Value -> CurrencySymbol -> Bool
 hasSymbol (Value mp) cur = case Map.lookup cur mp of
   Nothing -> False
   Just _ -> True
 
-symbolToValidatorHash :: CurrencySymbol -> ValidatorHash
-symbolToValidatorHash symbol = ValidatorHash $ unCurrencySymbol symbol
+-- FIXME: symbolToValidatorHash :: CurrencySymbol -> ValidatorHash
+-- FIXME --symbolToValidatorHash symbol = ValidatorHash $ unCurrencySymbol symbol
 
 {-
   It validate the username which can have only lower case letters, digits, hyphen

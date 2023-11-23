@@ -19,7 +19,7 @@ import qualified Contracts.Validator as ATV
 import qualified Data.Text as Text
 import Data.Time.Clock
 import Data.Time.Format
-import Plutus.V2.Ledger.Api (PubKeyHash, ValidatorHash (..))
+import PlutusLedgerApi.V2 (PubKeyHash, ValidatorHash (..))
 import PlutusTx.Prelude (fromMaybe)
 import System.IO ()
 import Utilities (Network (..), policyHash, posixTimeFromIso8601, validatorHash', bytesFromHex)

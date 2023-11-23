@@ -10,16 +10,16 @@
 
 module Main where
 
-import Contracts.Validator
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, unAssetClass)
-import Plutus.V2.Ledger.Api (CurrencySymbol (CurrencySymbol), PubKeyHash)
+-- FIXME: import Contracts.Validator
+import PlutusLedgerApi.V1.Value (AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, unAssetClass)
+import PlutusLedgerApi.V2 (CurrencySymbol (CurrencySymbol), PubKeyHash)
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 import PlutusTx.Prelude (takeByteString, traceError)
 import Utilities
 import qualified Data.Text as Text
 
 -- Define a custom function to retrieve the token name
-getTokenName :: CurrencySymbol -> Plutus.V1.Ledger.Value.Value -> TokenName
+getTokenName :: CurrencySymbol -> PlutusLedgerApi.V1.Value.Value -> TokenName
 getTokenName symbol v = do
   let xs = flattenValue v
   -- let filtered = filter (\(c, _, _) -> c == symbol) xs

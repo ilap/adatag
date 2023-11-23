@@ -10,7 +10,7 @@ import Data.ByteString.UTF8 (fromString, toString)
 import Numeric
 import System.IO
 import Prelude hiding (putStr, take)
-import Plutus.V1.Ledger.Api
+import PlutusLedgerApi.V1
 
 log2 :: Integer -> Integer
 log2 x = if odd x then 0 else (floor . logBase (2 :: Double) . fromIntegral) x
