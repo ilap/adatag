@@ -2,7 +2,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE  InstanceSigs #-}
+{-# LANGUAGE  ScopedTypeVariables #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Contracts.AlwaysFail where

@@ -1,18 +1,15 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -fno-strictness #-}
-{-# OPTIONS_GHC -fno-ignore-interface-pragmas #-}
-{-# OPTIONS_GHC -fno-omit-interface-pragmas #-}
-{-# OPTIONS_GHC -fobject-code #-}
 
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Contracts.TimeDeposit where
 
@@ -29,7 +26,7 @@ import PlutusLedgerApi.V2.Contexts (txSignedBy)
 import PlutusTx (CompiledCode, FromData (fromBuiltinData), compile, liftCode, makeLift, unstableMakeIsData)
 import PlutusTx.Builtins.Internal
 import qualified PlutusTx
-import PlutusTx.Prelude (Bool (..), Maybe (..), traceError, traceIfFalse, ($), (&&), (.), (<>))
+import PlutusTx.Prelude (Bool (..), Maybe (..), traceError, traceIfFalse, ($), (&&), (.))
 import Utilities ( wrapValidator,)
 import Prelude (Show)
 import PlutusCore.Version (plcVersion100)

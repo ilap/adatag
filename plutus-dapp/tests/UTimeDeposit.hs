@@ -4,13 +4,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# LANGUAGE StandaloneDeriving #-}
--- ^ to show plutus debug informations
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
+
 
 module Main where
 
@@ -60,7 +59,7 @@ timeDeposit cfg = do
     ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors (adaValue 10_000_000) cfg
+    good = testNoErrors{-Trace-} (adaValue 10_000_000) cfg
 
 
 ---------------------------------------------------------------------------------------------------

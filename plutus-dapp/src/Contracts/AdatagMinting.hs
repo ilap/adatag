@@ -1,18 +1,14 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
--- {-# LANGUAGE Strict #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# LANGUAGE  InstanceSigs #-}
+{-# LANGUAGE  ScopedTypeVariables #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -Wno-unused-local-binds #-} -- FIXME: remove it on release
-{-# OPTIONS_GHC -Wno-unused-do-bind #-}
-{-# HLINT ignore "Use if" #-}
--- {-# HLINT ignore "Use if" #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Contracts.AdatagMinting where
 

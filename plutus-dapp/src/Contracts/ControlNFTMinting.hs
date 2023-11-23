@@ -2,8 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
-{-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
+{-# LANGUAGE  InstanceSigs #-}
+{-# LANGUAGE  ScopedTypeVariables #-}
+
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+
 
 module Contracts.ControlNFTMinting where
 

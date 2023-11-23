@@ -39,7 +39,9 @@ common common-all
                  -fno-omit-interface-pragmas -fno-strictness
                  -fno-spec-constr -fno-specialise -fexpose-all-unfoldings
                  -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
-                 -- -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
+                 -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
+                 -fplugin-opt PlutusTx.Plugin:conservative-optimisation
+                 -- ^  bug it removes the trace messages otherwise.
                  -- -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations=3
 
 common common-test
