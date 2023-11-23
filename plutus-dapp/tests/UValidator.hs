@@ -4,7 +4,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -28,10 +27,11 @@ import PlutusLedgerApi.V2
   )
 import qualified PlutusTx
 import PlutusTx.Builtins (Integer)
-import PlutusTx.Prelude (Bool (..), Maybe (..), fst, head, map, take, ($), (.), takeByteString)
+import PlutusTx.Prelude (Bool (..), Maybe (..), fst, head, map, take, takeByteString, ($), (.))
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Prelude (IO, Semigroup ((<>)), mconcat)
 import qualified Prelude as Haskell
+
 -- import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 
 ---------------------------------------------------------------------------------------------------
@@ -61,8 +61,8 @@ timeDeposit cfg = do
     -- 4. The input is not a reference input.
     "Testing state holder (Control NFT) Validator"
     [ testGroup
-      "Deploying tests"
-      [good "Test Deploy validator" testInitValidator],
+        "Deploying tests"
+        [good "Test Deploy validator" testInitValidator],
       testGroup
         -- These tests using valid datums,
         "Input, output and minting tests (with correct states)"
@@ -82,12 +82,12 @@ timeDeposit cfg = do
           bad "Invalid - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE, -- Constr 2 []
           bad "Invalid - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa"),
           bad "Invalid - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata"),
-          good "Valid   - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag") 
-      ]
+          good "Valid   - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
+        ]
     ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors{-Trace-} (adaValue 100_000_000) cfg
+    good = testNoErrors {-Trace-} (adaValue 100_000_000) cfg
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
@@ -207,7 +207,6 @@ testInitValidator = do
     Just _ -> logInfo "Datum is good."
     _ -> logError "Validator is not deployed correctly: could not find datum"
 
-
 -- Output datum related tests
 testDatum :: BuiltinByteString -> ValidatorDatum -> ValidatorDatum -> Run ()
 testDatum adatag idat odat = do
@@ -217,7 +216,6 @@ testDatum adatag idat odat = do
   utxos <- utxoAt script
   sp <- spend u1 (adaValue 1)
 
-  
   let (ref, _) = head utxos
       tx = datumTx script ref cnft u1 sp (TokenName adatag)
 
@@ -247,21 +245,20 @@ testInputsOutputs nri mnri = do
   let mtns = take mnri goodTags
   --  let nms = if nri < mnri then mnri else nri
 
-
   sp <- spend u1 (adaValue 1)
 
-  let mval =   mconcat [singleton mintSymbol tn 1 | tn <- mtns]
+  let mval = mconcat [singleton mintSymbol tn 1 | tn <- mtns]
       tx = inputTx script refs cnft u1 sp tns mval
 
   logInfo $ "###### Minting Value      : #####\n" <> Haskell.show mval
   logInfo $ "###### Transaction details: #####\n" <> Haskell.show tx
-  
+
   submitTx u1 tx
   where
     inputTx scr refs cnft pkh sp tns mv =
       mconcat
-        [ mintValue mockMintPolicy () mv, 
-          -- ^ The minting's adatag can be the same with tokenname.
+        [ mintValue mockMintPolicy () mv,
+          -- \^ The minting's adatag can be the same with tokenname.
           mconcat [spendScript scr r () datI | r <- refs],
           userSpend sp,
           mconcat [payToScript scr (InlineDatum (dat1 $ unTokenName tn)) (adaValue 1 <> singleton cnft (TokenName $ takeByteString 1 $ unTokenName tn) 1) | tn <- tns],

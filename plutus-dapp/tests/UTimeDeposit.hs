@@ -4,30 +4,29 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
-
 
 module Main where
 
 import Contracts.TimeDeposit
 import Control.Monad (replicateM)
 -- import Plutus.Model
+
+import Plutus.Model.V2
 import PlutusLedgerApi.V2
   ( POSIXTime (POSIXTime, getPOSIXTime),
+    PubKeyHash,
     TxOut (txOutValue),
     TxOutRef,
-    Value (..), PubKeyHash,
+    Value (..),
   )
 import PlutusTx.Prelude (AdditiveSemigroup ((+)), Bool, Integer, ($), (.))
 import System.IO
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Prelude (Bool (..), mconcat)
-import Plutus.Model.V2
-
 
 main :: IO ()
 main = do
@@ -49,18 +48,17 @@ timeDeposit cfg = do
         [ good "Donation |  unit Datum | coll time raeached      | collect " $ testCollections True True True, -- unit datum, must pass.
           good "Donation |  unit Datum | coll time not raeached  | collect " $ testCollections True False True, -- unit datum, must pass.
           good "Donation | valid Datum | coll time raeached      | collect " $ testCollections False True True, -- valid dat, must pass, coll time reached.
-          bad  "Invalid  | valid Datum | coll time  not raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
-          bad  "Invalid  |  unit Datum | deadline raeached       |  redeem " $ testCollections True True False, -- unit datum, must fail.
-          bad  "Invalid  |  unit Datum | deadline not raeached   |  redeem " $ testCollections True False False, -- unit datum, must fail.
+          bad "Invalid  | valid Datum | coll time  not raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
+          bad "Invalid  |  unit Datum | deadline raeached       |  redeem " $ testCollections True True False, -- unit datum, must fail.
+          bad "Invalid  |  unit Datum | deadline not raeached   |  redeem " $ testCollections True False False, -- unit datum, must fail.
           good "Claim    | valid Datum | deadline raeached       |  redeem " $ testCollections False True False, -- valid datum, must pass, deadline reached.
-          bad  "Invalid  | valid Datum | deadline not raeached   |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
+          bad "Invalid  | valid Datum | deadline not raeached   |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
         ],
-       bad "None signing" testNoSigning
+      bad "None signing" testNoSigning
     ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors{-Trace-} (adaValue 10_000_000) cfg
-
+    good = testNoErrors {-Trace-} (adaValue 10_000_000) cfg
 
 ---------------------------------------------------------------------------------------------------
 -------------------------------------- TEST PARAMETERS --------------------------------------------
@@ -79,7 +77,6 @@ script tp = mkTypedValidator $ timeDepositValidator tp
 
 setupThreeUsers :: Run [PubKeyHash]
 setupThreeUsers = replicateM 3 $ newUser $ ada (Lovelace 1_000)
-
 
 --
 testCollections :: Bool -> Bool -> Bool -> Run ()
@@ -127,7 +124,7 @@ testTimeDepositColletion sender receiver collector dat red colltime waitDays = d
     sp <- spend sender val
     let ltx = lockingTx1 s dat sp val
     submitTx sender ltx
-    -- logInfo $ "Locking Tx: " <> show ltx
+  -- logInfo $ "Locking Tx: " <> show ltx
 
   wait $ days waitDays
 
@@ -136,11 +133,11 @@ testTimeDepositColletion sender receiver collector dat red colltime waitDays = d
   checkBalance (gives s (txOutValue vestOut) receiver) $ do
     -- It sets the valid range relative to current time, [curr-x ... curr ... curr++].
     range <- currentTimeInterval (POSIXTime (-999)) (POSIXTime 1_000)
-    --logError $ "Range: " Prelude.<> Prelude.show range
+    -- logError $ "Range: " Prelude.<> Prelude.show range
     let ctx = claimingTx1 s receiver dat red vestRef (txOutValue vestOut)
     tx <- validateIn range ctx
     submitTx receiver tx
-    
+
 lockingTx1 :: TimeDepositScript -> TimeDepositDatum -> UserSpend -> Value -> Tx
 lockingTx1 scr dat usp val =
   mconcat

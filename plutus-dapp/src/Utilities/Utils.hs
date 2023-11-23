@@ -17,21 +17,22 @@
 {-# OPTIONS_GHC -fno-spec-constr #-}
 {-# OPTIONS_GHC -fno-specialise #-}
 
-
 module Utilities.Utils where
 
-import PlutusLedgerApi.V1.Value -- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
-import PlutusLedgerApi.V2 -- ( ValidatorHash (ValidatorHash), ScriptContext (scriptContextTxInfo), TxInfo (txInfoMint), to)
+-- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
+-- ( ValidatorHash (ValidatorHash), ScriptContext (scriptContextTxInfo), TxInfo (txInfoMint), to)
 
 -- (map, mapMaybe, take, takeByteString, traceError)
+
+import Data.ByteString.Char8 qualified as BS8
+import Data.String qualified as Haskell
+import PlutusLedgerApi.V1.Value
+import PlutusLedgerApi.V2
 import PlutusTx.AssocMap qualified as Map
 import PlutusTx.Builtins
-import PlutusTx.Prelude
-import qualified Data.ByteString.Char8 as BS8
-import qualified Data.String as Haskell
-import Utilities.Conversions
 import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
-import qualified Prelude as Haskell
+import PlutusTx.Prelude
+import Utilities.Conversions
 
 -- FIXME: hexToBS :: Haskell.String -> BuiltinByteString
 -- hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
@@ -51,7 +52,7 @@ getTokenNamesOfSymbol (Value mp) cur =
 -- Just i  -> Map.keys i
 
 {-# INLINEABLE getTokenNameOfSymbolx #-}
-getTokenNameOfSymbolx :: Value -> CurrencySymbol ->  TokenName
+getTokenNameOfSymbolx :: Value -> CurrencySymbol -> TokenName
 getTokenNameOfSymbolx (Value mp) cur =
   case Map.lookup cur mp of
     _ -> traceError "expected valid currency symbol"
@@ -98,9 +99,9 @@ isValidUsername :: BuiltinByteString -> Bool
 isValidUsername bs =
   let n = lengthOfByteString bs
    in n > 0 && n < 16 --  must have valid length
---        && isLowerCase (indexByteString bs 0) -- 1st char must be letter
---        && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
---        && hasOnlyAllowedChars bs -- otherwise only allowed chars.
+  --        && isLowerCase (indexByteString bs 0) -- 1st char must be letter
+  --        && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
+  --        && hasOnlyAllowedChars bs -- otherwise only allowed chars.
 
 {-# INLINEABLE isLowerCase #-}
 isLowerCase :: Integer -> Bool
@@ -134,18 +135,17 @@ isValidChar ch =
 hasOnlyAllowedChars :: BuiltinByteString -> Bool
 hasOnlyAllowedChars bs =
   let n = lengthOfByteString bs
-   in all (isValidChar . indexByteString bs) [0 .. n -1]
+   in all (isValidChar . indexByteString bs) [0 .. n - 1]
 
 --  case lengthOfByteString bs of
 --    0 -> True
 --    n -> all (isValidChar . indexByteString bs) [0 .. n -1]
 
-{-# INLINABLE closeInterval #-}
+{-# INLINEABLE closeInterval #-}
 closeInterval :: POSIXTimeRange -> Maybe (POSIXTime, POSIXTime)
 closeInterval (Interval (LowerBound (Finite (POSIXTime l)) lc) (UpperBound (Finite (POSIXTime h)) hc)) =
   Just
-    (
-      POSIXTime $ l + 1 - fromEnum lc  -- Add one millisecond if the interval was open.
-    , POSIXTime $ h - 1 + fromEnum hc  -- Subtract one millisecond if the interval was open.
+    ( POSIXTime $ l + 1 - fromEnum lc, -- Add one millisecond if the interval was open.
+      POSIXTime $ h - 1 + fromEnum hc -- Subtract one millisecond if the interval was open.
     )
 closeInterval _ = Nothing

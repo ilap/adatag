@@ -1,15 +1,12 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
-
-
 
 {- This is a simple parameterized validator designed for handling control
 NFTs, which store the state of a tree used for minting and burning usernames.
@@ -31,6 +28,13 @@ of its addresses.
 -}
 module Contracts.Validator where
 
+-- (validatorHash', wrapValidator, writeValidatorToFile)
+
+import qualified Data.ByteString.Base16 as Haskell.Base16
+import qualified Data.Text as Haskell.Text
+import qualified Data.Text.Encoding as Haskell.Text.Encoding
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V2
 import PlutusLedgerApi.V2.Contexts
   ( findOwnInput,
     getContinuingOutputs,
@@ -42,37 +46,37 @@ import PlutusTx
     liftCode,
     unstableMakeIsData,
   )
+import qualified PlutusTx
 import PlutusTx.Prelude
-    ( Eq(..),
-      Integer,
-      Maybe(..),
-      traceError,
-      traceIfFalse,
-      ($),
-      (&&),
-      (+),
-      (.),
-      (>=),
-      takeByteString,
-      appendByteString,
-      sha2_256,
-      Bool )
-import Utilities -- (validatorHash', wrapValidator, writeValidatorToFile)
+  ( Bool,
+    Eq (..),
+    Integer,
+    Maybe (..),
+    appendByteString,
+    sha2_256,
+    takeByteString,
+    traceError,
+    traceIfFalse,
+    ($),
+    (&&),
+    (+),
+    (.),
+    (>=),
+  )
+import Utilities
 import Prelude (Show (show))
 import qualified Prelude as Haskell
-import qualified Data.ByteString.Base16  as Haskell.Base16
-import qualified Data.Text  as Haskell.Text
-import qualified Data.Text.Encoding  as Haskell.Text.Encoding
-import qualified PlutusTx
-import PlutusCore.Version (plcVersion100)
-import PlutusLedgerApi.V2
+
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 -- ####### DATUM
+
 -- | A type for representing hash digests.
 newtype Hash = Hash BuiltinByteString
   deriving (Haskell.Eq)
+
 unstableMakeIsData ''Hash
+
 instance Eq Hash where
   (==) :: Hash -> Hash -> Bool
   Hash h == Hash h' = h == h'
@@ -96,6 +100,7 @@ combineHash (Hash h) (Hash h') = hash (appendByteString h h')
 
 data TreeState = AdatagAdded | AdatagRemoved | InitialState
   deriving (Prelude.Show)
+
 unstableMakeIsData ''TreeState
 
 -- Inline datum attached to the control NFT for carrying the state of the labeled tree.
@@ -106,17 +111,18 @@ unstableMakeIsData ''TreeState
 -- 4. The added or deleted adatag.
 -- 5. The root hash of the complete labeled binary tree.
 -- 6. The associated minting policy that mints or burns adatags.
-data ValidatorDatum = ValidatorDatum
-  { vdOperationCount :: Integer, -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
-    vdAdatag :: BuiltinByteString, -- The username added or removed from the tree
-    vdTreeState :: TreeState, -- The state of the Tree.
-    vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
-    vdTreeProof :: Hash, -- BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
-    vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
-  } -- TODO: Only for testing, removed it from releases
+data ValidatorDatum
+  = ValidatorDatum
+      { vdOperationCount :: Integer, -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
+        vdAdatag :: BuiltinByteString, -- The username added or removed from the tree
+        vdTreeState :: TreeState, -- The state of the Tree.
+        vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
+        vdTreeProof :: Hash, -- BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
+        vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
+      } -- TODO: Only for testing, removed it from releases
   | UnitDatum ()
   | EmptyDatum {}
-  | WrongDatum { mock :: Integer }
+  | WrongDatum {mock :: Integer}
   deriving (Prelude.Show)
 
 unstableMakeIsData ''ValidatorDatum
@@ -126,7 +132,7 @@ unstableMakeIsData ''ValidatorDatum
 parseValidatorDatum :: OutputDatum -> Maybe ValidatorDatum
 parseValidatorDatum o = case o of
   NoOutputDatum -> traceError "Found validator output but NoOutputDatum"
-  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d-- Inline datum
+  OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
   OutputDatumHash _ -> traceError "Found validator output but no Inline datum"
 
 ---------------------------------------------------------------------------------------------------
@@ -156,8 +162,8 @@ type ControlNFT = CurrencySymbol
 {-# INLINEABLE stateHolderTypedValidator #-}
 stateHolderTypedValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
 stateHolderTypedValidator cnft dat _ ctx =
-    -- We assume that the system is properly bootstrapped
-    traceIfFalse "invalid output datum" hasValidDatum
+  -- We assume that the system is properly bootstrapped
+  traceIfFalse "invalid output datum" hasValidDatum
     && traceIfFalse "token missing from output" hasValidMintingInfo
   where
     info :: TxInfo
@@ -179,7 +185,7 @@ stateHolderTypedValidator cnft dat _ ctx =
     -- TODO: This is just for unit tests
     ownDatum :: TxOut -> ValidatorDatum
     ownDatum txout = case parseValidatorDatum (txOutDatum txout) of
-      Just (ValidatorDatum a b c d e f)   -> ValidatorDatum a b c d e f
+      Just (ValidatorDatum a b c d e f) -> ValidatorDatum a b c d e f
       Just _ -> traceError "TEMPORARY: invalid datums"
       Nothing -> traceError "invalid or non-inline datum"
 
@@ -191,7 +197,6 @@ stateHolderTypedValidator cnft dat _ ctx =
       let dat' = ownDatum ownOutput
       -- it validates that
       vdMintingPolicy dat == vdMintingPolicy dat' && vdOperationCount dat + 1 == vdOperationCount dat' && vdTreeSize dat' >= 0
-
 
     hasValidMintingInfo :: Bool
     hasValidMintingInfo = do
@@ -220,14 +225,12 @@ stateHolderTypedValidator cnft dat _ ctx =
 stateHolderUntypedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 stateHolderUntypedValidator = wrapValidator . stateHolderTypedValidator
 
-stateHolderValidator :: ControlNFT -> PlutusTx.CompiledCode ( BuiltinData -> BuiltinData ->  BuiltinData -> ())
-stateHolderValidator cnft =  $$(PlutusTx.compile [||stateHolderUntypedValidator||])
-     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 cnft
+stateHolderValidator :: ControlNFT -> PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
+stateHolderValidator cnft =
+  $$(PlutusTx.compile [||stateHolderUntypedValidator||])
+    `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 cnft
 
 {-
-
-
-
 
 {-# INLINEABLE mkWrappedValidator #-}
 mkWrappedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
