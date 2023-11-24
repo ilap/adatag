@@ -14,7 +14,7 @@ state "Inputs" as stateI {
         "script hash": "N/A"
         }
     }
-    state ITV2 as  "Control NFT from Tree Validator address" #line.dotted {
+    state ITV2 as  "Control NFT from Tree StateHolder address" #line.dotted {
         json "TD Reference Script UTxO" as JTV2 {
         "address": "TV script address",
         "value":"CNFT.a",
@@ -30,19 +30,19 @@ state "Inputs" as stateI {
         "script hash": "Minting Hash"
         }
     } 
-    state ITV as "AFV: Tree Validator" #line.dotted {
+    state ITV as "AFV: Tree StateHolder" #line.dotted {
         json "TV Reference Script UTxO" as JTV1 {
         "address": "N/A",
         "value":"N/A",
         "datum": "N/A",
-        "script hash": " Tree Validator Hash"
+        "script hash": " Tree StateHolder Hash"
         }
     }
 }
 
 state "Transaction" as stateT {
 
-    state TXTV as "Tree Validator" #line.dotted {
+    state TXTV as "Tree StateHolder" #line.dotted {
     }
     state TXMP as "Minting Policy" #line.dotted {
     }
@@ -66,7 +66,7 @@ state "Outputs" as stateO {
         "script hash": "N/A"
         }
     }
-    state OTV as "Control NFT to Tree Validator address" #line.dotted{
+    state OTV as "Control NFT to Tree StateHolder address" #line.dotted{
         json "Output" as TV2 {
         "address": "TV script address",
         "value":"CNFT.a",
@@ -74,7 +74,7 @@ state "Outputs" as stateO {
         "script hash": ""
         }
     }
-    state OTD as "Deposit to the TD Validator address" #line.dotted{
+    state OTD as "Deposit to the TD StateHolder address" #line.dotted{
         json "Output" as TD2 {
         "address": "TD script address",
         "value":"deposited amount",
@@ -102,7 +102,7 @@ state "Outputs" as stateO {
    
    ' Transactions
    '##################################################
-   TXTV: The validator is parameterized \n with the currency symbol of \n the control NFT and the minting \n script to prevent any spending \n without the Minting Policy.
+   TXTV: The StateHolder is parameterized \n with the currency symbol of \n the control NFT and the minting \n script to prevent any spending \n without the Minting Policy.
    TXTV: <b>Constraints</b>
   
    TXTV -down[dotted]-> TXMP

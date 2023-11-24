@@ -1,22 +1,22 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds           #-}
+{-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Unused LANGUAGE pragma" #-}
-
-{- This is a simple parameterized validator designed for handling control
+{- This is a simple parameterized StateHolder designed for handling control
 NFTs, which store the state of a tree used for minting and burning usernames.
 
-The minting policy, which is parameterised into this validator, ensures the integrity
+The minting policy, which is parameterised into this StateHolder, ensures the integrity
 of the control NFT's datum. The datum contains information about the current
 state of the usernames tree, including the number of elements in the tree, a proof of
 the tree, and the last element inserted into or removed from the tree.
 
-This validator's primary function is to transfer (spend) the control NFT to its
+This StateHolder's primary function is to transfer (spend) the control NFT to its
 own address only when a minting policy is present in the transaction.
 
 The minting policy permits minting or burning usernames only when there is only
@@ -26,78 +26,28 @@ This design restricts the minting and burning of usernames to one operation at a
 ensuring that the control NFT can only be moved from one of its addresses to another
 of its addresses.
 -}
-module Contracts.Validator where
+module Adatag.StateHolder where
 
--- (validatorHash', wrapValidator, writeValidatorToFile)
-
-import qualified Data.ByteString.Base16 as Haskell.Base16
-import qualified Data.Text as Haskell.Text
-import qualified Data.Text.Encoding as Haskell.Text.Encoding
-import PlutusCore.Version (plcVersion100)
-import PlutusLedgerApi.V2
-import PlutusLedgerApi.V2.Contexts
-  ( findOwnInput,
-    getContinuingOutputs,
-  )
-import PlutusTx
-  ( CompiledCode,
-    FromData (fromBuiltinData),
-    compile,
-    liftCode,
-    unstableMakeIsData,
-  )
+import           Adatag.Utils
+import           PlutusCore.Version          (plcVersion100)
+import           PlutusLedgerApi.V2
+import           PlutusLedgerApi.V2.Contexts (findOwnInput,
+                                              getContinuingOutputs)
+import           PlutusTx                    (CompiledCode,
+                                              FromData (fromBuiltinData),
+                                              compile, liftCode,
+                                              unstableMakeIsData)
 import qualified PlutusTx
-import PlutusTx.Prelude
-  ( Bool,
-    Eq (..),
-    Integer,
-    Maybe (..),
-    appendByteString,
-    sha2_256,
-    takeByteString,
-    traceError,
-    traceIfFalse,
-    ($),
-    (&&),
-    (+),
-    (.),
-    (>=),
-  )
-import Utilities
-import Prelude (Show (show))
-import qualified Prelude as Haskell
+import           PlutusTx.Prelude            (Bool, Eq (..), Integer,
+                                              Maybe (..), traceError,
+                                              traceIfFalse, ($), (&&), (+), (.),
+                                              (>=))
+import           Prelude                     (IO, Show (show))
+import           Text.Printf                 (printf)
+import           Utilities
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
--- ####### DATUM
-
--- | A type for representing hash digests.
-newtype Hash = Hash BuiltinByteString
-  deriving (Haskell.Eq)
-
-unstableMakeIsData ''Hash
-
-instance Eq Hash where
-  (==) :: Hash -> Hash -> Bool
-  Hash h == Hash h' = h == h'
-
-instance Haskell.Show Hash where
-  show (Hash bs) =
-    Haskell.Text.unpack
-      . Haskell.Text.Encoding.decodeUtf8
-      . Haskell.Base16.encode
-      . fromBuiltin
-      . takeByteString 4
-      $ bs
-
-{-# INLINEABLE hash #-}
-hash :: BuiltinByteString -> Hash
-hash = Hash . sha2_256
-
-{-# INLINEABLE combineHash #-}
-combineHash :: Hash -> Hash -> Hash
-combineHash (Hash h) (Hash h') = hash (appendByteString h h')
-
 data TreeState = AdatagAdded | AdatagRemoved | InitialState
   deriving (Prelude.Show)
 
@@ -114,11 +64,11 @@ unstableMakeIsData ''TreeState
 data ValidatorDatum
   = ValidatorDatum
       { vdOperationCount :: Integer, -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
-        vdAdatag :: BuiltinByteString, -- The username added or removed from the tree
-        vdTreeState :: TreeState, -- The state of the Tree.
-        vdTreeSize :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
-        vdTreeProof :: Hash, -- BuiltinByteString, -- The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
-        vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the validator and minting policy.
+        vdAdatag         :: BuiltinByteString, -- The username added or removed from the tree
+        vdTreeState      :: TreeState, -- The state of the Tree.
+        vdTreeSize       :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
+        vdTreeProof      :: BuiltinByteString, -- TODO: replace with Hash. The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
+        vdMintingPolicy  :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the StateHolder and minting policy.
       } -- TODO: Only for testing, removed it from releases
   | UnitDatum ()
   | EmptyDatum {}
@@ -131,12 +81,12 @@ unstableMakeIsData ''ValidatorDatum
 {-# INLINEABLE parseValidatorDatum #-}
 parseValidatorDatum :: OutputDatum -> Maybe ValidatorDatum
 parseValidatorDatum o = case o of
-  NoOutputDatum -> traceError "Found validator output but NoOutputDatum"
+  NoOutputDatum -> traceError "Found StateHolder output but NoOutputDatum"
   OutputDatum (Datum d) -> PlutusTx.fromBuiltinData d -- Inline datum
-  OutputDatumHash _ -> traceError "Found validator output but no Inline datum"
+  OutputDatumHash _ -> traceError "Found StateHolder output but no Inline datum"
 
 ---------------------------------------------------------------------------------------------------
------------------------------------ ON-CHAIN / VALIDATOR ------------------------------------------
+----------------------------------- ON-CHAIN / StateHolder ------------------------------------------
 
 -- Script param
 type ControlNFT = CurrencySymbol
@@ -146,7 +96,7 @@ type ControlNFT = CurrencySymbol
   params, are residing on 26 UTxOs of the. Initial UTxOs contains the initial state of each
   username trees (Ta .. Tz)
 
-  The validator must checks the following:
+  The StateHolder validator must checks the following:
   1. its own NFT name (one of the "a".."z") being validated.
   2. some part of the new state (datum) in the output datum of the own NFT name being validated.
      - gets the username of the datum
@@ -173,13 +123,13 @@ stateHolderTypedValidator cnft dat _ ctx =
     ownInput :: TxOut
     ownInput = case findOwnInput ctx of
       Nothing -> traceError "policy input missing"
-      Just i -> txInInfoResolved i
+      Just i  -> txInInfoResolved i
 
     -- Get all the outputs that pay to the same script address we are currently spending from, if any.
     ownOutput :: TxOut
     ownOutput = case getContinuingOutputs ctx of
       [o] -> o
-      _ -> traceError "expected exactly one policy output"
+      _   -> traceError "expected exactly one policy output"
 
     -- Get a valid inline datum from a TxOut, if any
     -- TODO: This is just for unit tests
@@ -230,63 +180,22 @@ stateHolderValidator cnft =
   $$(PlutusTx.compile [||stateHolderUntypedValidator||])
     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 cnft
 
-{-
-
-{-# INLINEABLE mkWrappedValidator #-}
-mkWrappedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidator = wrapValidator . stateHolderTypedValidator
-
-stateHolderValidator :: ControlNFT -> Validator
-stateHolderValidator cnft =
-  stateHolderTypedValidatorScript $
-    $$(PlutusTx.compile [||mkWrappedValidator||])
-      `PlutusTx.applyCode` PlutusTx.liftCode cnft
-
-{-# INLINEABLE mkWrappedValidatorLucid #-}
---                            CS                                      redeemer       context
-mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidatorLucid cs = wrapValidator $ stateHolderTypedValidator cnft
-  where
-    cnft = CurrencySymbol $ unsafeFromBuiltinData cs
-
-validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
-validatorCode = $$(compile [||mkWrappedValidatorLucid||])
-
--}
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- SAVE VALIDATOR -------------------------------------------
-{-
--- savePolicyCode :: IO ()
--- savePolicyCode = writeCodeToFile "contracts/04-nft-validator.plutus" validatorCode
 
--- It only requires the conrol NFT currency symbol as the
--- minting policy ID will be privided in datum. Setup at bootstrap.
-savePolicyScript :: CurrencySymbol -> IO ()
-savePolicyScript cnft = do
+saveStateHolderValidator :: CurrencySymbol -> IO ()
+saveStateHolderValidator cnft = do
   let
-  writeValidatorToFile fp $ stateHolderValidator cnft
+  writeCodeToFile fp $ stateHolderValidator cnft
   where
-    -- cnft = parseSymbol symbol
-    fp = printf "contracts/04-control-nft-validator-%s.plutus" $ take 10 (show cnft)
+    fp = printf "contracts/04-state-holder-validator-%s.plutus"  (show cnft)
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------
 
-parseSymbol :: String -> CurrencySymbol
-parseSymbol s = CurrencySymbol $ fromString s
-
-valHashBySymbol :: CurrencySymbol -> ValidatorHash
-valHashBySymbol cnft = validatorHash' (stateHolderValidator cnft)
+valHashBySymbol :: CurrencySymbol -> ScriptHash
+valHashBySymbol cnft = scriptHash' (stateHolderValidator cnft)
 
 -- Keep it for now
--- valHash :: String -> ValidatorHash
--- valHash symbol = do
---  let
---  validatorHash' ( stateHolderValidator vp )
---  where
---    cnft = parseSymbol symbol
---    vp = cnft
---
 -- scrAddress :: Address
 -- scrAddress = scriptAddress stateHolderValidator
--}

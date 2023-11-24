@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -11,28 +11,23 @@
 
 module Main where
 
-import qualified Contracts.ControlNFTMinting as CNFT
-import Contracts.Validator
-import Control.Monad (Monad (return))
-import Plutus.Model.V2
-import PlutusLedgerApi.V1.Value (CurrencySymbol (..), TokenName (unTokenName))
-import PlutusLedgerApi.V2
-  ( BuiltinByteString,
-    ScriptContext,
-    TokenName (TokenName),
-    TxOut (txOutValue),
-    TxOutRef,
-    Value,
-    singleton,
-  )
+import qualified Adatag.ControlNFTMinting as CNFT
+import           Adatag.StateHolder
+import           Control.Monad            (Monad (return))
+import           Plutus.Model.V2
+import           PlutusLedgerApi.V1.Value (CurrencySymbol (..),
+                                           TokenName (unTokenName))
+import           PlutusLedgerApi.V2       (BuiltinByteString, ScriptContext,
+                                           TokenName (TokenName),
+                                           TxOut (txOutValue), TxOutRef, Value,
+                                           singleton)
 import qualified PlutusTx
-import PlutusTx.Builtins (Integer)
-import PlutusTx.Prelude (Bool (..), Maybe (..), fst, head, map, take, takeByteString, ($), (.))
-import Test.Tasty (TestTree, defaultMain, testGroup)
-import Prelude (IO, Semigroup ((<>)), mconcat)
-import qualified Prelude as Haskell
-
--- import PlutusTx.Builtins.Class (stringToBuiltinByteString)
+import           PlutusTx.Builtins        (Integer)
+import           PlutusTx.Prelude         (Bool (..), Maybe (..), fst, head,
+                                           map, take, takeByteString, ($), (.))
+import           Prelude                  (IO, Semigroup ((<>)), mconcat)
+import qualified Prelude                  as Haskell
+import           Test.Tasty               (TestTree, defaultMain, testGroup)
 
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------
@@ -45,7 +40,7 @@ main = do
 timeDeposit :: MockConfig -> TestTree
 timeDeposit cfg = do
   testGroup
-    -- The validator only verifies that the output (only inline) datum has the following characteristics:
+    -- The StateHolder only verifies that the output (only inline) datum has the following characteristics:
     --
     -- The vdAdatag field matches the minting policy's only token name.
     -- The operation is one greater than the input datum's operation value.
@@ -59,17 +54,17 @@ timeDeposit cfg = do
     -- 2. Only one NFT is minted in the transaction.
     -- 3. The input's and output's token is the same.
     -- 4. The input is not a reference input.
-    "Testing state holder (Control NFT) Validator"
+    "Testing StateHolder"
     [ testGroup
         "Deploying tests"
-        [good "Test Deploy validator" testInitValidator],
+        [good "Test Deploy StateHolder" testInitStateHolder],
       testGroup
         -- These tests using valid datums,
         "Input, output and minting tests (with correct states)"
-        [ bad "Invalid - Two inputs/outputs" $ testInputsOutputs 2 1, -- Only one input/ouput is allowed in the MVP's tx.
-          good "Valid   - One input and output" $ testInputsOutputs 1 1, -- 1 input, 1 output and 1 minting
-          bad "Invalid - One input and two outputs" $ testInputsOutputs 1 2, -- 1 input, 1 output and 1 minting
-          bad "Invalid - Valid input output but two mintings" $ testInputsOutputs 2 2 -- 1 input/output and 2 mintings
+        [ bad  "Must fail - Two inputs/outputs" $ testInputsOutputs 2 1, -- Only one input/ouput is allowed in the MVP's tx.
+          good "Must pass - One input and output" $ testInputsOutputs 1 1, -- 1 input, 1 output and 1 minting
+          bad  "Must fail - One input and two outputs" $ testInputsOutputs 1 2, -- 1 input, 1 output and 1 minting
+          bad  "Must fail - Valid input output but two mintings" $ testInputsOutputs 2 2 -- 1 input/output and 2 mintings
         ],
       -- We assume a proper bootstrap, so the inputs must always be correct.
       -- Therefore, if there is any wrong input datum for a correct control NFT
@@ -77,12 +72,12 @@ timeDeposit cfg = do
       -- Therefore we do not check input datums as they're assumed to be correct.
       testGroup
         "Output datum's sanity checks"
-        [ bad "Invalid - wrong inline output datum (Unit)" $ testDatum "adatag" (dat1 "ab") datU, -- Constr 1 [Constr 0 []]
-          bad "Invalid - malformed inline output datum ({ m = 1})" $ testDatum "adatag" (dat1 "adatag") datW, -- Constr 3 [I 1]
-          bad "Invalid - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE, -- Constr 2 []
-          bad "Invalid - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa"),
-          bad "Invalid - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata"),
-          good "Valid   - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
+        [ bad  "Must fail - wrong inline output datum (Unit)" $ testDatum "adatag" (dat1 "ab") datU, -- Constr 1 [Constr 0 []]
+          bad  "Must fail - malformed inline output datum ({ m = 1})" $ testDatum "adatag" (dat1 "adatag") datW, -- Constr 3 [I 1]
+          bad  "Must fail - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE, -- Constr 2 []
+          bad  "Must fail - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa"),
+          bad  "Must fail - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata"),
+          good "Must pass - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
         ]
     ]
   where
@@ -112,7 +107,7 @@ datI = createDat 0 "" 0 mintSymbol
 dat1 :: BuiltinByteString -> ValidatorDatum
 dat1 a = createDat 1 a 1 mintSymbol
 
--- Validator only checks the op count, adatag, treesize and minting policy
+-- StateHolder only checks the op count, adatag, treesize and minting policy
 createDat :: Integer -> BuiltinByteString -> Integer -> CurrencySymbol -> ValidatorDatum
 createDat opc tag size mp =
   ValidatorDatum
@@ -120,14 +115,14 @@ createDat opc tag size mp =
       vdAdatag = tag,
       vdTreeState = AdatagAdded,
       vdTreeSize = size,
-      vdTreeProof = hash "",
+      vdTreeProof = "proof",
       vdMintingPolicy = mp
     }
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- MOCK/REAL VALIDATORS ----------------------------------------
 
--- Always success minting policy for testing validator
+-- Always success minting policy for testing StateHolder
 mockContract :: () -> ScriptContext -> Bool
 mockContract _ _ = True
 
@@ -137,11 +132,11 @@ mockMintPolicy = mkTypedPolicy $$(PlutusTx.compile [||toBuiltinPolicy mockContra
 mintSymbol :: CurrencySymbol
 mintSymbol = scriptCurrencySymbol mockMintPolicy
 
--- Validator
-type ValidatorScript = TypedValidator ValidatorDatum () -- No redeemer
+-- StateHolder
+type StateHolderScript = TypedValidator ValidatorDatum () -- No redeemer
 
-validatorScript :: ControlNFT -> ValidatorScript
-validatorScript c = mkTypedValidator $ stateHolderValidator c
+stateHolderScript :: ControlNFT -> StateHolderScript
+stateHolderScript c = mkTypedValidator $ stateHolderValidator c
 
 -- Controlo NFT
 cnftScript :: TxOutRef -> TypedPolicy ()
@@ -149,12 +144,11 @@ cnftScript ref = mkTypedPolicy $ CNFT.cnftPolicy ref CNFT.letters
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------- UNIT TESTS -----------------------------------------------
--- Deploy Validator script
+-- Deploy StateHolder script
 -- 1. Mint cnfts
--- 2. Send cnfts to the validator
--- 3. Load refscript to the refuser (Always Fail validator, but now it's a simple user)
--- Returns cnft symbol, and ref address holding validator and minting script
-initValidator :: ValidatorDatum -> Run (ValidatorScript, CurrencySymbol)
+-- 2. Send cnfts to the StateHolder
+-- Returns cnft symbol, and ref address holding StateHolder and minting script
+initValidator :: ValidatorDatum -> Run (StateHolderScript, CurrencySymbol)
 initValidator idat = do
   -- minter
   u <- newUser $ adaValue 26 -- 1 ada for each cnft
@@ -162,7 +156,7 @@ initValidator idat = do
 
   let [(ref, out)] = utxos
       cnft = scriptCurrencySymbol (cnftScript ref)
-      script = validatorScript cnft
+      script = stateHolderScript cnft
       mintingValue = mconcat [singleton cnft tn 1 | tn <- CNFT.letters]
 
   -- mint cnft
@@ -193,10 +187,10 @@ initValidator idat = do
             ]
         ]
 
--- Test deploying validator
-testInitValidator :: Run ()
-testInitValidator = do
-  -- Check that the validator deployed correctly
+-- Test deploying StateHolder
+testInitStateHolder :: Run ()
+testInitStateHolder = do
+  -- Check that the StateHolder deployed correctly
   (vs, _) <- initValidator datI
   utxos <- utxoAt vs
 
@@ -205,7 +199,7 @@ testInitValidator = do
   dat <- datumAt outref :: Run (Maybe ValidatorDatum)
   case dat of
     Just _ -> logInfo "Datum is good."
-    _ -> logError "Validator is not deployed correctly: could not find datum"
+    _ -> logError "StateHolder is not deployed correctly: could not find datum"
 
 -- Output datum related tests
 testDatum :: BuiltinByteString -> ValidatorDatum -> ValidatorDatum -> Run ()
@@ -219,7 +213,6 @@ testDatum adatag idat odat = do
   let (ref, _) = head utxos
       tx = datumTx script ref cnft u1 sp (TokenName adatag)
 
-  logInfo $ "Transaction details: \n" <> Haskell.show tx
   submitTx u1 tx
   where
     datumTx scr ref cnft pkh sp at =
@@ -249,9 +242,6 @@ testInputsOutputs nri mnri = do
 
   let mval = mconcat [singleton mintSymbol tn 1 | tn <- mtns]
       tx = inputTx script refs cnft u1 sp tns mval
-
-  logInfo $ "###### Minting Value      : #####\n" <> Haskell.show mval
-  logInfo $ "###### Transaction details: #####\n" <> Haskell.show tx
 
   submitTx u1 tx
   where

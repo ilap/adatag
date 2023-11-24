@@ -4,8 +4,8 @@
 
 All unit tests assume a valid bootstrap, including:
 1. The system has valid control NFTs (`cnftpid."a"` through `cnftpid."z"`).
-2. The validator uses the relevant control NFT's currency symbol as a parameter for generating its compiled code.
-3. Each control NFT is sent to a validator address individually, each with a valid initial state (inline datum):
+2. The StateHolder uses the relevant control NFT's currency symbol as a parameter for generating its compiled code.
+3. Each control NFT is sent to a state-holder address individually, each with a valid initial state (inline datum):
     - Operation count: `0`
     - Adatag: `""`
     - Tree state: `Initial`
@@ -17,8 +17,8 @@ All unit tests assume a valid bootstrap, including:
     - Collection time (twice the minting policy's deactivation time, calculated at bootstrap time).
 5. Proper setup of the MintingPolicy minting script with correct parameters, including:
     - Correct control NFT currency symbol.
-    - Correct Control NFT validator policy id.
-    - Correct TimeLockDeposit validator's policy id.
+    - Correct StateHolder validator policy id.
+    - Correct TimeLockDeposit vaildator's policy id.
     - Correct lock feature expiry time, usually around 6 months from bootstrap.
     - Correct user locking period, typically 20 days from deposit.
     - Maximum deposit that users must lock to prevent abusing the system initially.

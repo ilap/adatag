@@ -1,35 +1,30 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module Contracts.ControlNFTMinting where
+module Adatag.ControlNFTMinting where
 
-import qualified Data.ByteString.Char8 as BS8 (unpack)
-import PlutusCore.Version (plcVersion100)
-import PlutusLedgerApi.Common (serialiseCompiledCode)
-import PlutusLedgerApi.V1.Value (flattenValue)
-import PlutusLedgerApi.V2
-import PlutusLedgerApi.V2 (BuiltinData, CurrencySymbol, ScriptContext (scriptContextTxInfo), TokenName (unTokenName), TxId (TxId, getTxId), TxInInfo (txInInfoOutRef), TxInfo (txInfoInputs, txInfoMint), TxOutRef (TxOutRef, txOutRefId, txOutRefIdx))
-import PlutusLedgerApi.V2.Contexts
+import qualified Data.ByteString.Char8      as BS8 (unpack)
+import           PlutusCore.Version         (plcVersion100)
+import           PlutusLedgerApi.V1.Value   (flattenValue)
+import           PlutusLedgerApi.V2
 import qualified PlutusTx
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString), traceAll)
-import PlutusTx.Prelude (Bool (True), Eq ((==)), all, any, elem, head, trace, traceBool, traceIfFalse, traceIfTrue, ($), (&&), (<>))
-import qualified PlutusTx.Prelude as PlutusTx
-import qualified PlutusTx.Show as PlutusTx
-import qualified PlutusTx.Trace as PlutusTx
-import Text.Printf (printf)
-import Utilities (currencySymbol, policyToScript)
-import Utilities.PlutusTx (wrapPolicy)
-import Utilities.Serialise (writeCodeToFile)
-import Prelude (Bool (False), IO, Show (show), String)
-
--- import PlutusLedgerApi.V1.Contexts (ownCurrencySymbol)
+import           PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import           PlutusTx.Prelude           (Bool (..), Eq ((==)), all, any,
+                                             elem, head, traceIfFalse, ($),
+                                             (&&))
+import qualified PlutusTx.Show              as PlutusTx
+import           Prelude                    (IO, Show (show), String)
+import           Text.Printf                (printf)
+import           Utilities                  (currencySymbol)
+import           Utilities.PlutusTx         (wrapPolicy)
+import           Utilities.Serialise        (writeCodeToFile)
 
 newtype Cn = Cn BuiltinByteString
 
@@ -47,7 +42,7 @@ c2b c = Cn $ unCurrencySymbol c
 cnftTypedPolicy :: TxOutRef -> [TokenName] -> () -> ScriptContext -> Bool
 cnftTypedPolicy oref tnList () ctx =
   do
-    -- Tracing values
+    -- Tracing values inside plutus code
     -- let ownSymbol = ownCurrencySymbol ctx
     -- let c = c2b ownSymbol
     -- traceIfFalse "@@@@@@@@@@@@@@@@@@@ Owncurrency symbol @@@@@@@@@@@@" False
@@ -64,7 +59,6 @@ cnftTypedPolicy oref tnList () ctx =
     checkMintedAmount tns c =
       case flattenValue (txInfoMint (scriptContextTxInfo c)) of
         xs -> all (\(_, tn, amt) -> tn `elem` tns && amt == 1) xs
-        _ -> False
 
 {-# INLINEABLE cnftUntypedPolicy #-}
 cnftUntypedPolicy :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
@@ -90,7 +84,6 @@ cnftPolicy oref tns =
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
 -- Generate the currency symbol based on the parameters (UTxO ref, and the letters)
--- FIXME: It does not work...
 controlNFTCurrencySymbol :: TxOutRef -> CurrencySymbol
 controlNFTCurrencySymbol oref = currencySymbol $ cnftPolicy oref letters
 
@@ -101,7 +94,7 @@ saveControlNFTMintingPolicy :: TxOutRef -> IO ()
 saveControlNFTMintingPolicy oref =
   writeCodeToFile
     ( printf
-        "contracts/02-control-nft-minting-%s#%d-%s.plutus"
+        "contracts/02-cnft-minting-%s#%d-%s.plutus"
         (show $ txOutRefId oref)
         (txOutRefIdx oref)
         tn'
@@ -109,5 +102,5 @@ saveControlNFTMintingPolicy oref =
     $ cnftPolicy oref letters
   where
     tn' :: String
-    tn' = case unTokenName $ head letters of -- It gets the first tokenname the "a"
-      (BuiltinByteString bs) -> BS8.unpack bs --  $ bytesToHex bs
+    tn' = case unTokenName $ head letters of
+      (BuiltinByteString bs) -> BS8.unpack bs

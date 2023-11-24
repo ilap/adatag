@@ -1,33 +1,40 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module Contracts.TimeDeposit where
+module Adatag.TimeDeposit where
 
-import PlutusCore.Version (plcVersion100)
-import PlutusLedgerApi.V1.Interval (contains)
-import PlutusLedgerApi.V2
-  ( Datum (Datum),
-    OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
-    POSIXTime (..),
-    PubKeyHash (..),
-    ScriptContext (scriptContextTxInfo),
-    TxInfo (txInfoValidRange),
-    from,
-  )
-import PlutusLedgerApi.V2.Contexts (txSignedBy)
-import PlutusTx (CompiledCode, FromData (fromBuiltinData), compile, liftCode, makeLift, unstableMakeIsData)
+import qualified Data.ByteString.Char8       as BS8
+import           Data.Maybe                  (fromJust)
+import           PlutusCore.Version          (plcVersion100)
+import           PlutusLedgerApi.V1.Interval (contains)
+import           PlutusLedgerApi.V2          (Datum (Datum),
+                                              OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
+                                              POSIXTime (..), PubKeyHash (..),
+                                              ScriptContext (scriptContextTxInfo),
+                                              TxInfo (txInfoValidRange), from)
+import           PlutusLedgerApi.V2.Contexts (txSignedBy)
+import           PlutusTx                    (CompiledCode,
+                                              FromData (fromBuiltinData),
+                                              compile, liftCode, makeLift,
+                                              unstableMakeIsData)
 import qualified PlutusTx
-import PlutusTx.Builtins.Internal
-import PlutusTx.Prelude (Bool (..), Maybe (..), traceError, traceIfFalse, ($), (&&), (.))
-import Utilities (wrapValidator)
-import Prelude (Show)
+import           PlutusTx.Builtins.Internal
+import           PlutusTx.Prelude            (Bool (..), Maybe (..), traceError,
+                                              traceIfFalse, ($), (&&), (.))
+import           Prelude                     (IO, Show (show), String)
+import           Text.Printf                 (printf)
+import           Utilities                   (Network, posixTimeFromIso8601,
+                                              printDataToJSON,
+                                              validatorAddressBech32,
+                                              wrapValidator, writeCodeToFile,
+                                              writeDataToFile)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
@@ -35,7 +42,7 @@ import Prelude (Show)
 data TimeDepositDatum
   = TimeDepositDatum
       { ddBeneficiary :: PubKeyHash, -- Beneficiary of the locked time deposit.
-        ddDeadline :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter)
+        ddDeadline    :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter)
         -- from submitting the adatag minting transaction
         -- Note:  The minting policy will validate the deadline at minting time.
         -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
@@ -51,7 +58,7 @@ data TimeDepositDatum
 unstableMakeIsData ''TimeDepositDatum
 
 data TimeDepositParams = TimeDepositParams
-  { dpCollector :: PubKeyHash, -- Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
+  { dpCollector      :: PubKeyHash, -- Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
     dpCollectionTime :: POSIXTime -- The time the collector can collect the unclaimed time-lock deposits. It should be twice as deactivation time. ~1-2yrs
   }
   deriving (Prelude.Show)
@@ -94,7 +101,7 @@ validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> B
 validClaim info iscoll dat pkh pt =
   case dat of
     TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
-    _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
+    _                   -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
     -- It's anti pattern but we allow any wrongly formed datums for collections
     && traceIfFalse "signature is missing" signedByValidKey
   where
@@ -113,79 +120,20 @@ timeDepositValidator params =
   $$(PlutusTx.compile [||timeDepositUntypedValidator||])
     `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
 
-{-
-{-# INLINEABLE timeDepositUntypedValidator #-}
-timeDepositUntypedValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-timeDepositUntypedValidator params datum redeemer ctx =
-  PlutusTx.check
-    ( auctionTypedValidator
-        params
-        (PlutusTx.unsafeFromBuiltinData datum)
-        (PlutusTx.unsafeFromBuiltinData redeemer)
-        (PlutusTx.unsafeFromBuiltinData ctx)
-    )
-
-timedepositValidatorScript :: TimeDepositParams -> CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
-timedepositValidatorScript params =
-  $$(PlutusTx.compile [||timeDepositUntypedValidator||])
-    `PlutusTx.unsafeApplyCode` PlutusTx.liftCode plcVersion100 params
-
--}
-{-
-timeDepositUntypedValidator tid ix tn = wrapPolicy $ cnftTypedPolicy oref tn'
-  where
-    oref :: TxOutRef
-    oref =
-      TxOutRef
-        (TxId $ PlutusTx.unsafeFromBuiltinData tid)
-        (PlutusTx.unsafeFromBuiltinData ix)
-
-    tn' :: [TokenName]
-    tn' = PlutusTx.unsafeFromBuiltinData tn
-
-------------------
-{-# INLINEABLE mkWrappedTimeDepositValidator #-}
-mkWrappedTimeDepositValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedTimeDepositValidator = wrapValidator . timeDepositTypedValidator
-
-timeDepositValidator :: TimeDepositParams -> Validator
-timeDepositValidator params =
-  mkValidatorScript $
-    $$(PlutusTx.compile [||mkWrappedTimeDepositValidator||])
-      `PlutusTx.applyCode` PlutusTx.liftCode params
-
-{-# INLINEABLE mkWrappedValidatorLucid #-}
---                         Coll PKH       Coll time      datum          redeemer       context
-mkWrappedValidatorLucid :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
-mkWrappedValidatorLucid pkh ct = wrapValidator $ timeDepositTypedValidator tdp
-  where
-    tdp =
-      TimeDepositParams
-        { dpCollector = PubKeyHash $ unsafeFromBuiltinData pkh, --
-          dpCollectionTime = POSIXTime $ unsafeFromBuiltinData ct -- The time the collector can collect donations.
-        }
-
---                             Coll PKH       Coll time      datum          redeemer       context
-validatorCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
-validatorCode = $$(compile [||mkWrappedValidatorLucid||])
-
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- SAVE VALIDATOR -------------------------------------------
 
--- saveTimeDepositCode :: IO ()
--- saveTimeDepositCode = writeValidatorToFile "contracts/03-time-deposit.plutus" validatorCode
-
-saveTimeDepositScript :: PubKeyHash -> POSIXTime -> IO ()
-saveTimeDepositScript pkh ct = do
+saveTimeDepositValidator :: PubKeyHash -> POSIXTime -> IO ()
+saveTimeDepositValidator pkh ct = do
   let
-  writeValidatorToFile fp $ timeDepositValidator op
+  writeCodeToFile fp $ timeDepositValidator op
   where
     op =
       TimeDepositParams
         { dpCollector = pkh,
           dpCollectionTime = ct
         }
-    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (take 8 (show pkh)) $ show (getPOSIXTime ct)
+    fp = printf "contracts/03-time-deposit-%s-%s.plutus"  (show pkh) (show (getPOSIXTime ct))
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------
@@ -213,14 +161,14 @@ writeTimeDepositDatumJson pkh time = do
         { ddBeneficiary = PubKeyHash $ BuiltinByteString $ BS8.pack pkh,
           ddDeadline = fromJust $ posixTimeFromIso8601 time
         }
-    fp = printf "contracts/03-time-deposit-%s-datum.json" (take 8 (show pkh))
+    fp = printf "contracts/03-time-deposit-%s-datum.json" $ show pkh
 
 -- Write unit to construct outputs
 writeUnit :: IO ()
 writeUnit = writeDataToFile fp ()
   where
     fp = printf "contracts/03-time-deposit-unit.json"
--}
+
 {-
 > import qualified Data.ByteString.Char8 as BS8 (pack)
 > import Data.Maybe (fromJust)
@@ -229,9 +177,8 @@ writeUnit = writeDataToFile fp ()
 > import PlutusTx.Builtins.Internal
 > TimeDepositDatum (PubKeyHash "alma") (fromJust $ posixTimeFromIso8601 "2022-09-09T08:06:21.630747Z") (BuiltinByteString $ BS8.pack "adatag")
 TimeDepositDatum {ddBeneficiary = 616c6d61, ddDeadline = POSIXTime {getPOSIXTime = 1662710781631}, ddAdatag = "adatag"}
--}
 
-{- See an exampe below, how to use it
+See an exampe below, how to use it
 Repl> import PlutusLedgerApi.V2
 Repl> :set -XOverloadedStrings
 Repl> printTimeDepositDatumJSON (PubKeyHash "alma") "2022-09-09T08:06:21.630747Z" "adatag"

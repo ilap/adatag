@@ -1,64 +1,32 @@
-{-# LANGUAGE DataKinds #-}
--- editorconfig-checker-disable-file
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DerivingVia           #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE StrictData #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fexpose-all-unfoldings #-}
--- Prevent unboxing, which the plugin can't deal with
+
 {-# OPTIONS_GHC -fno-omit-interface-pragmas #-}
 {-# OPTIONS_GHC -fno-spec-constr #-}
 {-# OPTIONS_GHC -fno-specialise #-}
 
-module Utilities.Utils where
+module Adatag.Utils where
 
--- (CurrencySymbol (CurrencySymbol), unCurrencySymbol,AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, toString, unAssetClass)
--- ( ValidatorHash (ValidatorHash), ScriptContext (scriptContextTxInfo), TxInfo (txInfoMint), to)
+import           PlutusLedgerApi.V1.Value
+import           PlutusLedgerApi.V2
+import qualified PlutusTx.AssocMap        as Map
+import           PlutusTx.Builtins
+import           PlutusTx.Prelude
 
--- (map, mapMaybe, take, takeByteString, traceError)
 
-import Data.ByteString.Char8 qualified as BS8
-import Data.String qualified as Haskell
-import PlutusLedgerApi.V1.Value
-import PlutusLedgerApi.V2
-import PlutusTx.AssocMap qualified as Map
-import PlutusTx.Builtins
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
-import PlutusTx.Prelude
-import Utilities.Conversions
-
--- FIXME: hexToBS :: Haskell.String -> BuiltinByteString
--- hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
-
--- It does not require handling utf-8, as these are ASCII letters.
-hexToBS :: Haskell.String -> BuiltinByteString
-hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
-
-------- Value related functions
 {-# INLINEABLE getTokenNamesOfSymbol #-}
 getTokenNamesOfSymbol :: Value -> CurrencySymbol -> [TokenName]
 getTokenNamesOfSymbol (Value mp) cur =
   maybe [] Map.keys (Map.lookup cur mp)
-
--- case Map.lookup cur mp of
--- -> Nothing -> []
--- Just i  -> Map.keys i
-
-{-# INLINEABLE getTokenNameOfSymbolx #-}
-getTokenNameOfSymbolx :: Value -> CurrencySymbol -> TokenName
-getTokenNameOfSymbolx (Value mp) cur =
-  case Map.lookup cur mp of
-    _ -> traceError "expected valid currency symbol"
-    Just i -> case Map.keys i of
-      [tn] -> tn
-      _ -> traceError "expected only one token name"
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-tx/src/PlutusTx/AssocMap.hs#L265
 {-# INLINEABLE getOnlyTokenBySymbol #-}
@@ -68,17 +36,14 @@ getOnlyTokenBySymbol (Value v) s =
     Nothing -> traceError "expected currency in value"
     Just i -> case Map.keys i of
       [tn] -> tn
-      _ -> traceError "expected only one token name"
+      _    -> traceError "expected only one token name"
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-ledger-api/src/PlutusLedgerApi.V1/V1/Value.hs#L256
 {-# INLINEABLE hasSymbol #-}
 hasSymbol :: Value -> CurrencySymbol -> Bool
 hasSymbol (Value mp) cur = case Map.lookup cur mp of
   Nothing -> False
-  Just _ -> True
-
--- FIXME: symbolToValidatorHash :: CurrencySymbol -> ValidatorHash
--- FIXME --symbolToValidatorHash symbol = ValidatorHash $ unCurrencySymbol symbol
+  Just _  -> True
 
 {-
   It validate the username which can have only lower case letters, digits, hyphen
@@ -136,16 +101,3 @@ hasOnlyAllowedChars :: BuiltinByteString -> Bool
 hasOnlyAllowedChars bs =
   let n = lengthOfByteString bs
    in all (isValidChar . indexByteString bs) [0 .. n - 1]
-
---  case lengthOfByteString bs of
---    0 -> True
---    n -> all (isValidChar . indexByteString bs) [0 .. n -1]
-
-{-# INLINEABLE closeInterval #-}
-closeInterval :: POSIXTimeRange -> Maybe (POSIXTime, POSIXTime)
-closeInterval (Interval (LowerBound (Finite (POSIXTime l)) lc) (UpperBound (Finite (POSIXTime h)) hc)) =
-  Just
-    ( POSIXTime $ l + 1 - fromEnum lc, -- Add one millisecond if the interval was open.
-      POSIXTime $ h - 1 + fromEnum hc -- Subtract one millisecond if the interval was open.
-    )
-closeInterval _ = Nothing

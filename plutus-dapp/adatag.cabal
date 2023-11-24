@@ -8,30 +8,21 @@ license:                Apache-2.0
 build-type:             Simple
 
 common common-all
-    build-depends:    base
-                    , aeson
+    build-depends:    aeson
+                    , base
+                    , base16-bytestring
                     , bytestring
-                    , containers
                     , cardano-api
+                    , cardano-api:internal
                     , cardano-crypto-class
-                    , data-default
+                    , cardano-ledger-core
                     , plutus-core
                     , plutus-ledger-api
                     , plutus-tx-plugin
                     , plutus-tx
-                    , text
                     , serialise
-                    , QuickCheck
-                    , tasty
-                    , tasty-quickcheck
-                    , mtl
-                    , base16-bytestring
-                    , bytestring
-                    , cardano-ledger-core
+                    , text
                     , time
-                    , cryptohash-sha256
-                    , SHA               ^>= 1.6.4
-                    , utf8-string
 
     default-language: Haskell2010
     ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
@@ -40,11 +31,14 @@ common common-all
                  -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
                  -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
                  -fplugin-opt PlutusTx.Plugin:conservative-optimisation
-                 -- ^  bug it removes the trace messages otherwise.
+                 -- ^  Bug: it removes the trace messages otherwise.
                  -- -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations=3
 
 common common-test
     build-depends:      adatag
+                        , QuickCheck
+                        , tasty
+                        , tasty-quickcheck
                         , plutus-simple-model
     hs-source-dirs:     tests
 
@@ -52,11 +46,12 @@ library
   import:               common-all
   hs-source-dirs:       src lib
   exposed-modules:
-                        Contracts.AdatagMinting
-                        Contracts.AlwaysFail
-                        Contracts.ControlNFTMinting
-                        Contracts.TimeDeposit
-                        Contracts.Validator
+                        Adatag.AdatagMinting
+                        Adatag.AlwaysFail
+                        Adatag.ControlNFTMinting
+                        Adatag.TimeDeposit
+                        Adatag.StateHolder
+                        Adatag.Utils
                         Plutus.LabeledTree
                         Utilities
 
@@ -64,15 +59,15 @@ library
                         Utilities.Conversions
                         Utilities.PlutusTx
                         Utilities.Serialise
-                        Utilities.Utils
 
--- executable            bootstrap
---     import:           common-all
---     hs-source-dirs:   app
---     main-is:          Main.hs
---     build-depends:    adatag
+executable            bootstrap
+     import:           common-all
+     hs-source-dirs:   app
+     main-is:          Main.hs
+     build-depends:    adatag
 
--- executable            labeled-tree
+-- TODO: implement it.
+--executable            labeled-tree
 --     import:           common-all
 --     hs-source-dirs:   examples
 --     main-is:          TestLabeledTree.hs
@@ -97,11 +92,11 @@ test-suite              test-time-deposit
     type:               exitcode-stdio-1.0
     main-is:            UTimeDeposit.hs
 
-test-suite              test-validator
+test-suite              test-state-holder
     import:             common-all
                         , common-test
     type:               exitcode-stdio-1.0
-    main-is:            UValidator.hs
+    main-is:            UStateHolder.hs
     --                  ^ U means Unit test, P means Property tests
 
 test-suite              test-adatag

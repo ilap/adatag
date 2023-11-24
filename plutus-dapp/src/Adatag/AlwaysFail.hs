@@ -1,24 +1,25 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
-module Contracts.AlwaysFail where
+module Adatag.AlwaysFail where
 
-import PlutusTx (BuiltinData, CompiledCode, compile)
-import PlutusTx.Prelude (error)
-import Utilities ({-- FIXME: -- validatorAddressBech32,-} writeCodeToFile)
-import Prelude (IO)
+import           PlutusTx         (BuiltinData, CompiledCode, compile)
+import           PlutusTx.Prelude (error)
+import           Prelude          (IO, String)
+import           Utilities        (Network (..), validatorAddressBech32,
+                                   writeCodeToFile)
 
 ---------------------------------------------------------------------------------------------------
------------------------------------ ON-CHAIN / VALIDATOR ------------------------------------------
+----------------------------------- ON-CHAIN / StateHolder ------------------------------------------
 
--- It's a generic Always Fail Validator probably already exists on any of the networks.
+-- It's a generic Always Fail StateHolder probably already exists on any of the networks.
 {-# INLINEABLE mkAFValidator #-}
 mkAFValidator :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkAFValidator _ _ _ = error ()
@@ -53,5 +54,8 @@ saveScript = writeCodeToFile "contracts/01_afv.plutus" alwaysFailValidator
 -- Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Mainnet
 -- "addr1w9gexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g5740fw"
 
---  FIXME: --  referenceAddressBech32 :: Network -> String
--- referenceAddressBech32 network = validatorAddressBech32 network alwaysFailValidator
+-- ghci> fromNetworkMagic (NetworkMagic 2)
+-- Testnet (NetworkMagic {unNetworkMagic = 2})
+
+referenceAddressBech32 :: Network -> String
+referenceAddressBech32 network = validatorAddressBech32 network alwaysFailValidator

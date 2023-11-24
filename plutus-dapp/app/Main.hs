@@ -1,57 +1,67 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE StrictData #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Main where
 
-import Cardano.Api
-import Cardano.Api.Shelley
-import qualified Contracts.AdatagMinting as ATM
-import qualified Contracts.AlwaysFail as AFV
-import qualified Contracts.ControlNFTMinting as CNM
-import qualified Contracts.TimeDeposit as TDV
-import qualified Contracts.Validator as ATV
-import qualified Data.Text as Text
-import Data.Time.Clock
-import Data.Time.Format
-import PlutusLedgerApi.V2 (PubKeyHash, ValidatorHash (..))
-import PlutusTx.Prelude (fromMaybe)
-import System.IO ()
-import Utilities (Network (..), policyHash, posixTimeFromIso8601, validatorHash', bytesFromHex)
-import qualified Data.ByteString.Char8 as BS8
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import qualified Adatag.AdatagMinting       as ATM
+import qualified Adatag.AlwaysFail          as AFV
+import qualified Adatag.ControlNFTMinting   as CNM
+import qualified Adatag.StateHolder         as ATV
+import qualified Adatag.TimeDeposit         as TDV
+import           Cardano.Api.Shelley        hiding (ScriptHash, TxId)
+import qualified Data.ByteString.Char8      as BS8
+import           Data.Text
+import           Data.Time.Clock
+import           Data.Time.Format
+import           GHC.Exts                   (fromList)
+import           PlutusLedgerApi.V2         (PubKeyHash)
+import           PlutusLedgerApi.V2.Tx
+import           PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import           PlutusTx.Prelude           (fromMaybe)
+import           System.IO                  ()
+import           Utilities                  (Network (..), bytesFromHex,
+                                             posixTimeFromIso8601, scriptHash,
+                                             scriptHash')
 
+
+-- It does not require handling utf-8, as these are ASCII letters.
 hexToBS :: String -> BuiltinByteString
 hexToBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
 
-bech32ToPubkeyHash :: String -> Maybe PubKeyHash
+
+bech32ToPubkeyHash :: Text -> Maybe PubKeyHash
 bech32ToPubkeyHash address = do
-  let addr = case deserialiseFromBech32 AsShelleyAddress (Text.pack address) of
-        Right a -> a
+  let addr = case deserialiseFromBech32 AsShelleyAddress address of -- (BS8.pack address) of
+        Right a            -> a
         Left decodingError -> error (show decodingError)
   case shelleyPayAddrToPlutusPubKHash addr of
     pkh -> pkh
-    _ -> Nothing
+    _   -> Nothing
 
 data Networks
-  = Preview
+  = Sancho
+  | Preview
   | Preprod
   | Mainnet
   deriving (Prelude.Show)
 
--- Adahandle is not available in Preprod and Preview.
--- For testing Purpose a pubkey based NFT minting/burning policy will be created
--- for creating mock ada handles.
-usedSettings :: Networks -> (Network, String, String)
+usedSettings :: Networks -> (Network, String)
 usedSettings nws = case nws of
-  Main.Preview -> (Utilities.Testnet, "8d18d786e92776c824607fd8e193ec535c79dc61ea2405ddf3b09fe3", "https://preview.cardanoscan.io")
-  Main.Preprod -> (Utilities.Testnet, "8d18d786e92776c824607fd8e193ec535c79dc61ea2405ddf3b09fe3", "https://preprod.cardanoscan.io")
-  Main.Mainnet -> (Utilities.Mainnet, "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a", "https://cardanoscan.io")
+  Main.Sancho  -> (Utilities.Testnet, "https://sancho.cardanoscan.io")
+  Main.Preview -> (Utilities.Testnet, "https://preview.cardanoscan.io")
+  Main.Preprod -> (Utilities.Testnet, "https://preprod.cardanoscan.io")
+  Main.Mainnet -> (Utilities.Mainnet, "https://cardanoscan.io")
+
+toBS :: String -> BuiltinByteString
+toBS s = BuiltinByteString $ bytesFromHex (BS8.pack s)
+
+createOref :: String -> Integer -> TxOutRef
+createOref tx = TxOutRef (TxId $ toBS tx)
 
 {-
 This file compiles all the validators and minting scripts required for @adatag
@@ -61,7 +71,7 @@ main = do
   -- User inputs
   -- Network
   let env = Preview
-  let (network, adahandle, url) = usedSettings env -- Preprod, Mainnet
+  let (network, url) = usedSettings env -- Preprod, Mainnet
 
   -- Check you're using the right UTxO from the correct network above
   let txId = "97a2841803f778bd3609d053b83c9837420c34359b5a6ba979a0dd01af5ff382"
@@ -74,9 +84,7 @@ main = do
 
   let deactivationDaysAfter = 183 --  approx. half year after bootstrap
   let collectionDaysAfter = 365 -- approx a year after bootsrap
-  let lockPeriod = 60*60*24*20 :: Integer
- 
-
+  let lockPeriod = 20 -- in days
   putStrLn "############ Bootstrap details ##############"
   putStrLn ""
 
@@ -87,7 +95,7 @@ main = do
   putStrLn ""
 
   let refAddress = AFV.referenceAddressBech32 network
-  let afvPolicyId = validatorHash' AFV.alwaysFailValidator
+  let afvPolicyId = scriptHash' AFV.alwaysFailValidator
   putStrLn "----------- 1. Always Fail Validator -----------"
   putStrLn $ "Reference address : " ++ refAddress -- Address the Validator and Minting scripts are sent as reference scripts.
   putStrLn $ "Url               : " ++ url ++ "/address/" ++ refAddress
@@ -98,9 +106,9 @@ main = do
   putStrLn "-----------------------------------------------"
   putStrLn ""
 
-  let oref = CNM.generateOutRef txId idx
+  let oref = createOref txId idx
   let cnftSymbol = CNM.controlNFTCurrencySymbol oref
-  let cnftPolicyID = policyHash $ CNM.cnftPolicy oref CNM.letters
+  let cnftPolicyID = scriptHash $ CNM.cnftPolicy oref CNM.letters
   putStrLn "----- 2. Control NFT (CNFT) Minting Script -----"
   putStrLn $ "One-shot UTxO     : " ++ txId ++ "#" ++ show idx
   putStrLn $ "Own-hot UTxO Url  : " ++ show txIdUrl
@@ -115,12 +123,12 @@ main = do
   now <- getCurrentTime
   let deactivationTime = formatTime defaultTimeLocale "%FT%TZ" $ addUTCTime (60 * 60 * 24 * deactivationDaysAfter) now -- half year
   let collectionTime = formatTime defaultTimeLocale "%FT%TZ" $ addUTCTime (60 * 60 * 24 * collectionDaysAfter) now -- a year
-  let collectionPkh = bech32ToPubkeyHash collectionAddress
+  let collectionPkh = bech32ToPubkeyHash $ fromList collectionAddress
   let cp = fromMaybe (error "Invalid PubKeyHash.") collectionPkh
   let ct = fromMaybe (error "Invalid Time string.") $ posixTimeFromIso8601 collectionTime
   let tdp = TDV.TimeDepositParams {TDV.dpCollector = cp, TDV.dpCollectionTime = ct}
 
-  let timdedepositValidator = validatorHash' $ TDV.timeDepositValidator tdp
+  let timdedepositValidator = scriptHash' $ TDV.timeDepositValidator tdp
   let receiveAddress = TDV.timeDepositAddressBech32 network tdp
   putStrLn "----------- 3. Time Deposit Validator ----------"
   putStrLn $ "Own addr (deposit to send) : " ++ receiveAddress
@@ -130,44 +138,42 @@ main = do
   putStrLn $ "2. Collection time : " ++ collectionTime
   putStrLn "------------------- Saving --------------------"
   -- Save script
-  TDV.saveTimeDepositScript cp ct
+  TDV.saveTimeDepositValidator cp ct
   putStrLn "-----------------------------------------------"
   putStrLn ""
 
-  let cnftValidator = ATV.valHashBySymbol cnftSymbol
+  let stateHolderValidator = ATV.valHashBySymbol cnftSymbol
 
-  putStrLn "------- 4. Control NFT (CNFT) Validator --------"
-  putStrLn $ "Own policy ID             : " ++ show cnftValidator
+  putStrLn "------- 4. StateHolder Validator --------"
+  putStrLn $ "Own policy ID             : " ++ show stateHolderValidator
   putStrLn $ "Reference address to send : " ++ url ++ "/address/" ++ refAddress
   putStrLn "----------------  Parameters  -----------------"
   putStrLn $ "1. CNFT Currency Symbol : " ++ show cnftSymbol
   putStrLn "!!!IMPORTANT!!!"
   putStrLn "The minting policy id will be included in the"
-  putStrLn "CNFT validator datum at initialisation time, as"
+  putStrLn "StateHolder's datum at initialisation time, as"
   putStrLn "both must cross eference each other."
   putStrLn "------------------- Saving --------------------"
   -- Save script
-  ATV.savePolicyScript cnftSymbol
+  ATV.saveStateHolderValidator cnftSymbol
   putStrLn "-----------------------------------------------"
   putStrLn ""
 
   let minDeposit = 1750 :: Integer
   let dt = fromMaybe (error "Invalid Time string.") $ posixTimeFromIso8601 deactivationTime
-  let ah = ValidatorHash $ hexToBS adahandle
+
   putStrLn "---------- 5. Adatag Minting Script ----------"
 
   putStrLn $ "Deactivation time : " ++ deactivationTime
 
-
   putStrLn "----------------  Parameters  -----------------"
   putStrLn $ "1. Control NFT Symbol       : " ++ show cnftSymbol
-  putStrLn $ "2. Validator policy Id      : " ++ show cnftValidator
+  putStrLn $ "2. StateHolder policy Id      : " ++ show stateHolderValidator
   putStrLn $ "3. Time Deposit policy Id   : " ++ show timdedepositValidator
   putStrLn $ "4. Time Deposit Lock expiry : " ++ show deactivationTime
   putStrLn $ "5. Time Deposit Lock period : " ++ show lockPeriod
   putStrLn $ "6. Time Deposit max deposit : " ++ show minDeposit
-  putStrLn $ "7. Adahandle policy id      : " ++ show ah
   putStrLn "------------------- Saving --------------------"
-    -- Save script
-  ATM.saveAdatagMintingPolicy cnftSymbol cnftValidator timdedepositValidator dt lockPeriod minDeposit -- ah
+  -- Save script
+  ATM.saveAdatagMintingPolicy cnftSymbol stateHolderValidator timdedepositValidator dt lockPeriod minDeposit
   putStrLn "-----------------------------------------------"

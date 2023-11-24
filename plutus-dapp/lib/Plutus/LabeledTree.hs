@@ -3,19 +3,58 @@
 
 module Plutus.LabeledTree where
 
+{- FIXME:
 import Crypto.Hash.SHA256 (hash)
 import Data.ByteString (ByteString, take)
-import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base16 as B16 -- used by data-default
 import Data.ByteString.UTF8 (fromString, toString)
 import Numeric
 import System.IO
 import Prelude hiding (putStr, take)
 import PlutusLedgerApi.V1
-
+import qualified Data.ByteString.Base16 as Haskell.Base16
+import qualified Data.Text as Haskell.Text
+import qualified Data.Text.Encoding as Haskell.Text.Encoding -- text
 log2 :: Integer -> Integer
 log2 x = if odd x then 0 else (floor . logBase (2 :: Double) . fromIntegral) x
 
 
+-- ####### DATUM
+
+-- | A type for representing hash digests.
+newtype Hash = Hash BuiltinByteString
+  deriving (Haskell.Eq)
+
+unstableMakeIsData ''Hash
+
+instance Eq Hash where
+  (==) :: Hash -> Hash -> Bool
+  Hash h == Hash h' = h == h'
+
+instance Haskell.Show Hash where
+  show (Hash bs) =
+    Haskell.Text.unpack
+      . Haskell.Text.Encoding.decodeUtf8
+      . Haskell.Base16.encode
+      . fromBuiltin
+      . takeByteString 4
+      $ bs
+
+{-# INLINEABLE hash #-}
+hash :: BuiltinByteString -> Hash
+hash = Hash . sha2_256
+
+{-# INLINEABLE combineHash #-}
+combineHash :: Hash -> Hash -> Hash
+combineHash (Hash h) (Hash h') = hash (appendByteString h h')
+
+c2bs :: Integer -> BuiltinByteString
+c2bs i = stringToBuiltinByteString $ Haskell.show i
+
+  let c = indexByteString adatag 0
+      l = c - 1
+      r = c + 1
+      v = c2bs l <> c2bs r
 ------------------------------------ LABELED TREE MOCKS -------------------------------------------
 -- FIXME: These are vill be in the LabeledTree library
 
@@ -52,7 +91,7 @@ data Node
   = Leaf !ByteString
   | Node !(ByteString, ByteString) !Node !Node
   | HashNode !Hash !Node !Node
-  
+
 
 -- Leaf
 leaf :: Node
@@ -134,3 +173,4 @@ checkUpdate x nu na node isLeft = do
 -- where
 --  newLeft =  if index == index node then Leaf "" else left node
 --  newRight = if index == index node then Leaf "" else right node
+-}

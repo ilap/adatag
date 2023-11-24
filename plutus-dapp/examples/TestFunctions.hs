@@ -1,22 +1,23 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 -- {-# LANGUAGE StrictData #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE BlockArguments        #-}
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 
 module Main where
 
--- FIXME: import Contracts.Validator
-import PlutusLedgerApi.V1.Value (AssetClass (AssetClass), TokenName (TokenName, unTokenName), Value, adaSymbol, flattenValue, singleton, unAssetClass)
-import PlutusLedgerApi.V2 (CurrencySymbol (CurrencySymbol), PubKeyHash)
-import PlutusTx.Builtins.Class (stringToBuiltinByteString)
-import PlutusTx.Prelude (takeByteString, traceError)
-import Utilities
-import qualified Data.Text as Text
+import           Adatag.Utils
+import           PlutusLedgerApi.V1.Value (AssetClass (AssetClass),
+                                           TokenName (TokenName, unTokenName),
+                                           Value, adaSymbol, flattenValue,
+                                           singleton, unAssetClass)
+import           PlutusLedgerApi.V2       (CurrencySymbol (CurrencySymbol))
+import           PlutusTx.Builtins.Class  (stringToBuiltinByteString)
+import           PlutusTx.Prelude         (takeByteString, traceError)
 
 -- Define a custom function to retrieve the token name
 getTokenName :: CurrencySymbol -> PlutusLedgerApi.V1.Value.Value -> TokenName
@@ -26,7 +27,7 @@ getTokenName symbol v = do
   let filtered = filter (\(c, _, _) -> c == symbol) xs
   case filtered of
     [(_, tn, _)] -> tn
-    _ -> traceError "expected exactly one token name"
+    _            -> traceError "expected exactly one token name"
 
 -- Example usage
 currencySymbol :: CurrencySymbol
@@ -89,4 +90,4 @@ main = do
   print $ stringToNumber "abcdefghijkl"
 
 
-  
+

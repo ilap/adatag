@@ -1,7 +1,7 @@
 ## Introduction
 
 The adatag developer has to provide:
-- The one-shot "Control NFT" minting policy to mint control nfts for the Control NFT validator
+- The one-shot "Control NFT" minting policy to mint control nfts for the StateHolder
 -   One "Control NFT" validator for carrying the state of the username/adatag tree state in validator address contain one control NFT and the tree state in the datum.
 -   The "TimeDeposit" validator that un-locks the locked ADA deposit (when it's active).
 -   The "Minting" policy to mint/burn of users' adatags.

@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -11,24 +11,27 @@
 
 module Main where
 
-import qualified Contracts.ControlNFTMinting as CM
-import Control.Monad (Monad (return), replicateM, unless)
-import Plutus.Model
+import qualified Adatag.ControlNFTMinting  as CM
+import           Control.Monad             (Monad (return), replicateM, unless)
+import           Plutus.Model
 import qualified Plutus.Model.Validator.V2 as MV2
-import PlutusLedgerApi.V1.Value (CurrencySymbol)
-import PlutusLedgerApi.V2 (PubKeyHash, TokenName, TxOut (txOutValue), TxOutRef, Value (..), singleton)
-import PlutusTx.Prelude (Eq ((==)), Semigroup ((<>)), foldMap, ($), (.))
-import System.IO
-import Test.Tasty (defaultMain, testGroup)
-import Prelude (mconcat)
+import           PlutusLedgerApi.V1.Value  (CurrencySymbol)
+import           PlutusLedgerApi.V2        (PubKeyHash, TokenName,
+                                            TxOut (txOutValue), TxOutRef,
+                                            Value (..), singleton)
+import           PlutusTx.Prelude          (Eq ((==)), Semigroup ((<>)),
+                                            foldMap, ($), (.))
+import           Prelude                   (mconcat)
+import           System.IO
+import           Test.Tasty                (defaultMain, testGroup)
 
 main :: IO ()
 main =
   defaultMain
     $ testGroup
-      "Testing validator with some sensible values"
-      [ good "Minting Control NFTs works       " testMintControlNFT,
-        bad "Minting the same NFTs twice fails" testMintControlNFTTwice
+      "Testing CNFT minting policy"
+      [ good "Must pass - Minting Control NFTs works       " testMintControlNFT,
+        bad  "Must fail - Minting the same NFTs twice fails" testMintControlNFTTwice
       ]
   where
     bad msg = good msg . mustFail

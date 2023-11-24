@@ -1,5 +1,6 @@
 module Main where
 
+{-- FIXME }
 import Data.ByteString.UTF8
 import Plutus.LabeledTree
 import System.IO ()
@@ -26,3 +27,4 @@ main = do
   putStr "Acc aft: "
   printProof nodeU'
   print (proof node == proof nodeU')
+-}

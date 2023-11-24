@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
@@ -11,22 +11,23 @@
 
 module Main where
 
-import Contracts.AdatagMinting
-import Contracts.ControlNFTMinting
-import Contracts.TimeDeposit
-import Contracts.Validator
-import Control.Monad (Monad (return), replicateM)
-import Plutus.Model
-import Plutus.Model.V2 (mkTypedPolicy)
-import Plutus.Model.Validator.V2 (mkTypedValidator)
-import PlutusLedgerApi.V1.Value (flattenValue)
-import PlutusLedgerApi.V2
-import PlutusTx.Builtins.Class (stringToBuiltinByteString)
-import PlutusTx.Prelude (AdditiveGroup (..), Bool, Eq ((==)), Integer, Semigroup ((<>)), filter, indexByteString, lengthOfByteString, ($), (+), (.))
-import System.IO
-import Test.Tasty (defaultMain, testGroup)
-import Prelude (Bool (..))
-import qualified Prelude as Haskell
+import           Adatag.AdatagMinting
+import           Adatag.ControlNFTMinting
+import           Adatag.StateHolder
+import           Adatag.TimeDeposit
+import           Control.Monad             (Monad (return), replicateM)
+import           Plutus.Model
+import           Plutus.Model.V2           (mkTypedPolicy)
+import           Plutus.Model.Validator.V2 (mkTypedValidator)
+import           PlutusLedgerApi.V1.Value  (flattenValue)
+import           PlutusLedgerApi.V2
+import           PlutusTx.Prelude          (AdditiveGroup (..), Bool, Eq ((==)),
+                                            Integer, Semigroup ((<>)), filter,
+                                            lengthOfByteString, ($), (+), (.))
+import           Prelude                   (Bool (..))
+import qualified Prelude                   as Haskell
+import           System.IO
+import           Test.Tasty                (defaultMain, testGroup)
 
 main :: IO ()
 main =
@@ -37,17 +38,17 @@ main =
           "Deploying and basic input/output tests"
           [ good "Must pass - deploy @adatag with defaults (365, 183, 20, 1750)" testBootstrapping,
             --                                                                      vinp  tinp   validrange active deadline deposit
-            bad "Must fail - no state holder validator output" $ testMintAdatag False True True True True True,
-            bad "Must fail - no any validator output" $ testMintAdatag False False True True True True,
-            bad "Must fail - active but no time-deposit output" $ testMintAdatag True False True True True True,
+            bad  "Must fail - no state holder validator output" $ testMintAdatag False True True True True True,
+            bad  "Must fail - no any validator output" $ testMintAdatag False False True True True True,
+            bad  "Must fail - active but no time-deposit output" $ testMintAdatag True False True True True True,
             good "Must pass - deactivated and no time-lock output" $ testMintAdatag True False True False True True
           ],
         testGroup
           "Parameters and interval unit tests" --     vinp   tinp   validrange  active deadline deposit
           [ good "Must pass - all valid" $ testMintAdatag True True True True True True,
-            bad "Must fail - always interval ([-,+])" $ testMintAdatag True True False True True True,
-            bad "Must fail - invalid deadline" $ testMintAdatag True True True True False True,
-            bad "Must fail - invalid time-deposit" $ testMintAdatag True True True True False False,
+            bad  "Must fail - always interval ([-,+])" $ testMintAdatag True True False True True True,
+            bad  "Must fail - invalid deadline" $ testMintAdatag True True True True False True,
+            bad  "Must fail - invalid time-deposit" $ testMintAdatag True True True True False False,
             good "Must pass - deactivated" $ testMintAdatag True True True False False False
           ]
       ]
@@ -60,44 +61,39 @@ main =
 
 mockTest :: Bool -> Run ()
 mockTest b = case b of
-  True -> logInfo "True..."
+  True  -> logInfo "True..."
   False -> logError "False..."
 
 -- Set many users at once
 setupUsers :: Run [PubKeyHash]
 setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
 
-c2bs :: Integer -> BuiltinByteString
-c2bs i = stringToBuiltinByteString $ Haskell.show i
 
-createInitialStateDatum :: BuiltinByteString -> CurrencySymbol -> ValidatorDatum
-createInitialStateDatum adatag mpsym = do
-  let c = indexByteString adatag 0
-      l = c - 1
-      r = c + 1
-      v = c2bs l <> c2bs r
+
+createInitialStateDatum :: CurrencySymbol -> ValidatorDatum
+createInitialStateDatum mpsym =
   ValidatorDatum
     { vdOperationCount = 0,
       vdAdatag = "",
       vdTreeSize = 0,
       vdTreeState = InitialState,
-      vdTreeProof = combineHash (hash v) $ combineHash (hash "") (hash ""),
+      vdTreeProof = "11223344556677889900112233445566778899001122334455667788", -- FIXME: --  BuildintByteString now. combineHash (hash v) $ combineHash (hash "") (hash ""),
       vdMintingPolicy = mpsym
     }
 
 copyWith :: ValidatorDatum -> BuiltinByteString -> TreeState -> ValidatorDatum
-copyWith (ValidatorDatum oc at _ s _ mp) nat ns = do
+copyWith (ValidatorDatum oc _ _ s _ mp) nat ns = do
   let treesize = case ns of
-        InitialState -> 0
-        AdatagAdded -> s + 1
+        InitialState  -> 0
+        AdatagAdded   -> s + 1
         AdatagRemoved -> s - 1
 
   ValidatorDatum
     { vdOperationCount = oc + 1,
       vdAdatag = nat,
-      vdTreeState = InitialState,
+      vdTreeState = ns,
       vdTreeSize = treesize,
-      vdTreeProof = combineHash (hash $ nat <> at) $ combineHash (hash "") (hash ""),
+      vdTreeProof = "11223344556677889900112233445566778899001122334455667788",
       vdMintingPolicy = mp
     }
 
@@ -124,13 +120,13 @@ createMintRedeemer at ma =
 cnftScript :: TxOutRef -> TypedPolicy ()
 cnftScript ref = mkTypedPolicy $ cnftPolicy ref letters
 
--- State Holder Validator
+-- State Holder validator
 type ValidatorScript = TypedValidator ValidatorDatum () -- No redeemer
 
 validatorScript :: ControlNFT -> ValidatorScript
 validatorScript cnft = mkTypedValidator $ stateHolderValidator cnft
 
--- Time Deposit Validator
+-- Time Deposit validator
 type TimeDepositScript = TypedValidator TimeDepositDatum ()
 
 timeDepositParams :: PubKeyHash -> POSIXTime -> TimeDepositParams
@@ -170,14 +166,14 @@ testBootstrapping :: Run ()
 testBootstrapping = do
   (_, _, _, _, _) <- bootstrapAdatag 365 183 20 1_750
 
-  logInfo "@adatag properly bootstrapped!"
+  logInfo "@adatag is properly bootstrapped!"
 
--- Deploy Validator script
+-- Deploy StateHolder script
 -- 1. CNFT minting and send to the developer.
 -- 2. Set time-lock deposit - the developer will be the collector.
 -- 3. Adatag Minting Policy setup
--- 4. Send cnfts to state holder validator's address -- it requires a datum with minting policy
--- 5. Send all three validator (state-holder, time-deposit, adatag-minting a ref addres (AFV)
+-- 4. Send cnfts to state holder validators's address -- it requires a datum with minting policy
+-- 5. Send all three validators (state-holder, time-deposit, adatag-minting a ref addres (AFV)
 --    > Note: currently loadRefScript does not support sending to individual addresses and it requires
 --      datum, so cannot set for minting policies atm.
 bootstrapAdatag :: Integer -> Integer -> Integer -> Integer -> Run (MintingScript, MintParams, ValidatorScript, TimeDepositScript, CurrencySymbol)
@@ -227,11 +223,11 @@ bootstrapAdatag collt expt deadl maxd = do
   -- send
   -- All init datum can be the same as no state check only sanity checks
   let dtx = deployCnftsTx sp shv cnft amp
-  -- logInfo $ "Deploying CNFTs to state holder validator's address" <> Haskell.show dtx
+
   submitTx developer dtx
   --------------------------------------------------------------------------
   -- TODO: Make it to use reference scripts
-  -- 5. Send all three validator (state-holder, time-deposit, adatag-minting a ref addres (AFV)
+  -- 5. Send all three validators (state-holder, time-deposit, adatag-minting a ref addres (AFV)
   -- This version of PSM does not support sending scripts to a ref addres, so we jsut use the scripts
   -- address until supports sending script to any reference address.
   -- But this mean that minting policies cannot be used as they do not have datums.
@@ -249,7 +245,7 @@ bootstrapAdatag collt expt deadl maxd = do
       Haskell.mconcat
         [ userSpend dsp,
           Haskell.mconcat
-            [ payToScript scr (InlineDatum $ createInitialStateDatum (unTokenName tn) (scriptCurrencySymbol mintpol)) (adaValue 1 <> singleton curr tn 1) | tn <- letters
+            [ payToScript scr (InlineDatum $ createInitialStateDatum (scriptCurrencySymbol mintpol)) (adaValue 1 <> singleton curr tn 1) | tn <- letters
             ]
         ]
 
@@ -261,7 +257,7 @@ bootstrapAdatag collt expt deadl maxd = do
 -- 2. state holder validator:
 -- 3. adatag minting policy:
 testMintAdatag :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Run ()
--- valid validator output, valid deposit output, valid interval, active, valid deadlin and valid deposit
+-- valid state-holder output, valid deposit output, valid interval, active, valid deadlin and valid deposit
 testMintAdatag vout tout vint act vdl vdep = do
   -- Bootstrap parameters.
   let collectionStart = 365
@@ -275,7 +271,8 @@ testMintAdatag vout tout vint act vdl vdep = do
 
   let cnftToken = "i"
       adatag = "ilap"
-      vdat = copyWith (createInitialStateDatum cnftToken (scriptCurrencySymbol amp)) adatag AdatagAdded
+      vidat = createInitialStateDatum (scriptCurrencySymbol amp)
+      vodat = copyWith vidat adatag AdatagAdded
 
       -- Create deadline
       d = if vdl then 0 else -86_400_000 -- minus one day
@@ -289,12 +286,10 @@ testMintAdatag vout tout vint act vdl vdep = do
 
   beneficiary <- newUser $ adaValue (dep + 10) -- deposit plus some for fees
   let tdat = createTimeDepositDatum beneficiary dl
-  -- logInfo $   "######## DAYS: \n" <> Haskell.show (days userDeadline) <>  "\n##### DEADLINE ######\n" <> Haskell.show dl <> "\n##### DL: " <> Haskell.show mp
 
   sp <- spend beneficiary $ singleton adaSymbol adaToken dep
   utxos <- utxoAt shv
 
-  logInfo $ "###### REEEEEEEEF #######\n\n" <> Haskell.show utxos
   -- Find the required CNFT in utxos
   let [(ref, _)] =
         filter
@@ -307,11 +302,9 @@ testMintAdatag vout tout vint act vdl vdep = do
       mtr = createMintRedeemer adatag AddAdatag
       mval = singleton (scriptCurrencySymbol amp) (TokenName adatag) 1
       cnft = singleton cnftSymbol (TokenName cnftToken) 1
-      mtx = mintAdatagTx beneficiary sp ref amp mtr mval shv (createInitialStateDatum adatag cnftSymbol) vdat cnft tdv tdat (adaValue dep) vout tout
+      mtx = mintAdatagTx beneficiary sp ref amp mtr mval shv vidat vodat cnft tdv tdat (adaValue dep) vout tout
 
-  -- logError $ "All Tn.\n" <> Haskell.show mtx  <> " \nmpControlNFT \n: " <> Haskell.show (mpControlNFT mp) <> "Value:\n" <> Haskell.show cnft-- Haskell.show mtx
-
-  -- Wait till deactivation dat
+  -- Wait till feature deactivation
   let waitfor = if act then POSIXTime 0 else days (depositExpiry + 250)
   wait waitfor
 
@@ -319,7 +312,6 @@ testMintAdatag vout tout vint act vdl vdep = do
   r1 <- validateIn range mtx
   r2 <- validateIn always mtx
 
-  logInfo $ "@@@@@ Range: " <> Haskell.show range <> "\nmpUserLockingExpiry (minting params): " <> Haskell.show mp <> "\n### WAITFOR\n" <> Haskell.show waitfor
   let tx = if vint then r1 else r2
   submitTx beneficiary tx
 
