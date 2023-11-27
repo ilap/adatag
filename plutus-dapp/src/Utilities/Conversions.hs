@@ -79,6 +79,15 @@ bytesFromHex = either error id . BS16.decode
 bytesToHex :: BS.ByteString -> BS.ByteString
 bytesToHex = BS16.encode
 
+{-- Builtintype of bytesFromHex.
+import qualified PlutusLedgerApi.V1.Bytes as P (bytes, fromHex)
+bytesFromHex :: ByteString -> BuiltinByteString
+bytesFromHex = toBuiltin . P.bytes . fromEither . P.fromHex
+  where
+    fromEither (Left _)   = traceError "bytesFromHex failed"
+    fromEither (Right bs) = bs
+-}
+
 credentialLedgerToPlutus :: Ledger.Credential a Ledger.StandardCrypto -> Plutus.Credential
 credentialLedgerToPlutus (Ledger.ScriptHashObj (Ledger.ScriptHash h)) = Plutus.ScriptCredential $ Plutus.ScriptHash $ Plutus.toBuiltin $ hashToBytes h
 credentialLedgerToPlutus (Ledger.KeyHashObj (Ledger.KeyHash h)) = Plutus.PubKeyCredential $ Plutus.PubKeyHash $ Plutus.toBuiltin $ hashToBytes h

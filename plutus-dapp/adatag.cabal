@@ -16,6 +16,7 @@ common common-all
                     , cardano-api:internal
                     , cardano-crypto-class
                     , cardano-ledger-core
+                    , cryptohash-sha256
                     , plutus-core
                     , plutus-ledger-api
                     , plutus-tx-plugin
@@ -23,6 +24,10 @@ common common-all
                     , serialise
                     , text
                     , time
+                    -- these below are temporary
+                    , utf8-string
+                    , hashable
+                    , cryptonite
 
     default-language: Haskell2010
     ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
