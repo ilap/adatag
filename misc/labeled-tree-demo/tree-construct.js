@@ -42,6 +42,7 @@ function Node (a, b, hash, leftNode, rightNode) {
     this.rightNode = rightNode;
     this.isRoot = false;
     this.emptyHash = sha256.update("").array()
+    this.valhash = sha256.update(this.val).hex()
     
     this.toHexString = function (arr) {
       var array = new Uint8Array(arr);
@@ -52,9 +53,11 @@ function Node (a, b, hash, leftNode, rightNode) {
       }
       return hex;
     }
+
     this.proof = function () {
       var lp = this.leftNode  === undefined ? this.emptyHash : this.leftNode.proof();
       var rp = this.rightNode === undefined ? this.emptyHash : this.rightNode.proof();
+
       var hv = sha256.update(this.val).array();
       var h = hv.concat(lp.concat(rp));
       var p = sha256.update(h).array();
@@ -63,17 +66,26 @@ function Node (a, b, hash, leftNode, rightNode) {
       return p
     }
 
+    this.proofL = function () {
+      return this.leftNode  === undefined ? this.emptyHash : this.leftNode.proof();
+    }
+
+    this.proofR = function () {
+      return this.rightNode  === undefined ? this.emptyHash : this.rightNode.proof();
+    }
+
     this.toString = function() {
       if(this.leftNode || this.rightNode) {
         var returnObj = {
           text: {
-            datav: "val    : " + this.a + ", "+ this.b,
-            datah: "proof n: " + this.hash.substr(0, 6),
-            // datal: "proof l: " + this.proof(this.left).substr(0, 6),
-            // datar: "proof r: " + this.proof(this.right).substr(0, 6),
+            dataa: this.toHexString(this.proof()).substring(0, 6),
+            name:  this.a + ", "+ this.b,
+            datab: this.valhash.substring(0, 6),
+            title: this.toHexString(this.proofL()).substring(0, 6),
+            desc:  this.toHexString(this.proofR()).substring(0, 6),
           },
-          HTMLclass: this.isRoot ? "root-node" : "parent-node",
-          children: []
+          HTMLclass: this.isRoot ? "root-node" : "simple-node",
+          children: [],
         };
 
         if (this.leftNode) returnObj.children.push(this.leftNode.toString());
@@ -82,10 +94,13 @@ function Node (a, b, hash, leftNode, rightNode) {
       }
       return {
         text: {
-          datav: "val  : " + this.a + ", "+ this.b,
-          datah: "proof: " + this.hash.substr(0, 6),
+          dataa: this.toHexString(this.proof()).substring(0, 6),
+          name:  this.a + ", "+ this.b,
+          datab: this.valhash.substring(0, 6),
+          title: this.toHexString(this.proofL()).substring(0, 6),
+          desc:  this.toHexString(this.proofR()).substring(0, 6),
         },
-        HTMLclass: "label-node"
+        HTMLclass: "simple-node"
       };
     }
 }
@@ -101,5 +116,4 @@ var testData = [["`", "c"], ["z", "{"], ["f", "g"], ["j", "l"], ["d", "e"], ["y"
 
 var nodeList = convertToNodeList(testData);
 console.log(JSON.stringify(fromList(nodeList).toString()));
-
 */

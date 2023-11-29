@@ -1,4 +1,6 @@
 @startuml "@datag minting"
+
+caption "Complete @adatag minting."
 state "Inputs" as stateI {
     state IU as "User" #line.dotted {
         json "Collateral UTxO" as JU1 {
