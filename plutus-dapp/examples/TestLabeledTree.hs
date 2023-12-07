@@ -2,7 +2,7 @@ module Main where
 
 {-- FIXME }
 import Data.ByteString.UTF8
-import Plutus.LabeledTree
+import LabeledTree.Tree
 import System.IO ()
 
 main :: IO ()

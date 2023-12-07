@@ -29,3 +29,22 @@ In general, Merkle trees are more complex than complete binary trees, but they a
 | Level completeness | Any | Completely filled | Any |
 | Hash calculation | Efficient | Efficient | Inefficient |
 | Implementation | Easier | Easier | More difficult |
+
+
+## Update Proof Rules
+
+Proof rules for adding an element into the tree
+
+| **#** 	| **Plca** 	| **Pl** 	| **Pr** 	| **Ok** 	| **Comment (assuming x valid)**                 	|
+|-------	|----------	|--------	|--------	|--------	|------------------------------------------------	|
+|   1   	|  ValHash  |    Nu   	|   Na   	|   ok   	|                                               	|
+|   2   	|  ValHash	|    Na   	|   Nu   	|   ok   	|                                                	|
+|   3   	|    Nu    	|   Hash   	|   Na   	|   ok   	|                                                	|
+|   4   	|    Nu    	|    Na   	|   Hash   	|   ok   	|                                                	|
+|   5   	|    Na    	|    Nu   	|   eH   	|   ok   	|                                                	|
+|   6   	|   Na/Nu  	|   Hash   	|   eH   	|   ok   	|                                                	|
+|   7   	|   Na/Nu  	|    eH   	|   eH   	|   ok   	| Na==Nu & e is valid                            	|
+|       	|  ValHash 	|   Any  	|   Any  	|   nok  	| Any other than Na, Nu or Nu, Na<br>are invalid 	|
+|       	|   Hash    |   Any  	|   Any  	|   nok  	| Any other than Na, Nu or Nu, Na<br>are invalid 	|
+|       	|    Nu    	|   Any  	|   Any  	|   nok  	| Any other than Na, H or H, Na are<br>invalid    	|
+|       	|    Na    	|   eH   	|   eH   	|   nok  	| Any Na with Pr == eH are invalid               	|

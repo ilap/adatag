@@ -38,6 +38,8 @@ common common-all
                  -fplugin-opt PlutusTx.Plugin:conservative-optimisation
                  -- ^  Bug: it removes the trace messages otherwise.
                  -- -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations=3
+                 -fwrite-ide-info
+                 -hiedir=.hie
 
 common common-test
     build-depends:      adatag
@@ -57,7 +59,6 @@ library
                         Adatag.TimeDeposit
                         Adatag.StateHolder
                         Adatag.Utils
-                        Plutus.LabeledTree
                         Utilities
 
   other-modules:
@@ -65,11 +66,32 @@ library
                         Utilities.PlutusTx
                         Utilities.Serialise
 
+  build-depends:        labeled-tree
+
+library                 labeled-tree
+  import:               common-all
+  hs-source-dirs:       lib
+  exposed-modules:
+                        LabeledTree
+                        -- TODO: v Remove this from release
+                        LabeledTree.Utils
+
+  other-modules:        LabeledTree.Val
+                        LabeledTree.Hash
+                        LabeledTree.Proofs
+                        LabeledTree.LabeledTree
+
 executable            bootstrap
      import:           common-all
      hs-source-dirs:   app
      main-is:          Main.hs
      build-depends:    adatag
+
+executable            update
+     import:           common-all
+     hs-source-dirs:   app
+     main-is:          TestUpdate.hs
+     build-depends:    adatag:labeled-tree
 
 -- TODO: implement it.
 --executable            labeled-tree

@@ -1,7 +1,6 @@
--- {-# LANGUAGE StrictData #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
-module Plutus.OldLabeledTree where
+
+module LabeledTree.OldTree where
 
 {- FIXME:
 import Crypto.Hash.SHA256 (hash)
@@ -48,13 +47,13 @@ hash = Hash . sha2_256
 combineHash :: Hash -> Hash -> Hash
 combineHash (Hash h) (Hash h') = hash (appendByteString h h')
 
-c2bs :: Integer -> BuiltinByteString
-c2bs i = stringToBuiltinByteString $ Haskell.show i
+intToBs :: Integer -> BuiltinByteString
+intToBs i = stringToBuiltinByteString $ Haskell.show i
 
   let c = indexByteString adatag 0
       l = c - 1
       r = c + 1
-      v = c2bs l <> c2bs r
+      v = intToBs l <> intToBs r
 ------------------------------------ LABELED TREE MOCKS -------------------------------------------
 -- FIXME: These are vill be in the LabeledTree library
 
