@@ -1,19 +1,22 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Utilities.PlutusTx
-  ( wrapValidator,
-    wrapPolicy,
-  )
+module Utilities.PlutusTx (
+  wrapValidator,
+  wrapPolicy,
+)
 where
 
-import           PlutusLedgerApi.V2 (ScriptContext, UnsafeFromData,
-                                     unsafeFromBuiltinData)
-import           PlutusTx.Prelude   (Bool, BuiltinData, check, ($))
+import PlutusLedgerApi.V2 (
+  ScriptContext,
+  UnsafeFromData,
+  unsafeFromBuiltinData,
+ )
+import PlutusTx.Prelude (Bool, BuiltinData, check, ($))
 
-{-# INLINEABLE wrapValidator #-}
+{-# INLINABLE wrapValidator #-}
 wrapValidator ::
-  ( UnsafeFromData a,
-    UnsafeFromData b
+  ( UnsafeFromData a
+  , UnsafeFromData b
   ) =>
   (a -> b -> ScriptContext -> Bool) ->
   (BuiltinData -> BuiltinData -> BuiltinData -> ())
@@ -24,7 +27,7 @@ wrapValidator f a b ctx =
       (unsafeFromBuiltinData b)
       (unsafeFromBuiltinData ctx)
 
-{-# INLINEABLE wrapPolicy #-}
+{-# INLINABLE wrapPolicy #-}
 wrapPolicy ::
   (UnsafeFromData a) =>
   (a -> ScriptContext -> Bool) ->

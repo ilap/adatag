@@ -1,33 +1,47 @@
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# HLINT ignore "Use underscore" #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Main where
 
-import           Adatag.AdatagMinting
-import           Adatag.ControlNFTMinting
-import           Adatag.StateHolder
-import           Adatag.TimeDeposit
-import           Control.Monad             (Monad (return), replicateM)
-import           Plutus.Model
-import           Plutus.Model.V2           (mkTypedPolicy)
-import           Plutus.Model.Validator.V2 (mkTypedValidator)
-import           PlutusLedgerApi.V1.Value  (flattenValue)
-import           PlutusLedgerApi.V2
-import           PlutusTx.Prelude          (AdditiveGroup (..), Bool, Eq ((==)),
-                                            Integer, Semigroup ((<>)), filter,
-                                            lengthOfByteString, ($), (+), (.))
-import           Prelude                   (Bool (..))
-import qualified Prelude                   as Haskell
-import           System.IO
-import           Test.Tasty                (defaultMain, testGroup)
+import Adatag.AdatagMinting
+import Adatag.ControlNFTMinting
+import Adatag.StateHolder
+import Adatag.TimeDeposit
+import Control.Monad (Monad (return), replicateM)
+import Plutus.Model
+import Plutus.Model.V2 (mkTypedPolicy)
+import Plutus.Model.Validator.V2 (mkTypedValidator)
+import PlutusLedgerApi.V1.Value (flattenValue)
+import PlutusLedgerApi.V2
+import PlutusTx.Prelude (
+  AdditiveGroup (..),
+  Bool,
+  Eq ((==)),
+  Integer,
+  Semigroup ((<>)),
+  filter,
+  lengthOfByteString,
+  ($),
+  (+),
+  (.),
+ )
+import System.IO
+import Test.Tasty (defaultMain, testGroup)
+import Prelude (Bool (..), Show (show))
+import Prelude qualified as Haskell
+import LabeledTree (ProofTree (..), Hash, emptyHash, Val(..), rootHash')
+
+
 
 main :: IO ()
 main =
@@ -36,82 +50,118 @@ main =
       "Testing @adatag's NFT minting logic"
       [ testGroup
           "Deploying and basic input/output tests"
-          [ good "Must pass - deploy @adatag with defaults (365, 183, 20, 1750)" testBootstrapping,
-            --                                                                      vinp  tinp   validrange active deadline deposit
-            bad  "Must fail - no state holder validator output" $ testMintAdatag False True True True True True,
-            bad  "Must fail - no any validator output" $ testMintAdatag False False True True True True,
-            bad  "Must fail - active but no time-deposit output" $ testMintAdatag True False True True True True,
-            good "Must pass - deactivated and no time-lock output" $ testMintAdatag True False True False True True
-          ],
-        testGroup
+          [ good "Must pass - deploy @adatag with defaults (365, 183, 20, 1750)" testBootstrapping
+          , --                                                                      vinp  tinp   validrange active deadline deposit
+            bad "Must fail - no state holder validator output" $ testMintAdatag False True True True True True
+          , bad "Must fail - no any validator output" $ testMintAdatag False False True True True True
+          , bad "Must fail - active but no time-deposit output" $ testMintAdatag True False True True True True
+          , good "Must pass - deactivated and no time-lock output" $ testMintAdatag True False True False True True
+          ]
+      , testGroup
           "Parameters and interval unit tests" --     vinp   tinp   validrange  active deadline deposit
-          [ good "Must pass - all valid" $ testMintAdatag True True True True True True,
-            bad  "Must fail - always interval ([-,+])" $ testMintAdatag True True False True True True,
-            bad  "Must fail - invalid deadline" $ testMintAdatag True True True True False True,
-            bad  "Must fail - invalid time-deposit" $ testMintAdatag True True True True False False,
-            good "Must pass - deactivated" $ testMintAdatag True True True False False False
+          [ good "Must pass - all valid" $ testMintAdatag True True True True True True
+          , bad "Must fail - always interval ([-,+])" $ testMintAdatag True True False True True True
+          , bad "Must fail - invalid deadline" $ testMintAdatag True True True True False True
+          , bad "Must fail - invalid time-deposit" $ testMintAdatag True True True True False False
+          , good "Must pass - deactivated" $ testMintAdatag True True True False False False
+          ]
+      , testGroup
+          "Labeled Tree unit tests" --     vinp   tinp   validrange  active deadline deposit
+          [ good "Must pass - all valid" $ testMintAdatag True True True False False False
+
           ]
       ]
   where
     bad msg = good msg . mustFail
-    good = testNoErrors {-Test-} (adaValue 10_000_000_000) defaultBabbage
+    good = testNoErrorsTrace (adaValue 10_000_000_000) defaultBabbage
+
+
+---------------------------------------------------------------------------------------------------
+------------------------------------- HELPER FUNCTIONS --------------------------------------------
+pl = ProofLeaf emptyHash
+
+initialTree :: Val -> ProofTree
+-- initialTree v = ProofNode v (ProofLeaf emptyHash) (ProofLeaf emptyHash)
+initialTree v = ProofNode (Val 2 "ib15" "ib16") pl (ProofNode (Val 2 "ib14" "ib15") (ProofNode (Val 5 "ib13" "ib14") pl (ProofNode (Val 8 "ib12" "ib13") (ProofNode (Val 17 "ib11" "ib12") pl (ProofNode (Val 32 "ib10" "ib11") (ProofNode (Val 65 "ib9" "ib10") pl (ProofNode (Val 128 "ib8" "ib9") (ProofNode (Val 257 "ib7" "ib8") pl (ProofNode (Val 512 "ib6" "ib7") (ProofNode (Val 1025 "ib5" "ib6") pl (ProofNode (Val 2048 "ib4" "ib5") (ProofNode (Val 4097 "ib3" "ib4") pl (ProofNode (Val 8192 "ib2" "ib3") (ProofNode (Val 16385 "ib1" "ib2") pl (ProofNode (Val 32768 "ib0" "ib1") (ProofNode v pl pl) pl)) pl)) pl)) pl)) pl)) pl)) pl)) pl)
+
+addedTree :: Val -> Val -> ProofTree
+--addedTree v1 v2 = ProofNode v1
+--              (ProofNode v2 (ProofLeaf emptyHash) (ProofLeaf emptyHash)) 
+--              (ProofLeaf emptyHash)
+addedTree v1 v2 = ProofNode (Val 2 "ib15" "ib16") pl (ProofNode (Val 2 "ib14" "ib15") (ProofNode (Val 5 "ib13" "ib14") pl (ProofNode (Val 8 "ib12" "ib13") (ProofNode (Val 17 "ib11" "ib12") pl (ProofNode (Val 32 "ib10" "ib11") (ProofNode (Val 65 "ib9" "ib10") pl (ProofNode (Val 128 "ib8" "ib9") (ProofNode (Val 257 "ib7" "ib8") pl (ProofNode (Val 512 "ib6" "ib7") (ProofNode (Val 1_025 "ib5" "ib6") pl (ProofNode (Val 2_048 "ib4" "ib5") (ProofNode (Val 4_097 "ib3" "ib4") pl (ProofNode (Val 8_192 "ib2" "ib3") (ProofNode (Val 16_385 "ib1" "ib2") pl (ProofNode (Val 32_768 "ib0" "ib1") (ProofNode v1 (ProofNode v2 pl pl) pl) pl)) pl)) pl)) pl)) pl)) pl)) pl)) pl)
+n = 15 :: Integer
+
+tsize = 2 Haskell.^ (n+1)
+
+tsize' = 2 Haskell.* tsize
+
+cnftToken = "i"
+adatag = "ilapilapilapila"
+
+initVal = Val tsize "h" "j"
+
+updateVal = Val tsize "h" adatag
+appendVal = Val tsize "h" adatag
+leafVal = Val tsize' adatag "j"
+
+treeState = rootHash' $ initialTree initVal
+
+treeState' = rootHash' $ addedTree updateVal leafVal
 
 ---------------------------------------------------------------------------------------------------
 ------------------------------------- HELPER FUNCTIONS --------------------------------------------
 
 mockTest :: Bool -> Run ()
 mockTest b = case b of
-  True  -> logInfo "True..."
+  True -> logInfo "True..."
   False -> logError "False..."
 
 -- Set many users at once
 setupUsers :: Run [PubKeyHash]
 setupUsers = replicateM 4 $ newUser $ ada (Lovelace 1_000_000_000)
 
-
-
-createInitialStateDatum :: CurrencySymbol -> ValidatorDatum
-createInitialStateDatum mpsym =
+createInitialStateDatum :: CurrencySymbol -> Hash -> ValidatorDatum
+createInitialStateDatum mpsym h =
   ValidatorDatum
-    { vdOperationCount = 0,
-      vdAdatag = "",
-      vdTreeSize = 0,
-      vdTreeState = InitialState,
-      vdTreeProof = "11223344556677889900112233445566778899001122334455667788", -- FIXME: --  BuildintByteString now. combineHash (hash v) $ combineHash (hash "") (hash ""),
-      vdMintingPolicy = mpsym
+    { vdOperationCount = 0
+    , vdAdatag = ""
+    , vdTreeSize = 0
+    , vdTreeState = InitialState
+    , vdTreeProof = h
+    , vdMintingPolicy = mpsym
     }
 
-copyWith :: ValidatorDatum -> BuiltinByteString -> TreeState -> ValidatorDatum
-copyWith (ValidatorDatum oc _ _ s _ mp) nat ns = do
+copyWith :: ValidatorDatum -> BuiltinByteString -> TreeState -> Hash -> ValidatorDatum
+copyWith (ValidatorDatum oc _ _ s _ mp) nat ns root = do
   let treesize = case ns of
-        InitialState  -> 0
-        AdatagAdded   -> s + 1
+        InitialState -> 0
+        AdatagAdded -> s + 1
         AdatagRemoved -> s - 1
 
   ValidatorDatum
-    { vdOperationCount = oc + 1,
-      vdAdatag = nat,
-      vdTreeState = ns,
-      vdTreeSize = treesize,
-      vdTreeProof = "11223344556677889900112233445566778899001122334455667788",
-      vdMintingPolicy = mp
+    { vdOperationCount = oc + 1
+    , vdAdatag = nat
+    , vdTreeState = ns
+    , vdTreeSize = treesize
+    , vdTreeProof = root
+    , vdMintingPolicy = mp
     }
 
 createTimeDepositDatum :: PubKeyHash -> POSIXTime -> TimeDepositDatum
 createTimeDepositDatum pkh pt =
   TimeDepositDatum
-    { ddBeneficiary = pkh,
-      ddDeadline = pt
+    { ddBeneficiary = pkh
+    , ddDeadline = pt
     }
 
-createMintRedeemer :: BuiltinByteString -> MintAction -> MintRedeemer
-createMintRedeemer at ma =
+createMintRedeemer ::  MintAction -> BuiltinByteString -> Val -> Val -> ProofTree -> MintRedeemer
+createMintRedeemer ma at uv av p =
   MintRedeemer
-    { mrAction = ma,
-      mrAdatag = at,
-      mrUpdateLabel = val at "a",
-      mrAppendLabel = val at "b",
-      mrMinimalTree = leaf
+    { mrAction = ma
+    , mrAdatag = at
+    , mrUpdateVal = uv
+    , mrAppendVal = av
+    , mrProof = p
     }
 
 ---------------------------------------------------------------------------------------------------
@@ -132,8 +182,8 @@ type TimeDepositScript = TypedValidator TimeDepositDatum ()
 timeDepositParams :: PubKeyHash -> POSIXTime -> TimeDepositParams
 timeDepositParams pkh time = do
   TimeDepositParams
-    { dpCollector = pkh,
-      dpCollectionTime = time
+    { dpCollector = pkh
+    , dpCollectionTime = time
     }
 
 timeDepositScript :: TimeDepositParams -> TimeDepositScript
@@ -146,12 +196,12 @@ type MintingScript = TypedPolicy MintRedeemer
 adatagPolicyParams :: CurrencySymbol -> ScriptHash -> ScriptHash -> POSIXTime -> Integer -> Integer -> MintParams
 adatagPolicyParams cnft shv tdv exp lp md =
   MintParams
-    { mpControlNFT = cnft,
-      mpStateHolderValidator = shv,
-      mpTimeDepositValidator = tdv,
-      mpUserDepositFeatureExpiry = exp,
-      mpUserDepositLockingDays = lp,
-      mpDepositBase = md
+    { mpControlNFT = cnft
+    , mpStateHolderValidator = shv
+    , mpTimeDepositValidator = tdv
+    , mpUserDepositFeatureExpiry = exp
+    , mpUserDepositLockingDays = lp
+    , mpDepositBase = md
     }
 
 mintingScript :: MintParams -> MintingScript
@@ -237,15 +287,15 @@ bootstrapAdatag collt expt deadl maxd = do
   where
     mintCnftTx ref out v pkh =
       Haskell.mconcat
-        [ mintValue (cnftScript ref) () v,
-          payToKey pkh $ v <> txOutValue out,
-          spendPubKey ref
+        [ mintValue (cnftScript ref) () v
+        , payToKey pkh $ v <> txOutValue out
+        , spendPubKey ref
         ]
     deployCnftsTx dsp scr curr mintpol =
       Haskell.mconcat
-        [ userSpend dsp,
-          Haskell.mconcat
-            [ payToScript scr (InlineDatum $ createInitialStateDatum (scriptCurrencySymbol mintpol)) (adaValue 1 <> singleton curr tn 1) | tn <- letters
+        [ userSpend dsp
+        , Haskell.mconcat
+            [ payToScript scr (InlineDatum $ createInitialStateDatum (scriptCurrencySymbol mintpol) treeState) (adaValue 1 <> singleton curr tn 1) | tn <- letters
             ]
         ]
 
@@ -269,11 +319,8 @@ testMintAdatag vout tout vint act vdl vdep = do
 
   c <- currentTime
 
-  let cnftToken = "i"
-      adatag = "ilap"
-      vidat = createInitialStateDatum (scriptCurrencySymbol amp)
-      vodat = copyWith vidat adatag AdatagAdded
-
+  let vidat = createInitialStateDatum (scriptCurrencySymbol amp) treeState
+      vodat = copyWith vidat adatag AdatagAdded treeState'
       -- Create deadline
       d = if vdl then 0 else -86_400_000 -- minus one day
       t = getPOSIXTime $ days userDeadline
@@ -283,6 +330,9 @@ testMintAdatag vout tout vint act vdl vdep = do
       v = if vdep then 0 else -1
       ld = getMinLockingDeposit (mpDepositBase mp) (lengthOfByteString adatag) - v
       dep = if tout then ld else 0
+
+  logInfo $ "################## VIDAT: " Haskell.++ Prelude.show vidat
+  logInfo $ "################## VODAT: " Haskell.++ Prelude.show vodat
 
   beneficiary <- newUser $ adaValue (dep + 10) -- deposit plus some for fees
   let tdat = createTimeDepositDatum beneficiary dl
@@ -298,14 +348,17 @@ testMintAdatag vout tout vint act vdl vdep = do
                in Haskell.any (\(_, tn, _) -> tn == TokenName cnftToken) flattenedValue
           )
           utxos
-
-      mtr = createMintRedeemer adatag AddAdatag
+      -- uv = Val 1 "h" "j"
+      -- proof = ProofNode uv (ProofLeaf emptyHash) (ProofLeaf emptyHash)
+      mtr = createMintRedeemer AddAdatag adatag initVal initVal $ initialTree initVal
       mval = singleton (scriptCurrencySymbol amp) (TokenName adatag) 1
       cnft = singleton cnftSymbol (TokenName cnftToken) 1
       mtx = mintAdatagTx beneficiary sp ref amp mtr mval shv vidat vodat cnft tdv tdat (adaValue dep) vout tout
 
   -- Wait till feature deactivation
-  let waitfor = if act then POSIXTime 0 else days (depositExpiry + 250)
+      waitfor = if act then POSIXTime 0 else days (depositExpiry + 250)
+  logInfo $ "################## MTR: " Haskell.++ Prelude.show mtr
+    
   wait waitfor
 
   range <- currentTimeInterval (POSIXTime (-100)) (POSIXTime 100)
@@ -318,14 +371,14 @@ testMintAdatag vout tout vint act vdl vdep = do
 -- mintAdatagTx
 --              user          us           ref         mpol             mred            adatag   vpol               vidat             vodat              cnft     tpol                 tdat               deposit
 mintAdatagTx :: PubKeyHash -> UserSpend -> TxOutRef -> MintingScript -> MintRedeemer -> Value -> ValidatorScript -> ValidatorDatum -> ValidatorDatum -> Value -> TimeDepositScript -> TimeDepositDatum -> Value -> Bool -> Bool -> Tx
-mintAdatagTx u us ref mpol mred adatag vpol vidat vodat cnft tpol tdat deposit hasv hast =
+mintAdatagTx u us ref mpol mred at vpol vidat vodat cnft tpol tdat deposit hasv hast =
   Haskell.mconcat
-    [ mintValue mpol mred adatag,
-      Haskell.mconcat [payToScript tpol (InlineDatum tdat) deposit | hast],
-      Haskell.mconcat [spendScript vpol ref () vidat | hasv],
-      Haskell.mconcat [payToScript vpol (InlineDatum vodat) (adaValue 1 <> cnft) | hasv],
-      payToKey u adatag,
-      userSpend us
+    [ mintValue mpol mred at
+    , Haskell.mconcat [payToScript tpol (InlineDatum tdat) deposit | hast]
+    , Haskell.mconcat [spendScript vpol ref () vidat | hasv]
+    , Haskell.mconcat [payToScript vpol (InlineDatum vodat) (adaValue 1 <> cnft) | hasv]
+    , payToKey u at
+    , userSpend us
     ]
 
 mintAdatag :: Run ()

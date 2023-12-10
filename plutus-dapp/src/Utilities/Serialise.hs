@@ -1,27 +1,37 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
-module Utilities.Serialise
-  ( codeToScript,
-    dataToJSON,
-    printDataToJSON,
-    writeCodeToFile,
-    writeDataToFile,
-  )
+module Utilities.Serialise (
+  codeToScript,
+  dataToJSON,
+  printDataToJSON,
+  writeCodeToFile,
+  writeDataToFile,
+)
 where
 
-import           Cardano.Api           (Error (displayError), File (..),
-                                        PlutusScript, PlutusScriptV2,
-                                        prettyPrintJSON,
-                                        unsafeHashableScriptData, writeFileJSON,
-                                        writeFileTextEnvelope)
-import           Cardano.Api.Shelley   (PlutusScript (..), fromPlutusData,
-                                        scriptDataToJsonDetailedSchema)
-import           Data.Aeson            (Value)
-import qualified Data.ByteString.Char8 as BS8
-import           PlutusLedgerApi.V1    (ToData)
-import qualified PlutusLedgerApi.V2    as PlutusV2
-import           PlutusTx              (CompiledCode)
-import           Text.Printf           (printf)
+import Cardano.Api (
+  Error (displayError),
+  File (..),
+  PlutusScript,
+  PlutusScriptV2,
+  prettyPrintJSON,
+  unsafeHashableScriptData,
+  writeFileJSON,
+  writeFileTextEnvelope,
+ )
+import Cardano.Api.Shelley (
+  PlutusScript (..),
+  fromPlutusData,
+  scriptDataToJsonDetailedSchema,
+ )
+import Data.Aeson (Value)
+import Data.ByteString.Char8 qualified as BS8
+import PlutusLedgerApi.V1 (ToData)
+import PlutusLedgerApi.V2 qualified as PlutusV2
+import PlutusTx (CompiledCode)
+import Prelude
+import Text.Printf (printf)
 
 -- Serialize compiled code
 codeToScript :: CompiledCode a -> PlutusScript PlutusScriptV2

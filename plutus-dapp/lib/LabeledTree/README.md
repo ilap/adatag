@@ -31,7 +31,7 @@ In general, Merkle trees are more complex than complete binary trees, but they a
 | Implementation | Easier | Easier | More difficult |
 
 
-## Update Proof Rules
+## Update Proof Rules -- DEPRECATED. it's too complex.
 
 Proof rules for adding an element into the tree
 

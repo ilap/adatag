@@ -1,13 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module LabeledTree.Hash where
 
-import qualified Data.ByteString.Base16 as Haskell.Base16
-import qualified Data.Text as Haskell.Text
-import qualified Data.Text.Encoding as Haskell.Text.Encoding
-import qualified PlutusTx
+import Data.ByteString.Base16 qualified as Haskell.Base16
+import Data.Text qualified as Haskell.Text
+import Data.Text.Encoding qualified as Haskell.Text.Encoding
+import PlutusTx qualified
 import PlutusTx.Prelude hiding (toList)
-import qualified Prelude as Haskell
+import Prelude qualified as Haskell
 
 -- * Hash
 
@@ -27,17 +28,17 @@ instance Haskell.Show Hash where
       . takeByteString 3
       $ bs
 
-{-# INLINEABLE hash #-}
+{-# INLINABLE hash #-}
 hash :: BuiltinByteString -> Hash
 hash = Hash . sha2_256
 
-{-# INLINEABLE combineHashes #-}
+{-# INLINABLE combineHashes #-}
 combineHashes :: Hash -> Hash -> Hash
 combineHashes (Hash h) (Hash h') = hash (appendByteString h h')
 
 -- * combineThreeHashes
 
-{-# INLINEABLE combineThreeHashes #-}
+{-# INLINABLE combineThreeHashes #-}
 combineThreeHashes :: Hash -> Hash -> Hash -> Hash
 combineThreeHashes (Hash h) (Hash h') (Hash h'') =
   hash (appendByteString h (appendByteString h' h''))

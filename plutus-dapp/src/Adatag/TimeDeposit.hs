@@ -1,53 +1,73 @@
-{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Adatag.TimeDeposit where
 
-import qualified Data.ByteString.Char8       as BS8
-import           Data.Maybe                  (fromJust)
-import           PlutusCore.Version          (plcVersion100)
-import           PlutusLedgerApi.V1.Interval (contains)
-import           PlutusLedgerApi.V2          (Datum (Datum),
-                                              OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
-                                              POSIXTime (..), PubKeyHash (..),
-                                              ScriptContext (scriptContextTxInfo),
-                                              TxInfo (txInfoValidRange), from)
-import           PlutusLedgerApi.V2.Contexts (txSignedBy)
-import           PlutusTx                    (CompiledCode,
-                                              FromData (fromBuiltinData),
-                                              compile, liftCode, makeLift,
-                                              unstableMakeIsData)
-import qualified PlutusTx
-import           PlutusTx.Builtins.Internal
-import           PlutusTx.Prelude            (Bool (..), Maybe (..), traceError,
-                                              traceIfFalse, ($), (&&), (.))
-import           Prelude                     (IO, Show (show), String)
-import           Text.Printf                 (printf)
-import           Utilities                   (Network, posixTimeFromIso8601,
-                                              printDataToJSON,
-                                              validatorAddressBech32,
-                                              wrapValidator, writeCodeToFile,
-                                              writeDataToFile)
+import Data.ByteString.Char8 qualified as BS8
+import Data.Maybe (fromJust)
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V1.Interval (contains)
+import PlutusLedgerApi.V2 (
+  Datum (Datum),
+  OutputDatum (NoOutputDatum, OutputDatum, OutputDatumHash),
+  POSIXTime (..),
+  PubKeyHash (..),
+  ScriptContext (scriptContextTxInfo),
+  TxInfo (txInfoValidRange),
+  from,
+ )
+import PlutusLedgerApi.V2.Contexts (txSignedBy)
+import PlutusTx (
+  CompiledCode,
+  FromData (fromBuiltinData),
+  compile,
+  liftCode,
+  makeLift,
+  unstableMakeIsData,
+ )
+import PlutusTx qualified
+import PlutusTx.Builtins.Internal
+import PlutusTx.Prelude (
+  Bool (..),
+  Maybe (..),
+  traceError,
+  traceIfFalse,
+  ($),
+  (&&),
+  (.),
+ )
+import Text.Printf (printf)
+import Utilities (
+  Network,
+  posixTimeFromIso8601,
+  printDataToJSON,
+  validatorAddressBech32,
+  wrapValidator,
+  writeCodeToFile,
+  writeDataToFile,
+ )
+import Prelude (IO, Show (show), String)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / VALIDATOR ------------------------------------------
 
 data TimeDepositDatum
   = TimeDepositDatum
-      { ddBeneficiary :: PubKeyHash, -- Beneficiary of the locked time deposit.
-        ddDeadline    :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter)
-        -- from submitting the adatag minting transaction
-        -- Note:  The minting policy will validate the deadline at minting time.
-        -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
-        -- Minting policy handles this logic. It's not required for unlocking.
-        -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
+      { ddBeneficiary :: PubKeyHash -- Beneficiary of the locked time deposit.
+      , ddDeadline :: POSIXTime -- Deadline to claim deposits. Preferably ~20 days (minting policy's parameter)
+      -- from submitting the adatag minting transaction
+      -- Note:  The minting policy will validate the deadline at minting time.
+      -- This prevents any adversaries generating 26 adatags at the same time but having only one time-lock output in the transaction.
+      -- Minting policy handles this logic. It's not required for unlocking.
+      -- TODO: ddAdatag :: BuiltinByteString - inf future version we would allow multiple minting in the same tx.
       }
   | -- Note: the unit type () has a different signature than the {} and therefore different PLC data
     -- () = {"constructor": 1, "fields": [{"constructor": 0,"fields": []}]}"
@@ -58,8 +78,8 @@ data TimeDepositDatum
 unstableMakeIsData ''TimeDepositDatum
 
 data TimeDepositParams = TimeDepositParams
-  { dpCollector      :: PubKeyHash, -- Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
-    dpCollectionTime :: POSIXTime -- The time the collector can collect the unclaimed time-lock deposits. It should be twice as deactivation time. ~1-2yrs
+  { dpCollector :: PubKeyHash -- Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
+  , dpCollectionTime :: POSIXTime -- The time the collector can collect the unclaimed time-lock deposits. It should be twice as deactivation time. ~1-2yrs
   }
   deriving (Prelude.Show)
 
@@ -73,7 +93,7 @@ data TimeDepositRedeemer = Collect | Redeem
 unstableMakeIsData ''TimeDepositRedeemer
 
 -- Only inline datums are allowed.
-{-# INLINEABLE parseTimeDepositDatum #-}
+{-# INLINABLE parseTimeDepositDatum #-}
 parseTimeDepositDatum :: OutputDatum -> Maybe TimeDepositDatum
 parseTimeDepositDatum o = case o of
   NoOutputDatum -> traceError "Found time deposit output but NoOutputDatum"
@@ -82,7 +102,7 @@ parseTimeDepositDatum o = case o of
 
 -- TimeDeposit validator for locking a certain amount of ADA for some time (20 days) at minting time
 -- to prevent for buying a lot of the rare usernames and sell them on the market for high price.
-{-# INLINEABLE timeDepositTypedValidator #-}
+{-# INLINABLE timeDepositTypedValidator #-}
 timeDepositTypedValidator :: TimeDepositParams -> TimeDepositDatum -> TimeDepositRedeemer -> ScriptContext -> Bool
 timeDepositTypedValidator params dat red ctx =
   case red of
@@ -96,12 +116,12 @@ timeDepositTypedValidator params dat red ctx =
     info :: TxInfo
     info = scriptContextTxInfo ctx
 
-{-# INLINEABLE validClaim #-}
+{-# INLINABLE validClaim #-}
 validClaim :: TxInfo -> Bool -> TimeDepositDatum -> PubKeyHash -> POSIXTime -> Bool
 validClaim info iscoll dat pkh pt =
   case dat of
     TimeDepositDatum {} -> traceIfFalse "time not reached" timeReached
-    _                   -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
+    _ -> iscoll -- Any other datum is handled as donation, meaning only the collector can claim it.
     -- It's anti pattern but we allow any wrongly formed datums for collections
     && traceIfFalse "signature is missing" signedByValidKey
   where
@@ -111,7 +131,7 @@ validClaim info iscoll dat pkh pt =
     timeReached :: Bool
     timeReached = contains (from pt) $ txInfoValidRange info
 
-{-# INLINEABLE timeDepositUntypedValidator #-}
+{-# INLINABLE timeDepositUntypedValidator #-}
 timeDepositUntypedValidator :: TimeDepositParams -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 timeDepositUntypedValidator = wrapValidator . timeDepositTypedValidator
 
@@ -130,10 +150,10 @@ saveTimeDepositValidator pkh ct = do
   where
     op =
       TimeDepositParams
-        { dpCollector = pkh,
-          dpCollectionTime = ct
+        { dpCollector = pkh
+        , dpCollectionTime = ct
         }
-    fp = printf "contracts/03-time-deposit-%s-%s.plutus"  (show pkh) (show (getPOSIXTime ct))
+    fp = printf "contracts/03-time-deposit-%s-%s.plutus" (show pkh) (show (getPOSIXTime ct))
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------
@@ -145,10 +165,10 @@ timeDepositAddressBech32 network tdp = validatorAddressBech32 network (timeDepos
 -- Generate a datum to lock.
 printTimeDepositDatumJSON :: PubKeyHash -> String -> IO ()
 printTimeDepositDatumJSON pkh time =
-  printDataToJSON $
-    TimeDepositDatum
-      { ddBeneficiary = pkh,
-        ddDeadline = fromJust $ posixTimeFromIso8601 time
+  printDataToJSON
+    $ TimeDepositDatum
+      { ddBeneficiary = pkh
+      , ddDeadline = fromJust $ posixTimeFromIso8601 time
       }
 
 writeTimeDepositDatumJson :: String -> String -> IO ()
@@ -158,8 +178,8 @@ writeTimeDepositDatumJson pkh time = do
   where
     datum =
       TimeDepositDatum
-        { ddBeneficiary = PubKeyHash $ BuiltinByteString $ BS8.pack pkh,
-          ddDeadline = fromJust $ posixTimeFromIso8601 time
+        { ddBeneficiary = PubKeyHash $ BuiltinByteString $ BS8.pack pkh
+        , ddDeadline = fromJust $ posixTimeFromIso8601 time
         }
     fp = printf "contracts/03-time-deposit-%s-datum.json" $ show pkh
 

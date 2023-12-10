@@ -1,44 +1,42 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Adatag.ControlNFTMinting where
 
-import qualified Data.ByteString.Char8      as BS8 (unpack)
-import           PlutusCore.Version         (plcVersion100)
-import           PlutusLedgerApi.V1.Value   (flattenValue)
-import           PlutusLedgerApi.V2
-import qualified PlutusTx
-import           PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
-import           PlutusTx.Prelude           (Bool (..), Eq ((==)), all, any,
-                                             elem, head, traceIfFalse, ($),
-                                             (&&))
-import qualified PlutusTx.Show              as PlutusTx
-import           Prelude                    (IO, Show (show), String)
-import           Text.Printf                (printf)
-import           Utilities                  (currencySymbol)
-import           Utilities.PlutusTx         (wrapPolicy)
-import           Utilities.Serialise        (writeCodeToFile)
-
-newtype Cn = Cn BuiltinByteString
-
-PlutusTx.deriveShow ''Cn
-
--- b2Cn :: BuiltinByteString -> Cn
--- b2Cn a =  Cn a
-
-{-# INLINEABLE c2b #-}
-c2b :: CurrencySymbol -> Cn
-c2b c = Cn $ unCurrencySymbol c
+import Data.ByteString.Char8 qualified as BS8 (unpack)
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V1.Value (flattenValue)
+import PlutusLedgerApi.V2
+import PlutusTx qualified
+import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import PlutusTx.Prelude (
+  Bool (..),
+  Eq ((==)),
+  all,
+  any,
+  elem,
+  head,
+  traceIfFalse,
+  ($),
+  (&&),
+ )
+import PlutusTx.Show qualified as PlutusTx
+import Text.Printf (printf)
+import Utilities (currencySymbol)
+import Utilities.PlutusTx (wrapPolicy)
+import Utilities.Serialise (writeCodeToFile)
+import Prelude (IO, Show (show), String)
 
 -- One-shot NFT minting policy for generating 26 control NFTs for @adatag namely "a" to "z"
-{-# INLINEABLE cnftTypedPolicy #-}
+{-# INLINABLE cnftTypedPolicy #-}
 cnftTypedPolicy :: TxOutRef -> [TokenName] -> () -> ScriptContext -> Bool
 cnftTypedPolicy oref tnList () ctx =
   do
@@ -60,7 +58,7 @@ cnftTypedPolicy oref tnList () ctx =
       case flattenValue (txInfoMint (scriptContextTxInfo c)) of
         xs -> all (\(_, tn, amt) -> tn `elem` tns && amt == 1) xs
 
-{-# INLINEABLE cnftUntypedPolicy #-}
+{-# INLINABLE cnftUntypedPolicy #-}
 cnftUntypedPolicy :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 cnftUntypedPolicy tid ix tn = wrapPolicy $ cnftTypedPolicy oref tn'
   where

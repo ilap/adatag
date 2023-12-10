@@ -1,12 +1,13 @@
-{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DataKinds #-}
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
-{-# LANGUAGE DeriveAnyClass      #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 {- This is a simple parameterized StateHolder designed for handling control
 NFTs, which store the state of a tree used for minting and burning usernames.
@@ -28,24 +29,41 @@ of its addresses.
 -}
 module Adatag.StateHolder where
 
-import           Adatag.Utils
-import           PlutusCore.Version          (plcVersion100)
-import           PlutusLedgerApi.V2
-import           PlutusLedgerApi.V2.Contexts (findOwnInput,
-                                              getContinuingOutputs)
-import           PlutusTx                    (CompiledCode,
-                                              FromData (fromBuiltinData),
-                                              compile, liftCode,
-                                              unstableMakeIsData)
-import qualified PlutusTx
-import           PlutusTx.Prelude            (Bool, Eq (..), Integer,
-                                              Maybe (..), traceError,
-                                              traceIfFalse, ($), (&&), (+), (.),
-                                              (>=))
-import           Prelude                     (IO, Show (show))
-import           Text.Printf                 (printf)
-import           Utilities
-
+import Adatag.Utils
+import LabeledTree.Hash qualified as LT
+import PlutusCore.Version (plcVersion100)
+import PlutusLedgerApi.V2
+import PlutusLedgerApi.V2.Contexts (
+  findOwnInput,
+  getContinuingOutputs,
+ )
+import PlutusTx (
+  CompiledCode,
+  FromData (fromBuiltinData),
+  compile,
+  liftCode,
+  unstableMakeIsData,
+ )
+import PlutusTx qualified
+import PlutusTx.Prelude (
+  Bool,
+  Eq (..),
+  Integer,
+  Maybe (..),
+  traceError,
+  traceIfFalse,
+  ($),
+  (&&),
+  (+),
+  (.),
+  (>=),
+ )
+import Text.Printf (printf)
+import Utilities
+import Prelude (IO, Show (show))
+-- import PlutusTx
+import PlutusTx.Prelude qualified as PlutusTx
+import PlutusTx.Show qualified as PlutusTx
 ---------------------------------------------------------------------------------------------------
 ----------------------------- ON-CHAIN: HELPER FUNCTIONS/TYPES ------------------------------------
 data TreeState = AdatagAdded | AdatagRemoved | InitialState
@@ -63,12 +81,12 @@ unstableMakeIsData ''TreeState
 -- 6. The associated minting policy that mints or burns adatags.
 data ValidatorDatum
   = ValidatorDatum
-      { vdOperationCount :: Integer, -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
-        vdAdatag         :: BuiltinByteString, -- The username added or removed from the tree
-        vdTreeState      :: TreeState, -- The state of the Tree.
-        vdTreeSize       :: Integer, -- The size of a tree is the same as the number of adatags in the tree.
-        vdTreeProof      :: BuiltinByteString, -- TODO: replace with Hash. The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
-        vdMintingPolicy  :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the StateHolder and minting policy.
+      { vdOperationCount :: Integer -- TODO: reconsider this. The number of operations (adding/deleting adatag) from bootstrap.
+      , vdAdatag :: BuiltinByteString -- The username added or removed from the tree
+      , vdTreeState :: TreeState -- The state of the Tree.
+      , vdTreeSize :: Integer -- The size of a tree is the same as the number of adatags in the tree.
+      , vdTreeProof :: LT.Hash -- TODO: replace with Hash. The root hash of the tree, which proves the current state of the tree after a username has been added or deleted.
+      , vdMintingPolicy :: CurrencySymbol -- Corresponding adatag minting policy. It is used to avoid circular dependency between the StateHolder and minting policy.
       } -- TODO: Only for testing, removed it from releases
   | UnitDatum ()
   | EmptyDatum {}
@@ -78,7 +96,7 @@ data ValidatorDatum
 unstableMakeIsData ''ValidatorDatum
 
 -- Only inline datums are allowed.
-{-# INLINEABLE parseValidatorDatum #-}
+{-# INLINABLE parseValidatorDatum #-}
 parseValidatorDatum :: OutputDatum -> Maybe ValidatorDatum
 parseValidatorDatum o = case o of
   NoOutputDatum -> traceError "Found StateHolder output but NoOutputDatum"
@@ -109,7 +127,7 @@ type ControlNFT = CurrencySymbol
   - the new state's (output's UTxO) username, proof, and username count (based on minting action) differs from the previous state
    in the input's UTxO.
 -}
-{-# INLINEABLE stateHolderTypedValidator #-}
+{-# INLINABLE stateHolderTypedValidator #-}
 stateHolderTypedValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
 stateHolderTypedValidator cnft dat _ ctx =
   -- We assume that the system is properly bootstrapped
@@ -123,13 +141,13 @@ stateHolderTypedValidator cnft dat _ ctx =
     ownInput :: TxOut
     ownInput = case findOwnInput ctx of
       Nothing -> traceError "policy input missing"
-      Just i  -> txInInfoResolved i
+      Just i -> txInInfoResolved i
 
     -- Get all the outputs that pay to the same script address we are currently spending from, if any.
     ownOutput :: TxOut
     ownOutput = case getContinuingOutputs ctx of
       [o] -> o
-      _   -> traceError "expected exactly one policy output"
+      _ -> traceError "expected exactly one policy output"
 
     -- Get a valid inline datum from a TxOut, if any
     -- TODO: This is just for unit tests
@@ -171,7 +189,8 @@ stateHolderTypedValidator cnft dat _ ctx =
 ---------------------------------------------------------------------------------------------------
 ------------------------------------ COMPILE VALIDATOR --------------------------------------------
 
-{-# INLINEABLE stateHolderUntypedValidator #-}
+{-# INLINABLE stateHolderUntypedValidator #-}
+-- stateHolderTypedValidator :: ControlNFT -> ValidatorDatum -> () -> ScriptContext -> Bool
 stateHolderUntypedValidator :: ControlNFT -> BuiltinData -> BuiltinData -> BuiltinData -> ()
 stateHolderUntypedValidator = wrapValidator . stateHolderTypedValidator
 
@@ -188,7 +207,7 @@ saveStateHolderValidator cnft = do
   let
   writeCodeToFile fp $ stateHolderValidator cnft
   where
-    fp = printf "contracts/04-state-holder-validator-%s.plutus"  (show cnft)
+    fp = printf "contracts/04-state-holder-validator-%s.plutus" (show cnft)
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------- HELPER FUNCTIONS FOR BOOTSTRAPPING -----------------------------------

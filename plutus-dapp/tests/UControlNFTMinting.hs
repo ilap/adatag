@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -11,27 +11,37 @@
 
 module Main where
 
-import qualified Adatag.ControlNFTMinting  as CM
-import           Control.Monad             (Monad (return), replicateM, unless)
-import           Plutus.Model
-import qualified Plutus.Model.Validator.V2 as MV2
-import           PlutusLedgerApi.V1.Value  (CurrencySymbol)
-import           PlutusLedgerApi.V2        (PubKeyHash, TokenName,
-                                            TxOut (txOutValue), TxOutRef,
-                                            Value (..), singleton)
-import           PlutusTx.Prelude          (Eq ((==)), Semigroup ((<>)),
-                                            foldMap, ($), (.))
-import           Prelude                   (mconcat)
-import           System.IO
-import           Test.Tasty                (defaultMain, testGroup)
+import Adatag.ControlNFTMinting qualified as CM
+import Control.Monad (Monad (return), replicateM, unless)
+import Plutus.Model
+import Plutus.Model.Validator.V2 qualified as MV2
+import PlutusLedgerApi.V1.Value (CurrencySymbol)
+import PlutusLedgerApi.V2 (
+  PubKeyHash,
+  TokenName,
+  TxOut (txOutValue),
+  TxOutRef,
+  Value (..),
+  singleton,
+ )
+import PlutusTx.Prelude (
+  Eq ((==)),
+  Semigroup ((<>)),
+  foldMap,
+  ($),
+  (.),
+ )
+import System.IO
+import Test.Tasty (defaultMain, testGroup)
+import Prelude (mconcat)
 
 main :: IO ()
 main =
   defaultMain
     $ testGroup
       "Testing CNFT minting policy"
-      [ good "Must pass - Minting Control NFTs works       " testMintControlNFT,
-        bad  "Must fail - Minting the same NFTs twice fails" testMintControlNFTTwice
+      [ good "Must pass - Minting Control NFTs works       " testMintControlNFT
+      , bad "Must fail - Minting the same NFTs twice fails" testMintControlNFTTwice
       ]
   where
     bad msg = good msg . mustFail
@@ -54,9 +64,9 @@ nftScript ref tn = MV2.mkTypedPolicy $ CM.cnftPolicy ref tn
 mintNFTTx :: TxOutRef -> TxOut -> [TokenName] -> Value -> PubKeyHash -> Tx
 mintNFTTx ref out tn val pkh =
   mconcat
-    [ mintValue (nftScript ref tn) () val,
-      payToKey pkh $ val <> txOutValue out,
-      spendPubKey ref
+    [ mintValue (nftScript ref tn) () val
+    , payToKey pkh $ val <> txOutValue out
+    , spendPubKey ref
     ]
 
 -- Create a Plutus Value from a list of token names.

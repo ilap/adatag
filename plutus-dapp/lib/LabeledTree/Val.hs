@@ -1,33 +1,29 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module LabeledTree.Val where
 
 import LabeledTree.Hash
-import qualified PlutusTx
+import PlutusTx qualified
 import PlutusTx.Prelude hiding (toList)
-import qualified Prelude as Haskell
-import qualified PlutusLedgerApi.V2 as SB
 import PlutusTx.Show
+import Prelude qualified as Haskell
 
--- | Val
---
--- The `Val` type represents the constraint data as interval set used for storing and validating elements in the tree.
--- In a `LabeledTree`, each element must fall within the initial constraint, forming two nodes
--- that contain the element for every existing element in the tree.
--- For any non-existing but valid element (lower bound < element < upper bound),
--- there will be only one node. All other elements are considered invalid.
--- This structure ensures the generation of proofs for membership and non-membership of an element.
---
--- Membership can be validated by:
--- 1. For membership (x ∈ T), if x equals either x' or x" in Val (x', x") of a node of the tree.
--- 2. For non-membership (x ∉ T), if x' < x < x" in Val (x', x") of a node of the tree.
--- All other elements are considered invalid for the tree.
-data Val
-  = Val
-      { xi :: Integer,
-        xa :: BuiltinByteString,
-        xb :: BuiltinByteString
-      }
+{- | Val
+
+The `Val` type represents the constraint data as interval set used for storing and validating elements in the tree.
+In a `LabeledTree`, each element must fall within the initial constraint, forming two nodes
+that contain the element for every existing element in the tree.
+For any non-existing but valid element (lower bound < element < upper bound),
+there will be only one node. All other elements are considered invalid.
+This structure ensures the generation of proofs for membership and non-membership of an element.
+
+Membership can be validated by:
+1. For membership (x ∈ T), if x equals either x' or x" in Val (x', x") of a node of the tree.
+2. For non-membership (x ∉ T), if x' < x < x" in Val (x', x") of a node of the tree.
+All other elements are considered invalid for the tree.
+-}
+data Val = Val Integer BuiltinByteString BuiltinByteString
   deriving (Haskell.Eq, Haskell.Show)
 
 instance Eq Val where
@@ -39,32 +35,30 @@ instance Eq Val where
 -- valid membership, x ∈ T, if x = x' or x = x" of Val (x', x")
 -- valid non-membership, x ∉ T, if x' < x < x" of Val (x', x")
 -- otherwise invalid.
-{-# INLINEABLE valid #-}
+{-# INLINABLE valid #-}
 valid :: BuiltinByteString -> Val -> Bool
 valid e val = member e val || nonmember e val
 
 -- * member
 
 -- e == a or e == b
-{-# INLINEABLE member #-}
+{-# INLINABLE member #-}
 member :: BuiltinByteString -> Val -> Bool
-member e val = e == xa val || e == xb val
+member e (Val _ a b) = e == a || e == b
 
 -- * nonmember
 
 -- a < e < b
-{-# INLINEABLE nonmember #-}
+{-# INLINABLE nonmember #-}
 nonmember :: BuiltinByteString -> Val -> Bool
-nonmember e val = xa val < e && e < xb val
+nonmember e (Val _ a b) = a  < e && e < b
 
 -- | The hash of the node's Value is the hash of the concatenated `xi`, `xa` and `xb` of the Val.
-{-# INLINEABLE hashVal #-}
+{-# INLINABLE hashVal #-}
 hashVal :: Val -> Hash
-hashVal v = hash ((intToBs $ xi v) <> xa v <> xb v)
+hashVal (Val xi xa xb) = hash (intToBs xi  <> xa <> xb)
 
-
-
-{-# INLINEABLE intToBs #-}
+{-# INLINABLE intToBs #-}
 -- It converts an Integer to a bytestring
 -- >>> intToBs (-00001234567)
 -- "-1234567"
@@ -72,6 +66,6 @@ hashVal v = hash ((intToBs $ xi v) <> xa v <> xb v)
 -- "1234567"
 --
 intToBs :: Integer -> BuiltinByteString
-intToBs n =  encodeUtf8 (show n)
+intToBs n = encodeUtf8 (show n)
 
 PlutusTx.unstableMakeIsData ''Val

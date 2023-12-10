@@ -16,3 +16,37 @@
   - Updateable node (**`Nu`**): These nodes are already part of the tree, but their values will be updated sometime by an update process.
   - Appendable node (**`Na`**): These are then nodes where a new leaf `L` will be appended to.
 - The right child (`Nr`) of an appendable node (`Na`), must always be an empty hash, represented as **`ε`**. The left child can be either an empty hash (**`ε`**) or a leaf.
+
+
+ # Letter Frequency Table for English Words
+ 
+
+| Letter | Approximate Frequency |
+|--------|------------------------|
+| E      | ~12-15%               |
+| T      | ~8-10%                |
+| A      | ~7-9%                 |
+| O      | ~7-8%                 |
+| I      | ~6-7%                 |
+| N      | ~6-7%                 |
+| S      | ~6-7%                 |
+| H      | ~5-6%                 |
+| R      | ~5-6%                 |
+| D      | ~4-5%                 |
+| L      | ~3-4%                 |
+| U      | ~2-3%                 |
+| M      | ~2-3%                 |
+| W      | ~2-3%                 |
+| C      | ~2-3%                 |
+| F      | ~2%                   |
+| G      | ~1-2%                 |
+| Y      | ~1-2%                 |
+| P      | ~1-2%                 |
+| B      | ~1-2%                 |
+| V      | ~1%                   |
+| K      | ~0.5-1%               |
+| J      | ~0.1-0.5%             |
+| X      | ~0.1-0.5%             |
+| Q      | ~0.1%                 |
+| Z      | ~0.1%                 |
+

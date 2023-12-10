@@ -1,49 +1,47 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DerivingVia           #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fexpose-all-unfoldings #-}
-
 {-# OPTIONS_GHC -fno-omit-interface-pragmas #-}
 {-# OPTIONS_GHC -fno-spec-constr #-}
 {-# OPTIONS_GHC -fno-specialise #-}
+{-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Adatag.Utils where
 
-import           PlutusLedgerApi.V1.Value
-import           PlutusLedgerApi.V2
-import qualified PlutusTx.AssocMap        as Map
-import           PlutusTx.Builtins
-import           PlutusTx.Prelude
+import PlutusLedgerApi.V1.Value
+import PlutusLedgerApi.V2
+import PlutusTx.AssocMap qualified as Map
+import PlutusTx.Builtins
+import PlutusTx.Prelude
 
-
-{-# INLINEABLE getTokenNamesOfSymbol #-}
+{-# INLINABLE getTokenNamesOfSymbol #-}
 getTokenNamesOfSymbol :: Value -> CurrencySymbol -> [TokenName]
 getTokenNamesOfSymbol (Value mp) cur =
-  maybe [] Map.keys (Map.lookup cur mp)
+  maybe [] Map.keys $ Map.lookup cur mp
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-tx/src/PlutusTx/AssocMap.hs#L265
-{-# INLINEABLE getOnlyTokenBySymbol #-}
+{-# INLINABLE getOnlyTokenBySymbol #-}
 getOnlyTokenBySymbol :: Value -> CurrencySymbol -> TokenName
 getOnlyTokenBySymbol (Value v) s =
   case Map.lookup s v of
     Nothing -> traceError "expected currency in value"
     Just i -> case Map.keys i of
       [tn] -> tn
-      _    -> traceError "expected only one token name"
+      _ -> traceError "expected only one token name"
 
 -- https://github.com/input-output-hk/plutus/blob/c5c1c39cf712fc3cd758a078467277bb2785cdf5/plutus-ledger-api/src/PlutusLedgerApi.V1/V1/Value.hs#L256
-{-# INLINEABLE hasSymbol #-}
+{-# INLINABLE hasSymbol #-}
 hasSymbol :: Value -> CurrencySymbol -> Bool
-hasSymbol (Value mp) cur = case Map.lookup cur mp of
-  Nothing -> False
-  Just _  -> True
+hasSymbol (Value mp) cur = isJust $ Map.lookup cur mp
 
 {-
   It validate the username which can have only lower case letters, digits, hyphen
@@ -59,36 +57,36 @@ hasSymbol (Value mp) cur = case Map.lookup cur mp of
   4. last chars cannot be "-", "_"
   5. only contains "a".."z", "0".."9", "_", "-" letters.
 -}
-{-# INLINEABLE isValidUsername #-}
+{-# INLINABLE isValidUsername #-}
 isValidUsername :: BuiltinByteString -> Bool
 isValidUsername bs =
   let n = lengthOfByteString bs
    in n > 0 && n < 16 --  must have valid length
-  --        && isLowerCase (indexByteString bs 0) -- 1st char must be letter
-  --        && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
-  --        && hasOnlyAllowedChars bs -- otherwise only allowed chars.
+          && isLowerCase (indexByteString bs 0) -- 1st char must be letter
+          && isLowerCaseOrDigit (indexByteString bs (n - 1)) -- Last char must be letters or digits
+          && hasOnlyAllowedChars bs -- otherwise only allowed chars.
 
-{-# INLINEABLE isLowerCase #-}
+{-# INLINABLE isLowerCase #-}
 isLowerCase :: Integer -> Bool
 isLowerCase ch = (ch >= 97) && (ch <= 122)
 
-{-# INLINEABLE isDigit #-}
+{-# INLINABLE isDigit #-}
 isDigit :: Integer -> Bool
 isDigit digit = (digit >= 48) && (digit <= 57)
 
-{-# INLINEABLE isLowerCaseOrDigit #-}
+{-# INLINABLE isLowerCaseOrDigit #-}
 isLowerCaseOrDigit :: Integer -> Bool
 isLowerCaseOrDigit ch = isLowerCase ch || isDigit ch
 
-{-# INLINEABLE isHyphen #-}
+{-# INLINABLE isHyphen #-}
 isHyphen :: Integer -> Bool
 isHyphen char = char == 45
 
-{-# INLINEABLE isUnderscore #-}
+{-# INLINABLE isUnderscore #-}
 isUnderscore :: Integer -> Bool
 isUnderscore char = char == 95
 
-{-# INLINEABLE isValidChar #-}
+{-# INLINABLE isValidChar #-}
 isValidChar :: Integer -> Bool
 isValidChar ch =
   isLowerCase ch
@@ -96,8 +94,13 @@ isValidChar ch =
     || isHyphen ch
     || isUnderscore ch
 
-{-# INLINEABLE hasOnlyAllowedChars #-}
+{-# INLINABLE hasOnlyAllowedChars #-}
 hasOnlyAllowedChars :: BuiltinByteString -> Bool
-hasOnlyAllowedChars bs =
-  let n = lengthOfByteString bs
-   in all (isValidChar . indexByteString bs) [0 .. n - 1]
+hasOnlyAllowedChars bs = go 0
+  where
+    !n = lengthOfByteString bs
+
+    go !i
+      | i >= n = True
+      | not (isValidChar (indexByteString bs i)) = False
+      | otherwise = go (i + 1)

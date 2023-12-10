@@ -1,33 +1,51 @@
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Main where
 
-import qualified Adatag.ControlNFTMinting as CNFT
-import           Adatag.StateHolder
-import           Control.Monad            (Monad (return))
-import           Plutus.Model.V2
-import           PlutusLedgerApi.V1.Value (CurrencySymbol (..),
-                                           TokenName (unTokenName))
-import           PlutusLedgerApi.V2       (BuiltinByteString, ScriptContext,
-                                           TokenName (TokenName),
-                                           TxOut (txOutValue), TxOutRef, Value,
-                                           singleton)
-import qualified PlutusTx
-import           PlutusTx.Builtins        (Integer)
-import           PlutusTx.Prelude         (Bool (..), Maybe (..), fst, head,
-                                           map, take, takeByteString, ($), (.))
-import           Prelude                  (IO, Semigroup ((<>)), mconcat)
-import qualified Prelude                  as Haskell
-import           Test.Tasty               (TestTree, defaultMain, testGroup)
+import Adatag.ControlNFTMinting qualified as CNFT
+import Adatag.StateHolder
+import Control.Monad (Monad (return))
+import Plutus.Model.V2
+import PlutusLedgerApi.V1.Value (
+  CurrencySymbol (..),
+  TokenName (unTokenName),
+ )
+import PlutusLedgerApi.V2 (
+  BuiltinByteString,
+  ScriptContext,
+  TokenName (TokenName),
+  TxOut (txOutValue),
+  TxOutRef,
+  Value,
+  singleton,
+ )
+import PlutusTx qualified
+import PlutusTx.Builtins (Integer)
+import PlutusTx.Prelude (
+  Bool (..),
+  Maybe (..),
+  fst,
+  head,
+  map,
+  take,
+  takeByteString,
+  ($),
+  (.),
+ )
+import Test.Tasty (TestTree, defaultMain, testGroup)
+import Prelude (IO, Semigroup ((<>)), mconcat)
+import Prelude qualified as Haskell
+import LabeledTree.Proofs (ProofTree(ProofLeaf))
 
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------
@@ -57,27 +75,27 @@ timeDeposit cfg = do
     "Testing StateHolder"
     [ testGroup
         "Deploying tests"
-        [good "Test Deploy StateHolder" testInitStateHolder],
-      testGroup
+        [good "Test Deploy StateHolder" testInitStateHolder]
+    , testGroup
         -- These tests using valid datums,
         "Input, output and minting tests (with correct states)"
-        [ bad  "Must fail - Two inputs/outputs" $ testInputsOutputs 2 1, -- Only one input/ouput is allowed in the MVP's tx.
-          good "Must pass - One input and output" $ testInputsOutputs 1 1, -- 1 input, 1 output and 1 minting
-          bad  "Must fail - One input and two outputs" $ testInputsOutputs 1 2, -- 1 input, 1 output and 1 minting
-          bad  "Must fail - Valid input output but two mintings" $ testInputsOutputs 2 2 -- 1 input/output and 2 mintings
-        ],
-      -- We assume a proper bootstrap, so the inputs must always be correct.
+        [ bad "Must fail - Two inputs/outputs" $ testInputsOutputs 2 1 -- Only one input/ouput is allowed in the MVP's tx.
+        , good "Must pass - One input and output" $ testInputsOutputs 1 1 -- 1 input, 1 output and 1 minting
+        , bad "Must fail - One input and two outputs" $ testInputsOutputs 1 2 -- 1 input, 1 output and 1 minting
+        , bad "Must fail - Valid input output but two mintings" $ testInputsOutputs 2 2 -- 1 input/output and 2 mintings
+        ]
+    , -- We assume a proper bootstrap, so the inputs must always be correct.
       -- Therefore, if there is any wrong input datum for a correct control NFT
       -- then the adatag is exploited, making it useless.
       -- Therefore we do not check input datums as they're assumed to be correct.
       testGroup
         "Output datum's sanity checks"
-        [ bad  "Must fail - wrong inline output datum (Unit)" $ testDatum "adatag" (dat1 "ab") datU, -- Constr 1 [Constr 0 []]
-          bad  "Must fail - malformed inline output datum ({ m = 1})" $ testDatum "adatag" (dat1 "adatag") datW, -- Constr 3 [I 1]
-          bad  "Must fail - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE, -- Constr 2 []
-          bad  "Must fail - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa"),
-          bad  "Must fail - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata"),
-          good "Must pass - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
+        [ bad "Must fail - wrong inline output datum (Unit)" $ testDatum "adatag" (dat1 "ab") datU -- Constr 1 [Constr 0 []]
+        , bad "Must fail - malformed inline output datum ({ m = 1})" $ testDatum "adatag" (dat1 "adatag") datW -- Constr 3 [I 1]
+        , bad "Must fail - malformed inline output datum (Empty)" $ testDatum "adatag" (dat1 "adatag") datE -- Constr 2 []
+        , bad "Must fail - same correct inline input output datum" $ testDatum "adatag" (dat1 "aa") (dat1 "aa")
+        , bad "Must fail - correct datum with wrong adatag" $ testDatum "adatag" datI (dat1 "adata")
+        , good "Must pass - correct and valid inline input and output datum" $ testDatum "adatag" datI (dat1 "adatag")
         ]
     ]
   where
@@ -111,12 +129,12 @@ dat1 a = createDat 1 a 1 mintSymbol
 createDat :: Integer -> BuiltinByteString -> Integer -> CurrencySymbol -> ValidatorDatum
 createDat opc tag size mp =
   ValidatorDatum
-    { vdOperationCount = opc,
-      vdAdatag = tag,
-      vdTreeState = AdatagAdded,
-      vdTreeSize = size,
-      vdTreeProof = "proof",
-      vdMintingPolicy = mp
+    { vdOperationCount = opc
+    , vdAdatag = tag
+    , vdTreeState = AdatagAdded
+    , vdTreeSize = size
+    , vdTreeProof = ProofLeaf $ hash ""
+    , vdMintingPolicy = mp
     }
 
 ---------------------------------------------------------------------------------------------------
@@ -175,14 +193,14 @@ initValidator idat = do
   where
     mintCnftTx ref out val pkh =
       mconcat
-        [ mintValue (cnftScript ref) () val,
-          payToKey pkh $ val <> txOutValue out,
-          spendPubKey ref
+        [ mintValue (cnftScript ref) () val
+        , payToKey pkh $ val <> txOutValue out
+        , spendPubKey ref
         ]
     deployTx dsp scr curr dat =
       Haskell.mconcat
-        [ userSpend dsp,
-          Haskell.mconcat
+        [ userSpend dsp
+        , Haskell.mconcat
             [ payToRef scr (InlineDatum dat) (adaValue 1 <> singleton curr tn 1) | tn <- CNFT.letters
             ]
         ]
@@ -217,11 +235,11 @@ testDatum adatag idat odat = do
   where
     datumTx scr ref cnft pkh sp at =
       mconcat
-        [ mintValue mockMintPolicy () (singleton mintSymbol at 1),
-          spendScript scr ref () idat,
-          userSpend sp,
-          payToScript scr (InlineDatum odat) (adaValue 1 <> singleton cnft "a" 1),
-          payToKey pkh (adaValue 1 <> singleton mintSymbol at 1)
+        [ mintValue mockMintPolicy () (singleton mintSymbol at 1)
+        , spendScript scr ref () idat
+        , userSpend sp
+        , payToScript scr (InlineDatum odat) (adaValue 1 <> singleton cnft "a" 1)
+        , payToKey pkh (adaValue 1 <> singleton mintSymbol at 1)
         ]
 
 -- Sanity checks of inputs/ouptus of MVP. Only one input and putput is allowed
@@ -247,10 +265,10 @@ testInputsOutputs nri mnri = do
   where
     inputTx scr refs cnft pkh sp tns mv =
       mconcat
-        [ mintValue mockMintPolicy () mv,
-          -- \^ The minting's adatag can be the same with tokenname.
-          mconcat [spendScript scr r () datI | r <- refs],
-          userSpend sp,
-          mconcat [payToScript scr (InlineDatum (dat1 $ unTokenName tn)) (adaValue 1 <> singleton cnft (TokenName $ takeByteString 1 $ unTokenName tn) 1) | tn <- tns],
-          payToKey pkh (adaValue 1 <> mv)
+        [ mintValue mockMintPolicy () mv
+        , -- \^ The minting's adatag can be the same with tokenname.
+          mconcat [spendScript scr r () datI | r <- refs]
+        , userSpend sp
+        , mconcat [payToScript scr (InlineDatum (dat1 $ unTokenName tn)) (adaValue 1 <> singleton cnft (TokenName $ takeByteString 1 $ unTokenName tn) 1) | tn <- tns]
+        , payToKey pkh (adaValue 1 <> mv)
         ]

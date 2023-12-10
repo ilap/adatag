@@ -1,9 +1,9 @@
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
@@ -11,17 +11,26 @@
 
 module Main where
 
-import           Adatag.TimeDeposit
-import           Control.Monad      (replicateM)
-import           Plutus.Model.V2
-import           PlutusLedgerApi.V2 (POSIXTime (POSIXTime, getPOSIXTime),
-                                     PubKeyHash, TxOut (txOutValue), TxOutRef,
-                                     Value (..))
-import           PlutusTx.Prelude   (AdditiveSemigroup ((+)), Bool, Integer,
-                                     ($), (.))
-import           Prelude            (Bool (..), mconcat)
-import           System.IO
-import           Test.Tasty         (TestTree, defaultMain, testGroup)
+import Adatag.TimeDeposit
+import Control.Monad (replicateM)
+import Plutus.Model.V2
+import PlutusLedgerApi.V2 (
+  POSIXTime (POSIXTime, getPOSIXTime),
+  PubKeyHash,
+  TxOut (txOutValue),
+  TxOutRef,
+  Value (..),
+ )
+import PlutusTx.Prelude (
+  AdditiveSemigroup ((+)),
+  Bool,
+  Integer,
+  ($),
+  (.),
+ )
+import System.IO
+import Test.Tasty (TestTree, defaultMain, testGroup)
+import Prelude (Bool (..), mconcat)
 
 main :: IO ()
 main = do
@@ -40,16 +49,16 @@ timeDeposit cfg = do
         --   1.2. Unclaimed deposits: valid TimeDepositDatum and collection time reached
         -- 2. Redeem/Claim time locked deposit:
         --   2.1. It needs valid TimeDepositDatum and deadline reached.
-        [ good "Must pass - Donation |  unit Datum | coll time raeached      | collect " $ testCollections True True True, -- unit datum, must pass.
-          good "Must pass - Donation |  unit Datum | coll time not raeached  | collect " $ testCollections True False True, -- unit datum, must pass.
-          good "Must pass - Donation | valid Datum | coll time raeached      | collect " $ testCollections False True True, -- valid dat, must pass, coll time reached.
-          bad  "Must fail  | valid Datum | coll time  not raeached | collect " $ testCollections False False True, -- valid dat, must fail, coll time not reached.
-          bad  "Must fail  |  unit Datum | deadline raeached       |  redeem " $ testCollections True True False, -- unit datum, must fail.
-          bad  "Must fail  |  unit Datum | deadline not raeached   |  redeem " $ testCollections True False False, -- unit datum, must fail.
-          good "Must pass - Claim    | valid Datum | deadline raeached       |  redeem " $ testCollections False True False, -- valid datum, must pass, deadline reached.
-          bad  "Must fail | valid Datum | deadline not raeached   |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
-        ],
-      bad "None signing" testNoSigning
+        [ good "Must pass - Donation |  unit Datum | coll time raeached      | collect " $ testCollections True True True -- unit datum, must pass.
+        , good "Must pass - Donation |  unit Datum | coll time not raeached  | collect " $ testCollections True False True -- unit datum, must pass.
+        , good "Must pass - Donation | valid Datum | coll time raeached      | collect " $ testCollections False True True -- valid dat, must pass, coll time reached.
+        , bad "Must fail  | valid Datum | coll time  not raeached | collect " $ testCollections False False True -- valid dat, must fail, coll time not reached.
+        , bad "Must fail  |  unit Datum | deadline raeached       |  redeem " $ testCollections True True False -- unit datum, must fail.
+        , bad "Must fail  |  unit Datum | deadline not raeached   |  redeem " $ testCollections True False False -- unit datum, must fail.
+        , good "Must pass - Claim    | valid Datum | deadline raeached       |  redeem " $ testCollections False True False -- valid datum, must pass, deadline reached.
+        , bad "Must fail | valid Datum | deadline not raeached   |  redeem " $ testCollections False False False -- valid datum, must fail, deadline not reached.
+        ]
+    , bad "None signing" testNoSigning
     ]
   where
     bad msg = good msg . mustFail
@@ -63,8 +72,8 @@ type TimeDepositScript = TypedValidator TimeDepositDatum TimeDepositRedeemer
 params :: PubKeyHash -> POSIXTime -> TimeDepositParams
 params pkh time = do
   TimeDepositParams
-    { dpCollector = pkh,
-      dpCollectionTime = time
+    { dpCollector = pkh
+    , dpCollectionTime = time
     }
 
 script :: TimeDepositParams -> TimeDepositScript
@@ -96,8 +105,8 @@ testCollections unit reached collect = do
         where
           vtd =
             TimeDepositDatum
-              { ddBeneficiary = u1,
-                ddDeadline = deadline
+              { ddBeneficiary = u1
+              , ddDeadline = deadline
               }
       collector = if collect then c1 else u1
       red = if collect then Collect else Redeem
@@ -135,13 +144,13 @@ testTimeDepositColletion sender receiver collector dat red colltime waitDays = d
 lockingTx1 :: TimeDepositScript -> TimeDepositDatum -> UserSpend -> Value -> Tx
 lockingTx1 scr dat usp val =
   mconcat
-    [ userSpend usp,
-      payToScript scr (InlineDatum dat) val
+    [ userSpend usp
+    , payToScript scr (InlineDatum dat) val
     ]
 
 claimingTx1 :: TimeDepositScript -> PubKeyHash -> TimeDepositDatum -> TimeDepositRedeemer -> TxOutRef -> Value -> Tx
 claimingTx1 scr pkh dat red vestRef vestVal =
   mconcat
-    [ spendScript scr vestRef red dat,
-      payToKey pkh vestVal
+    [ spendScript scr vestRef red dat
+    , payToKey pkh vestVal
     ]

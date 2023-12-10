@@ -1,45 +1,52 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs     #-}
+{-# LANGUAGE GADTs #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-# OPTIONS_GHC -fno-ignore-interface-pragmas #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:defer-errors #-}
 {-# OPTIONS_GHC -fplugin-opt PlutusTx.Plugin:target-version=1.0.0 #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
-module Utilities.Conversions
-  ( Network (..),
-    currencySymbol,
-    hashScript,
-    posixTimeFromIso8601,
-    posixTimeToIso8601,
-    bytesFromHex,
-    bytesToHex,
-    validatorAddressBech32,
-    scriptHash,
-    scriptHash',
-    tryReadAddress,
-  )
+module Utilities.Conversions (
+  Network (..),
+  currencySymbol,
+  hashScript,
+  posixTimeFromIso8601,
+  posixTimeToIso8601,
+  bytesFromHex,
+  bytesToHex,
+  validatorAddressBech32,
+  scriptHash,
+  scriptHash',
+  tryReadAddress,
+)
 where
 
-import qualified Cardano.Api                as Api
-import qualified Cardano.Api.Shelley        as Api
-import           Cardano.Crypto.Hash.Class  (hashToBytes)
-import           Cardano.Ledger.BaseTypes   (CertIx (CertIx), Network (..),
-                                             TxIx (TxIx))
-import qualified Cardano.Ledger.Credential  as Ledger
-import qualified Cardano.Ledger.Crypto      as Ledger
-import qualified Cardano.Ledger.Hashes      as Ledger
-import qualified Cardano.Ledger.Keys        as Ledger
-import qualified Data.ByteString            as BS
-import qualified Data.ByteString.Base16     as BS16
-import qualified Data.Text                  as Text
-import qualified Data.Time.Clock.POSIX      as Time
-import qualified Data.Time.Format.ISO8601   as Time
-import           PlutusLedgerApi.V2         (CurrencySymbol (CurrencySymbol),
-                                             POSIXTime, ScriptHash (..))
-import qualified PlutusLedgerApi.V2         as Plutus
-import           PlutusTx                   (CompiledCode)
-import           PlutusTx.Builtins.Internal (BuiltinByteString (..))
-import           Utilities.Serialise        (codeToScript)
+import Cardano.Api qualified as Api
+import Cardano.Api.Shelley qualified as Api
+import Cardano.Crypto.Hash.Class (hashToBytes)
+import Cardano.Ledger.BaseTypes (
+  CertIx (CertIx),
+  Network (..),
+  TxIx (TxIx),
+ )
+import Cardano.Ledger.Credential qualified as Ledger
+import Cardano.Ledger.Crypto qualified as Ledger
+import Cardano.Ledger.Hashes qualified as Ledger
+import Cardano.Ledger.Keys qualified as Ledger
+import Data.ByteString qualified as BS
+import Data.ByteString.Base16 qualified as BS16
+import Data.Text qualified as Text
+import Data.Time.Clock.POSIX qualified as Time
+import Data.Time.Format.ISO8601 qualified as Time
+import PlutusLedgerApi.V2 (
+  CurrencySymbol (CurrencySymbol),
+  POSIXTime,
+  ScriptHash (..),
+ )
+import PlutusLedgerApi.V2 qualified as Plutus
+import PlutusTx (CompiledCode)
+import PlutusTx.Builtins.Internal (BuiltinByteString (..))
+import Utilities.Serialise (codeToScript)
 
 hashScript :: Api.PlutusScript Api.PlutusScriptV2 -> Api.ScriptHash
 hashScript = Api.hashScript . Api.PlutusScript Api.PlutusScriptV2
@@ -55,12 +62,12 @@ currencySymbol = CurrencySymbol . BuiltinByteString . Api.serialiseToRawBytes . 
 
 validatorAddressBech32 :: Network -> CompiledCode a -> String
 validatorAddressBech32 network v =
-  Text.unpack $
-    Api.serialiseToBech32 $
-      Api.ShelleyAddress
-        network
-        (Ledger.ScriptHashObj $ Api.toShelleyScriptHash $ scriptHash v)
-        Ledger.StakeRefNull
+  Text.unpack
+    $ Api.serialiseToBech32
+    $ Api.ShelleyAddress
+      network
+      (Ledger.ScriptHashObj $ Api.toShelleyScriptHash $ scriptHash v)
+      Ledger.StakeRefNull
 
 posixTimeFromIso8601 :: String -> Maybe POSIXTime
 posixTimeFromIso8601 s = do
@@ -107,6 +114,6 @@ tryReadAddress x = case Api.deserialiseAddress Api.AsAddressAny $ Text.pack x of
   Just (Api.AddressShelley (Api.ShelleyAddress _ p s)) ->
     Just
       Plutus.Address
-        { Plutus.addressCredential = credentialLedgerToPlutus p,
-          Plutus.addressStakingCredential = stakeReferenceLedgerToPlutus s
+        { Plutus.addressCredential = credentialLedgerToPlutus p
+        , Plutus.addressStakingCredential = stakeReferenceLedgerToPlutus s
         }

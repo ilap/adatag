@@ -1,26 +1,29 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 
 module Adatag.AlwaysFail where
 
-import           PlutusTx         (BuiltinData, CompiledCode, compile)
-import           PlutusTx.Prelude (error)
-import           Prelude          (IO, String)
-import           Utilities        (Network (..), validatorAddressBech32,
-                                   writeCodeToFile)
+import PlutusTx (BuiltinData, CompiledCode, compile)
+import PlutusTx.Prelude (error)
+import Utilities (
+  Network (..),
+  validatorAddressBech32,
+  writeCodeToFile,
+ )
+import Prelude (IO, String)
 
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / StateHolder ------------------------------------------
 
 -- It's a generic Always Fail StateHolder probably already exists on any of the networks.
-{-# INLINEABLE mkAFValidator #-}
+{-# INLINABLE mkAFValidator #-}
 mkAFValidator :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 mkAFValidator _ _ _ = error ()
 
@@ -47,12 +50,13 @@ saveScript = writeCodeToFile "contracts/01_afv.plutus" alwaysFailValidator
 -- The address generation only uses the Netork IDs e.g.: Mainnet=0 and Testnet=1
 -- Example (these simplest AFV addresses already exists on all of the networks):
 
--- $ cabal repl
--- Prelude AlwaysFailValidator> import Utilities
--- Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Testnet
--- "addr_test1wpgexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g0kpnxt"
--- Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Mainnet
--- "addr1w9gexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g5740fw"
+{- $ cabal repl
+Prelude AlwaysFailValidator> import Utilities
+Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Testnet
+"addr_test1wpgexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g0kpnxt"
+Prelude Utilities AlwaysFailValidator> referenceAddressBech32 Mainnet
+"addr1w9gexmeunzsykesf42d4eqet5yvzeap6trjnflxqtkcf66g5740fw"
+-}
 
 -- ghci> fromNetworkMagic (NetworkMagic 2)
 -- Testnet (NetworkMagic {unNetworkMagic = 2})

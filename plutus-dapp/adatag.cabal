@@ -28,18 +28,37 @@ common common-all
                     , utf8-string
                     , hashable
                     , cryptonite
+                    , random
 
+    -- default-extensions: 
     default-language: Haskell2010
     ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
-                 -fno-omit-interface-pragmas -fno-strictness
-                 -fno-spec-constr -fno-specialise -fexpose-all-unfoldings
+                 -- For release
+                 -- https://github.com/mlabs-haskell/styleguide/blob/main/README.md
+                 -- -Wcompat
+                 -- -Wincomplete-uni-patterns
+                 -- -Wincomplete-record-updates
+                 -- -Wredundant-constraints
+                 -- -Wmissing-export-lists
+                 -- -Wmissing-deriving-strategies
+                 -- -Werror
+                 -- -Wredundant-constraints
+                 -- -fno-omit-interface-pragmas 
+                 -- For release
+                 -fno-strictness
+                 -fno-spec-constr 
+                 -fno-specialise 
+                 -fexpose-all-unfoldings
                  -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
                  -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
                  -fplugin-opt PlutusTx.Plugin:conservative-optimisation
                  -- ^  Bug: it removes the trace messages otherwise.
-                 -- -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations=3
+                 -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations-uplc=12
+                 -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations-pir=12
+                 -- -fplugin-opt PlutusTx.Plugin:profile-all
                  -fwrite-ide-info
                  -hiedir=.hie
+    
 
 common common-test
     build-depends:      adatag
@@ -47,17 +66,19 @@ common common-test
                         , tasty
                         , tasty-quickcheck
                         , plutus-simple-model
+                        , adatag:labeled-tree
     hs-source-dirs:     tests
 
 library
   import:               common-all
-  hs-source-dirs:       src lib
+  hs-source-dirs:       src
   exposed-modules:
                         Adatag.AdatagMinting
                         Adatag.AlwaysFail
                         Adatag.ControlNFTMinting
                         Adatag.TimeDeposit
                         Adatag.StateHolder
+                        Adatag.SimpleValidator
                         Adatag.Utils
                         Utilities
 
@@ -66,7 +87,8 @@ library
                         Utilities.PlutusTx
                         Utilities.Serialise
 
-  build-depends:        labeled-tree
+
+  build-depends:        adatag:labeled-tree
 
 library                 labeled-tree
   import:               common-all
@@ -75,23 +97,26 @@ library                 labeled-tree
                         LabeledTree
                         -- TODO: v Remove this from release
                         LabeledTree.Utils
-
-  other-modules:        LabeledTree.Val
+                        LabeledTree.Val
                         LabeledTree.Hash
                         LabeledTree.Proofs
                         LabeledTree.LabeledTree
+
 
 executable            bootstrap
      import:           common-all
      hs-source-dirs:   app
      main-is:          Main.hs
      build-depends:    adatag
+                       -- , adatag:labeled-tree
 
 executable            update
      import:           common-all
      hs-source-dirs:   app
      main-is:          TestUpdate.hs
-     build-depends:    adatag:labeled-tree
+     build-depends:    random
+                       , adatag:labeled-tree
+                       , adatag
 
 -- TODO: implement it.
 --executable            labeled-tree
@@ -131,4 +156,11 @@ test-suite              test-adatag
                         , common-test
     type:               exitcode-stdio-1.0
     main-is:            UAdatagTesting.hs
+    --                  ^ U means Unit test, P means Property tests
+
+test-suite              test-simple
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            USimpleValidator.hs
     --                  ^ U means Unit test, P means Property tests
