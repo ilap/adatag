@@ -1,0 +1,219 @@
+{
+  "preamble": {
+    "title": "ilap/adatag",
+    "description": "Aiken contracts for project 'ilap/adatag'",
+    "version": "0.0.0",
+    "plutusVersion": "v2",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.0.21-alpha+4b04517"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "state_holder.state_holder",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/state_holder~1StateHolderDatum"
+        }
+      },
+      "redeemer": {
+        "title": "_r",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "compiledCode": "5902800100003232323232323232322223232533300832323232533300c3370e90011805800899191919299980819b8748000c03c0044c8c8c8c8c94ccc054cdc3a4008602800226464646464a66603466e1d200030190011323232533301d3370e9002180e0008991919299981019b87375a6024603c00466e00dd69809180f005240042a66604066e252000375a604a604c604c604c603c00426466e3cdd71800980f8059bae3001301f003230263027302730273027302700114a02940c064004c08c004c06c00458c024c068004c080004c06000458c8c94ccc0780045300103d87a800013374a90001980f9810000a5eb80c8cc004004008894ccc07c00452f5c026464a66603c66ebcc040c0700080184cc088008cc0100100044cc010010004c08c008c084004dd61803180b8081805180b1803180b0039808800980d80098098008b18009809180118090019180c980d180d0009180c180c800980b00098070008b19191980080080111299980a8008a6103d87a80001323253330143375e600c602400400e266e952000330180024bd70099802002000980c801180b8009bac3001300d006230140013012001300a0011630100013010002300e001300600314984d958c0040108c94ccc020cdc3a40000022646464646464646464646464a66602e60340042649319299980a99b874800000454ccc060c04c02052616153330153370e90010008a99980c18098040a4c2c2a66602a66e1d200400115333018301300814985858c04c01c58dd7180c000980c0011bae30160013016002375a60280026028004602400260240046eb8c040004c040008dd6980700098030010b1803000918029baa001230033754002ae6955ceaab9e5573eae815d0aba201",
+      "hash": "b729d1b50cb1d022d8a1911fd92b2714d50cad3eb0e3f2b162356d26"
+    },
+    {
+      "title": "tree_test.test_tree",
+      "datum": {
+        "title": "_d",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "redeemer": {
+        "title": "rdmr",
+        "schema": {
+          "$ref": "#/definitions/tree_test~1TreeRedeemer"
+        }
+      },
+      "compiledCode": "59014201000032323232323232322223253330074a229309b2b19191919299980519b87480000044c8c8c8c8c8c8c8c8c8c8c8c8c8c94ccc06cc0740084c8c8c92630120033013004301200516301b001301b0023019001301900230170013017002375c602a002602a0046eb8c04c004c04c008dd6980880098088011bae300f001300800616300800530010012232533300a3370e900000089919299980798088010a4c2c6eb8c03c004c02000854ccc028cdc3a40040022646464646464a666026602a004264649319805005001198048048018b18098009809801180880098088011bae300f001300800216300800123253330083370e90000008991919191919299980898098010a4c2c6eb8c044004c044008dd7180780098078011bad300d0013006002163006001230053754002460066ea80055cd2ab9d5573caae7d5d0aba201",
+      "hash": "036bd1d68a2d0d467b3432167c4ac55552e9c609021d3462452ca41a"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "ilap/labeled_tree/types/labeled_tree/Proof": {
+      "title": "Proof",
+      "anyOf": [
+        {
+          "title": "NodeHash",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "hash",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        },
+        {
+          "title": "HashNode",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": [
+            {
+              "title": "hash",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "left",
+              "$ref": "#/definitions/ilap~1labeled_tree~1types~1labeled_tree~1Proof"
+            },
+            {
+              "title": "right",
+              "$ref": "#/definitions/ilap~1labeled_tree~1types~1labeled_tree~1Proof"
+            }
+          ]
+        }
+      ]
+    },
+    "ilap/labeled_tree/types/labeled_tree/Val": {
+      "title": "Val",
+      "anyOf": [
+        {
+          "title": "Val",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "xi",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "xa",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "xb",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "state_holder/StateHolderDatum": {
+      "title": "StateHolderDatum",
+      "anyOf": [
+        {
+          "title": "StateHolderDatum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "count",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "adatag",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "tree_state",
+              "$ref": "#/definitions/state_holder~1TreeState"
+            },
+            {
+              "title": "tree_size",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "tree_proof",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "minting_policy",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "state_holder/TreeState": {
+      "title": "TreeState",
+      "anyOf": [
+        {
+          "title": "InitialState",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "AdatagAdded",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "AdatagRemoved",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        }
+      ]
+    },
+    "tree_test/TreeRedeemer": {
+      "title": "TreeRedeemer",
+      "anyOf": [
+        {
+          "title": "TreeRedeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "adatag",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "tree_size",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "old_state",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "new_state",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "update_val",
+              "$ref": "#/definitions/ilap~1labeled_tree~1types~1labeled_tree~1Val"
+            },
+            {
+              "title": "append_val",
+              "$ref": "#/definitions/ilap~1labeled_tree~1types~1labeled_tree~1Val"
+            },
+            {
+              "title": "proof",
+              "$ref": "#/definitions/ilap~1labeled_tree~1types~1labeled_tree~1Proof"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
