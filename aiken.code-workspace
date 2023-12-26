@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "on-chain/aiken"
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": ["aiken"]
+	  }
+}

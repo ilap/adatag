@@ -1,0 +1,34 @@
+function initConstructTree(){
+  // var testData = [["`", "c"], ["z", "{"], ["f", "g"], ["j", "l"], ["d", "e"], ["y", "z"], ["g", "h"], ["l", "o"], ["u", "ul"], ["s", "u"], ["x", "y"], ["e", "f"], ["o", "s"], ["i", "j"], ["v", "x"], ["c", "d"], ["h", "i"], ["ul", "v"]];
+  var testData2 = [["`", "adam_1969"], ["susan012", "sylvan_37"], ["mike-a210", "mystic_33"], ["adam_1969", "alex_omega"], ["angel012", "aqua_69"], ["pedre_33", "phoenix_12"], ["luna_23", "luna_55"], ["alex_omega", "angel012"], ["bella_8", "casc-ada"], ["harmony-42", "harmony-88"], ["david_123", "dreamer_22"], ["violet-22", "whispering_wolf"], ["james5", "jason_13"], ["whispering_wolf", "whispers_12"], ["emma_11", "enchanted_66"], ["enchanted_66", "enigma_12"], ["johnny_9", "journey_23"], ["mystic_33", "mystic_8"], ["phoenix_77", "quasar_33"], ["sapphire_8", "seraph_22"], ["stardust_23", "susan012"], ["olivia_99", "pedre_33"], ["journeyer_44", "legend_22"], ["chris_7", "david_123"], ["tranquility_12", "tranquility_14"], ["melody_56", "meridian_12"], ["celestial_81", "chris_7"], ["infinity_3", "james5"], ["nebula_17", "nebula_88"], ["legend_22", "lullaby_22"], ["obsidian_10", "oliver_6"], ["aurora_92", "bella_8"], ["grace_14", "harmony-14"], ["cascade-19", "cascade-27"], ["michael_8", "mike-a210"], ["zen_8", "zenith_11"], ["nova_45", "obsidian_10"], ["luminary_6", "luminary_67"], ["harmony-14", "harmony-42"], ["nebula_88", "nebulous_61"], ["seraph_27", "seraph_33"], ["aqua_69", "astral001"], ["ethereal_11", "ethereal_22"], ["cascade-27", "cascade_12"], ["oliver_6", "olivia_99"], ["whispers_22", "whispers_36"], ["tempest_44", "tempest_67"], ["trinity_8", "violet-22"], ["jason_13", "johnny_9"], ["astral_77", "astral_9"], ["illusion_9", "infinity_19"], ["solstice_21", "stardust_23"], ["sylvan_37", "tempest_16"], ["eternal_4", "ethereal_11"], ["journey_23", "journeyer_44"], ["serenade_15", "serendipity_7"], ["enigma_18", "enigma_37"], ["dreamweaver_25", "dreamweaver_36"], ["drizzle_7", "drizzle_91"], ["aurora_45", "aurora_6"], ["harmony-88", "illusion_76"], ["solitude_14", "solstice_18"], ["infinity_19", "infinity_3"], ["zenith_99", "zephyr_12"], ["mariner_23", "melody_56"], ["nocturne_42", "nova_45"], ["ethereal_8", "etherme"], ["phoenix_55", "phoenix_76"], ["mystique_12_1", "mystique_12_2"], ["luminous_32", "luna_14"], ["cascade_77", "cascade_8"], ["zephyr_4", "zephyr_55"], ["whispers_66", "whispers_67"], ["ember_18", "emma_11"], ["seraphim_9", "serenade_15"], ["lunar_37", "lunar_61"], ["meridian_12", "michael_8"], ["nebulous_61", "nocturnal1985"], ["celestial_14", "celestial_19"], ["quasar_33", "quasar_36"], ["radiant_76", "radiant_77"], ["drifter_8", "drizzle_7"], ["solace_22", "solace_92"], ["echoes_43", "echoes_8"], ["tranquility_67", "tranquility_9"], ["siren_12", "siren_77"], ["astral_9", "aurora-02"], ["zenith_11", "zenith_77"], ["dreamer_88", "dreamer_99"], ["serendipity_7", "serenity_14"], ["cascade_55", "cascade_77"], ["luminosity_14", "luminous_32"], ["mystic_8", "mystique_12_1"], ["drizzle_91", "echo-es01"], ["zenith_77", "zenith_99"], ["lullaby_5", "lullaby_7"], ["ethereal_22", "ethereal_33"], ["whispers_61", "whispers_66"], ["enigma_37", "enigma_67"], ["lunar_13", "lunar_37"], ["tempest_16", "tempest_44"], ["phoenix_29", "phoenix_55"], ["radiant_44", "radiant_76"], ["serenity_23", "serenity_33"], ["solstice_18", "solstice_21"], ["illusion_76", "illusion_77"], ["celestial_19", "celestial_67"], ["cascade_9", "celestial_12"], ["tranquility_36", "tranquility_67"], ["zephyr_88", "{"], ["whispers_12", "whispers_22"], ["seraph_57", "seraphim_9"], ["luminary_33", "luminary_6"], ["dreamweaver_21", "dreamweaver_25"], ["aurora_6", "aurora_92"], ["echoes_8", "ember_18"], ["ethereal_47", "ethereal_8"], ["solace_92", "solitude_14"], ["astral_17", "astral_77"], ["quasar_55", "quasar_67"], ["radiant_33", "radiant_44"], ["luna_14", "luna_23"], ["nocturnal_61", "nocturne_42"], ["mystique_12_2", "mystique_12_3"], ["siren_77", "siri001"], ["cascade_12", "cascade_36"], ["serenity_44", "shoelace004"], ["tempest_8", "tempike"], ["dreamer_99", "dreamweaver_21"], ["lullaby_22", "lullaby_5"], ["ethereal_37", "ethereal_47"], ["whispers_67", "whispers_8"], ["enigma_12", "enigma_18"], ["lunar_61", "lunar_9"], ["phoenix_76", "phoenix_77"], ["rada-007", "rada007"], ["illusion_77", "illusion_8"], ["celestial_67", "celestial_81"], ["cascade_36", "cascade_55"], ["tranquility_9", "trinity_8"], ["zephyr_12", "zephyr_4"], ["whispers_88", "zen_8"], ["seraph_33", "seraph_57"], ["luminary_14", "luminary_33"], ["dreamweaver_36", "dreamweaver_67"], ["aurora-02", "aurora002"], ["echo-es01", "echoes01"], ["ethereal_33", "ethereal_37"], ["shoelace1", "siren_12"], ["astral001", "astral1"], ["quasar_36", "quasar_55"], ["radiant_88", "sapphire_8"], ["luna_55", "luna_67"], ["nocturnal_12", "nocturnal_61"], ["mystique_12_3", "mystique_12_4"], ["siri001-02", "solace_22"], ["cascade_8", "cascade_9"], ["serenity_33", "serenity_44"], ["tempike", "tranquility_12"], ["dreamer_22", "dreamer_88"], ["lullaby_7", "luminary_14"], ["etherme", "etherme2"], ["whispers_36", "whispers_61"], ["enigma_67", "eternal_4"], ["lunar_9", "mariner_23"], ["phoenix_12", "phoenix_29"], ["radiant_77", "radiant_88"], ["illusion_8", "illusion_9"], ["celestial_12", "celestial_14"], ["casc-ada", "cascada9"], ["tranquility_14", "tranquility_36"], ["zephyr_55", "zephyr_88"], ["whispers_8", "whispers_88"], ["seraph_22", "seraph_27"], ["luminary_67", "luminosity_14"], ["dreamweaver_67", "drifter_8"], ["aurora002", "aurora_45"], ["echoes01", "echoes_43"], ["etherme2", "grace_14"], ["shoelace004", "shoelace1"], ["astral1", "astral_17"], ["quasar_67", "rada-007"], ["rada007", "radiant_33"], ["luna_67", "lunar_13"], ["nocturnal1985", "nocturnal_12"], ["mystique_12_4", "nebula_17"], ["siri001", "siri001-02"], ["cascada9", "cascade-19"], ["serenity_14", "serenity_23"], ["tempest_67", "tempest_8"]];
+
+  var testData = [["i", "it"]]
+  var nodeList = convertToNodeList(testData);
+ 
+  var nodeTreeStructure = fromList(nodeList).toString();
+ 
+  var chart_config = {
+    	chart: {
+    		container: "#labeled-tree",
+        connectors: {
+          "type":"step",
+          "style": {
+            "stroke-width": 2
+          }
+        },
+        animateOnInit: true,
+        node: {
+            collapsable: true,
+            // HTMLclass: 'custom-node'
+        },
+        animation: {
+            //nodeAnimation: "easeOutBounce",
+            nodeSpeed: 700,
+            //connectorsAnimation: "bounce",
+            connectorsSpeed: 700
+        }
+    	},
+    	nodeStructure: nodeTreeStructure
+  };
+  new Treant( chart_config );
+}
