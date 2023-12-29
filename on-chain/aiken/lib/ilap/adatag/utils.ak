@@ -19,8 +19,7 @@ use aiken/transaction.{
 use aiken/transaction/credential.{ScriptCredential, VerificationKeyCredential}
 use aiken/transaction/value.{MintedValue, Value, tokens}
 use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
-use ilap/adatag/types.{TokenName, ScriptHash}
-
+use ilap/adatag/types.{ScriptHash, TokenName}
 
 pub fn debug(data) {
   builtin.debug(cbor.diagnostic(data), data)
@@ -72,21 +71,26 @@ pub fn find_script_inputs(
        )
 }
 
+pub fn output_has_token(
+  outputs: List<Output>,
+  policy_id: ScriptHash,
+  asset_name: TokenName,
+) -> Bool {
+  let result =
+    outputs
+      |> list.filter_map(
+           fn(output) {
+             let v = output.value
 
-pub fn output_has_token(outputs: List<Output>, policy_id: ScriptHash, asset_name: TokenName) -> Bool {
-  let result = outputs
-  |> list.filter_map(fn (output) {
-    let v = output.value
-
-    if value.quantity_of(v, policy_id, asset_name) > 0 {
-      Some(True)
-    } else {
-      None
-    }
-  })
-  |> list.head
+             if value.quantity_of(v, policy_id, asset_name) > 0 {
+               Some(True)
+             } else {
+               None
+             }
+           },
+         )
+      |> list.head
   //|> Some
-  
   when result is {
     None -> False
     Some(_) -> True
@@ -105,7 +109,6 @@ test test_output_has_token() {
       datum: InlineDatum(Void),
       reference_script: None,
     }
-  
   output_has_token([output], own_hash, "ilap")
 }
 
@@ -279,8 +282,7 @@ pub fn parse_int(string: ByteArray) -> Int {
 }
 
 test test_parse_ints() {
-
- // parse_int("12345678901") == 12345678901 && 
- // parse_int("0") == 0 && 
- parse_int("100000000000000000000000000000000000000000000") == 100000000000000000000000000000000000000000000
+  // parse_int("12345678901") == 12345678901 && 
+  // parse_int("0") == 0 && 
+  parse_int("100000000000000000000000000000000000000000000") == 100000000000000000000000000000000000000000000
 }

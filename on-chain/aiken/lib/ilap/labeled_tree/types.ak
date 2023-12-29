@@ -1,6 +1,7 @@
 use aiken/hash
 
-pub type Hash = hash.Hash<hash.Sha2_256, ByteArray>
+pub type Hash =
+  hash.Hash<hash.Sha2_256, ByteArray>
 
 pub type Val {
   xi: ByteArray,

@@ -6,13 +6,13 @@ use aiken/transaction.{
 }
 use aiken/transaction/value.{add}
 use ilap/adatag/tests/fixture.{other_hash, own_address, own_hash}
-use ilap/adatag/types.{AdatagAdded, AdatagRemoved, ScriptHash, TreeState}
+use ilap/adatag/types.{AdatagAdded, ScriptHash, TreeState}
 use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
-use aiken/cbor
-use ilap/labeled_tree/hash.{combine_three_hashes, hash_val}
-use ilap/labeled_tree/types as tree
-use ilap/labeled_tree/proofs.{empty_hash}
 
+//use aiken/cbor
+//use ilap/labeled_tree/hash.{combine_three_hashes, hash_val}
+//use ilap/labeled_tree/types as tree
+//use ilap/labeled_tree/proofs.{empty_hash}
 
 /// This is a simple parameterized validator designed for handling (by UtxOs) control
 /// NFT tokens and the state of a tree used for minting and burning adatags.
@@ -82,7 +82,12 @@ validator(auth_token: ScriptHash) {
     // e.g. adatag == "ilap" then auth_token's token name must be "i"
     let output_value = own_output.value
     expect
-      has_only_token(output_value, auth_token, bytearray.take(new_state.adatag, 1), 1)
+      has_only_token(
+        output_value,
+        auth_token,
+        bytearray.take(new_state.adatag, 1),
+        1,
+      )
     // Condition(5): No other than AdaSymbol and the auth token's policies (currency symbols) 
     // are alowed in the output.
     expect list.length(value.policies(output_value)) == 2
@@ -175,25 +180,22 @@ test test_state_holder() {
 
   state_holder(Void, auth_token: auth_token, old_state: os, ctx: ctx)
 }
+//test test_tree_state() {
+//   let ns =
+//    TreeState {
+//      operation_count: 1110,
+//      operation: AdatagAdded,
+//      size: "0",
+//      adatag: "",
+//      minting_policy: "9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6",
+//      root_hash: "",
+//    }
 
+//  let ts = "d8799f00d87a8040410058354500340003210002230050000722008700420050000491000009950002210213011004890002007500360000082502060513051500581c9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6ff"
 
-test test_tree_state() {
-   let ns =
-    TreeState {
-      operation_count: 1110,
-      operation: AdatagAdded,
-      size: "0",
-      adatag: "",
-      minting_policy: "9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6",
-      root_hash: "",
-    }
-
-  let ts = "d8799f00d87a8040410058354500340003210002230050000722008700420050000491000009950002210213011004890002007500360000082502060513051500581c9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6ff"
-
-  //cbor.diagnostic(ns) == @"a"
-  //cbor.serialise(ns) == ""
-  let cs = combine_three_hashes(hash_val(tree.Val {xi: "0", xa: "y", xb: "{"}), empty_hash, empty_hash)
-  
-  cs == ""
-  //True
-}
+//cbor.diagnostic(ns) == @"a"
+//cbor.serialise(ns) == ""
+//  let cs = combine_three_hashes(hash_val(tree.Val {xi: "0", xa: "y", xb: "{"}), empty_hash, empty_hash)
+//  cs == ""
+//True
+//}

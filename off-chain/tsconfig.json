@@ -22,10 +22,14 @@
         "*": ["src/*"]
     },
     "types": [
-      "bun-types"
+      "bun-types",
+      "jest"
     ]
   },
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules",
+//    "packages"
+  ],
   "include": [
     "src/**/*.ts", 
     "config/**/*.ts",

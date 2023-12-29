@@ -38,5 +38,6 @@ function showDetails() {
 export {
   showDetails,
   collectorAddress,
+  collectorSeed,
   collectorPkh,
 }

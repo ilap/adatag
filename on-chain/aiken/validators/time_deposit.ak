@@ -4,13 +4,13 @@ use aiken/time.{PosixTime}
 use aiken/transaction.{
   OutputReference, ScriptContext, Spend, Transaction, TransactionId,
 }
-
 use ilap/adatag/tests/fixture.{collector_keyhash}
 use ilap/adatag/types.{
   Collect, Credential, Redeem, TimeDepositDatum, TimeDepositParams,
   TimeDepositRedeemer,
 }
 use ilap/adatag/utils.{debug, time_elapsed}
+
 //use aiken/cbor
 
 fn valid_claim(
@@ -20,18 +20,16 @@ fn valid_claim(
   time: PosixTime,
   context: ScriptContext,
 ) -> Bool {
-
   let void_datum: Data = Void
-  
   // Any void datum is handled as donation, meaning only the collector can claim it.
   // It's anti pattern but we allow any wrongly formed datums for collections
-  let valid = if void_datum == datum {
-    is_coll
-  } else {
-    
-    expect _d : TimeDepositDatum = datum
-    time_elapsed(context.transaction.validity_range, time)
-  }
+  let valid =
+    if void_datum == datum {
+      is_coll
+    } else {
+      expect _d: TimeDepositDatum = datum
+      time_elapsed(context.transaction.validity_range, time)
+    }
 
   let signed_by = list.has(context.transaction.extra_signatories, cred)?
   valid && signed_by
@@ -60,7 +58,8 @@ validator(params: TimeDepositParams) {
       // User can redeem only after the deadline has passed.
       // The false means it's not collection but redeem.
       Redeem -> {
-        expect TimeDepositDatum { beneficiary, deadline } : TimeDepositDatum = debug(datum)
+        expect TimeDepositDatum { beneficiary, deadline }: TimeDepositDatum =
+          debug(datum)
 
         valid_claim(
           is_coll: False,
@@ -84,10 +83,11 @@ test test_timedeposit_validator() {
     }
 
   //let datum = debug(Void) //VoidDatum 
-  let datum = TimeDepositDatum { beneficiary: collector_keyhash, deadline: coll_time }
-  
-  let rdmr = Redeem // Collect
+  let datum =
+    TimeDepositDatum { beneficiary: collector_keyhash, deadline: coll_time }
+  let rdmr = Redeem
 
+  // Collect
   let placeholder_utxo =
     OutputReference { transaction_id: TransactionId(""), output_index: 0 }
 

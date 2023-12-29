@@ -1,16 +1,11 @@
 use aiken/builtin.{append_bytearray, sha2_256}
-use ilap/labeled_tree/types.{ Hash, NodeHash, HashNode, Proof, Val, }
-
+use ilap/labeled_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 
 pub fn combine_hashes(h1: Hash, h2: Hash) -> Hash {
   hash(append_bytearray(h1, h2))
 }
 
-pub fn combine_three_hashes(
-  h1: Hash,
-  h2: Hash,
-  h3: Hash,
-) -> Hash {
+pub fn combine_three_hashes(h1: Hash, h2: Hash, h3: Hash) -> Hash {
   hash(append_bytearray(h1, append_bytearray(h2, h3)))
 }
 

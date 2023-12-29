@@ -1,4 +1,3 @@
-
 use aiken/bytearray
 // use aiken/builtin
 use aiken/string

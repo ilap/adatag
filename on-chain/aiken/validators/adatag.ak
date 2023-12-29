@@ -256,7 +256,7 @@ test test_adatag_minting_2_20() {
 
   let params =
     MintParams {
-      auth_token: auth_token,
+      auth_token,
       state_holder: shv,
       timedeposit_validator: tdv,
       deposit_base: 1750,

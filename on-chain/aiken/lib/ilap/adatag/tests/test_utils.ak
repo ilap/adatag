@@ -1,7 +1,6 @@
-
+use aiken/list
 use aiken/transaction/value.{add}
 use ilap/adatag/utils.{has_only_token}
-use aiken/list
 
 test test_has_only_token() {
   let v =
