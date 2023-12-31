@@ -1,0 +1,123 @@
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,textarea,p,blockquote,th,td { margin:0; padding:0; }
+table { border-collapse:collapse; border-spacing:0; }
+fieldset,img { border:0; }
+address,caption,cite,code,dfn,em,strong,th,var { font-style:normal; font-weight:normal; }
+caption,th { text-align:left; }
+h1,h2,h3,h4,h5,h6 { font-size:100%; font-weight:normal; }vi m
+q:before,q:after { content:''; }
+abbr,acronym { border:0; }
+
+body { background: #fff; }
+/* required LIB STYLES */
+/* .Treant se automatski dodaje na svaki chart conatiner */
+.Treant { position: relative; overflow: hidden; padding: 0 !important; }
+.Treant > .node,
+.Treant > .pseudo { position: absolute; display: flex; visibility: hidden; }
+.Treant.Treant-loaded .node,
+.Treant.Treant-loaded .pseudo { visibility: visible; }
+.Treant > .pseudo { width: 0; height: 0; border: none; padding: 0; }
+.Treant .collapse-switch { width: 3px; height: 3px; display: block; border: 1px solid black; position: absolute; top: 1px; right: 1px; cursor: pointer; }
+.Treant .collapsed .collapse-switch { background-color: #868DEE; }
+.Treant > .node img {	border: none; float: left; }
+
+
+
+/* optional Container STYLES */
+.chart { height: 600px; margin: 5px; width: 900px; }
+.Treant > .node { padding: 3px; border: 1px solid #484848; border-radius: 3px; }
+.Treant > .node img { width: 100%; height: 100%; }
+
+.Treant .collapse-switch { width: 100%; height: 100%; border: none; }
+.Treant .node.collapsed { background-color: #000000; }
+.Treant .node.collapsed .collapse-switch { background: none; }
+
+body {
+  background-color: #ffffff;
+}
+
+* {
+    font-family: 'Inconsolata', monospace;
+    box-sizing: border-box;
+  }
+
+  .tree-container{
+    width: 100%;
+    float: left;
+    position: relative;
+    border: solid black;
+    border-size: 0.5px
+  }
+
+  .controls {
+    width: 30%;
+    float: left;
+    position: relative;
+  }
+  .controls > ul {
+      padding-top: 20px
+  }
+
+  .controls > textarea {
+    font-family: 'Inconsolata', monospace;
+  }
+
+  .node {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    width: 250px;
+    font-family: Tahoma;
+    font-size: 12px;
+  }
+
+  .node-name,
+  .node-title,
+  .node-desc,
+  .node-dataa,
+  .node-datab {
+    flex: 1;
+    border: 1px solid #000000;
+    padding: 5px;
+    margin: 0px;
+    text-align: center;
+    width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .node-name {
+    background-color: #e9d719;
+    align-items: center;
+  }
+  .node-title {
+    background-color: #dbaf96;
+  }
+  .node-desc {
+    background-color: #dbaf96;
+  }
+  
+  .node-dataa {
+    background-color: #ed6a1e;
+  }
+  
+  .node-datab {
+    background-color: #1eed3a;
+  }
+  .node.root-node {
+    background-color: #e91919;
+  }    
+  .node.simple-node {
+    background-color: #19e91c;
+  }
+
+
+  /* Individual entries styles*/
+.Treant .node.collapsed .node-dataa { 
+  background-color: #000000; 
+  color: #fff;
+}

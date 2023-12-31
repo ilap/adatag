@@ -1,0 +1,21 @@
+{
+  "name": "adatag-app",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "my-bash-script": "bash my-script.sh"
+  },
+  "devDependencies": {
+    "@types/sha256": "^0.2.2",
+    "bun-types": "latest",
+    "eslint": "^8.50.0",
+    "fast-check": "^3.15.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "mathjs": "^12.2.1",
+    "translucent-cardano": "github:txpipe/translucent"
+  }
+}

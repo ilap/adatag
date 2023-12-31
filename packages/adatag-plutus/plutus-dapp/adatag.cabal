@@ -1,0 +1,171 @@
+cabal-version:          3.4
+name:                   adatag
+version:                0.1.0.0
+description:            Adatag - Universal NFT PlutusV2 example
+author:                 Pal Dorogi
+maintainer:             "ilap" <pal.dorogi@gmail.com>
+license:                Apache-2.0
+build-type:             Simple
+
+common common-all
+    build-depends:    aeson
+                    , base
+                    , base16-bytestring
+                    , bytestring
+                    , cardano-api
+                    , cardano-api:internal
+                    , cardano-crypto-class
+                    , cardano-ledger-core
+                    , cryptohash-sha256
+                    , plutus-core
+                    , plutus-ledger-api
+                    , plutus-tx-plugin
+                    , plutus-tx
+                    , serialise
+                    , text
+                    , time
+                    -- these below are temporary
+                    , utf8-string
+                    , hashable
+                    , cryptonite
+                    , random
+                    , cardano-ledger-alonzo
+                    , cardano-ledger-babbage
+                    
+
+    -- default-extensions: 
+    default-language: Haskell2010
+    ghc-options: -Wall -fobject-code -fno-ignore-interface-pragmas
+                 -- For release
+                 -- https://github.com/mlabs-haskell/styleguide/blob/main/README.md
+                 -- -Wcompat
+                 -- -Wincomplete-uni-patterns
+                 -- -Wincomplete-record-updates
+                 -- -Wredundant-constraints
+                 -- -Wmissing-export-lists
+                 -- -Wmissing-deriving-strategies
+                 -- -Werror
+                 -- -Wredundant-constraints
+                 -- -fno-omit-interface-pragmas 
+                 -- For release
+                 -fno-strictness
+                 -fno-spec-constr 
+                 -fno-specialise 
+                 -fexpose-all-unfoldings
+                 -fplugin-opt PlutusTx.Plugin:defer-errors -dynamic
+                 -fplugin-opt PlutusTx.Plugin:target-version=1.0.0
+                 -fplugin-opt PlutusTx.Plugin:conservative-optimisation
+                 -- ^  Bug: it removes the trace messages otherwise.
+                 -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations-uplc=12
+                 -fplugin-opt PlutusTx.Plugin:max-simplifier-iterations-pir=12
+                 -- -fplugin-opt PlutusTx.Plugin:profile-all
+                 -fwrite-ide-info
+                 -hiedir=.hie
+    
+
+common common-test
+    build-depends:      adatag
+                        , QuickCheck
+                        , tasty
+                        , tasty-quickcheck
+                        , plutus-simple-model
+                        , adatag:labeled-tree
+                        , cardano-ledger-alonzo
+                        , cardano-ledger-babbage
+    hs-source-dirs:     tests
+
+library
+  import:               common-all
+  hs-source-dirs:       src
+  exposed-modules:
+                        Adatag.AdatagMinting
+                        Adatag.AlwaysFail
+                        Adatag.ControlNFTMinting
+                        Adatag.TimeDeposit
+                        Adatag.StateHolder
+                        Adatag.SimpleValidator
+                        Adatag.Utils
+                        Utilities
+
+  other-modules:
+                        Utilities.Conversions
+                        Utilities.PlutusTx
+                        Utilities.Serialise
+
+
+  build-depends:        adatag:labeled-tree
+
+library                 labeled-tree
+  import:               common-all
+  hs-source-dirs:       lib
+  exposed-modules:
+                        LabeledTree
+                        -- TODO: v Remove this from release
+                        LabeledTree.Utils
+                        LabeledTree.Val
+                        LabeledTree.Hash
+                        LabeledTree.Proofs
+                        LabeledTree.LabeledTree
+
+
+executable            bootstrap
+     import:           common-all
+     hs-source-dirs:   app
+     main-is:          Main.hs
+     build-depends:    adatag
+                       -- , adatag:labeled-tree
+
+executable            update
+     import:           common-all
+     hs-source-dirs:   app
+     main-is:          TestUpdate.hs
+     build-depends:    random
+                       , adatag:labeled-tree
+                       , adatag
+
+-- TODO: implement it.
+--executable            labeled-tree
+--     import:           common-all
+--     hs-source-dirs:   examples
+--     main-is:          TestLabeledTree.hs
+--     build-depends:    adatag
+
+executable            functions
+    import:           common-all
+    hs-source-dirs:   examples
+    main-is:          TestFunctions.hs
+    build-depends:    adatag
+
+test-suite              test-control-nft-minting
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            UControlNFTMinting.hs
+    --                  ^ U means Unit test, P means Property tests
+
+test-suite              test-time-deposit
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            UTimeDeposit.hs
+
+test-suite              test-state-holder
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            UStateHolder.hs
+    --                  ^ U means Unit test, P means Property tests
+
+test-suite              test-adatag
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            UAdatagTesting.hs
+    --                  ^ U means Unit test, P means Property tests
+
+test-suite              test-simple
+    import:             common-all
+                        , common-test
+    type:               exitcode-stdio-1.0
+    main-is:            USimpleValidator.hs
+    --                  ^ U means Unit test, P means Property tests

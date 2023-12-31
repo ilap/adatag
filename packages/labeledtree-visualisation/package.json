@@ -1,0 +1,10 @@
+{
+  "name": "labeledtree-visualisation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tree-construct.js",
+  "dependencies": {
+    "js-sha256": "^0.10.1",
+    "underscore": "^1.13.6"
+  }
+}
