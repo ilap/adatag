@@ -17,46 +17,46 @@ In TypeScript-based dApp development on the off-chain side, the following compon
 - [Yaci-Devkit](https://github.com/bloxbean/yaci-devkit)
 - [Docker Engine](https://docs.docker.com/engine/install/)
 
-
-An example install on Ubuntu:
+An example install on Ubuntu 22.04
 
 ```bash
-# Dev
-$ sudo apt-get update && sudo apt-get upgrade
+#!/bin/env bash
 
-# Clone the project
-$ git clone https://gihub.com/ilap/adatag-dapp && cd adatag-dapp/dev
-...
+# Update the server
+sudo apt-get update && apt-get upgrade
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
 
+# Install the prerequisities (Aiken, Bun and Docker)
 # Aiken
-$ curl -sSfL https://install.aiken-lang.org | bash
-...
-$ source /home/ilap/.bashrc
-$ aikup
-...
+curl -sSfL https://install.aiken-lang.org | bash
+source ~/.bashrc
+aikup
 
 # Bun
-$ curl -fsSL https://bun.sh/install | bash 
+curl -fsSL https://bun.sh/install | bash 
 
 # Docker
-$ wget "https://desktop.docker.com/linux/main/amd64/docker-desktop-4.26.1-amd64.deb"
-$ sudo apt install docker-docker-desktop-4.26.1-amd64.deb
-...
-$ git clone https://github.com/bloxbean/yaci-devkit
-$ cd yaci-devkit
-$ sudo ./start.sh
-...
-$ ./yaci-cli.sh
-...
-yaci-cli:>create-node -o --start
-...
-devnet:default>topup addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg 10000 # in ADA
-...
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-```
+sudo apt update
+apt-cache policy docker-ce
+sudo apt install docker-ce
+# Check it
+sudo systemctl status docker
 
-As a bash script to install everything
-```bash
+# Executing the Docker Command Without Sudo
+# Open a new terminal after this to be applied
+sudo usermod -aG docker ${USER}
+
+# Clone the dApp
+git clone git@github.com:ilap/adatag-dapp && cd adatag-dapp/dev
+
+# Cllone the yaci-devkit
+git clone https://github.com/bloxbean/yaci-devkit
+
+# Reboot the system
+
 ```
 
 ## Initialise the development environment.
@@ -77,7 +77,7 @@ DEPOSIT_BASE=1750
 # In days
 LOCKING_DAYS=20
 
-# In, days after 
+# In, days after bootstrap (Mainnet default: 183, 365)
 DEACTIVATION_TIME=1
 COLLECTION_TIME=2
 
@@ -101,5 +101,4 @@ MAESTRO_API_KEY="CjL6...zhc"
 # Kupo and Ogmios combo e.g. Yaci-devkit or similar
 OGMIOS_URL="http://localhost:1337"
 KUPO_URL="http://localhost:1442"
-
 ```
