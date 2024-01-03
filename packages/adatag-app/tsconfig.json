@@ -14,6 +14,7 @@
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,
     "outDir": "./dist",
@@ -25,10 +26,11 @@
   },
   "exclude": ["node_modules"],
   "include": [
-    "src/**/*.ts",
     "config/**/*.ts",
-    "tests/**/*.ts",
-    "scripts/**/*.ts",
-    "*.json"
+    "common/**/*.ts",
+    "deploy/**/*.ts",
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "**/*.json"
   ]
 }
