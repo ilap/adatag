@@ -25,9 +25,7 @@ export async function generateAccount(assets: Assets) {
 }
 
 export async function addressFromSeed(translucent: Translucent, seed: string) {
-  return await translucent
-    .selectWalletFromSeed(seed)
-    .wallet.address();
+  return await translucent.selectWalletFromSeed(seed).wallet.address();
 }
 
 export async function getPolicyId(mp: MintingPolicy): Promise<string> {

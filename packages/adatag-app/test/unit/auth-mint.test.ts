@@ -1,7 +1,6 @@
 import { test, expect, describe } from "bun:test";
 
-import { Assets, Data, Translucent, fromText } from "translucent-cardano";
-
+import { Data, Translucent, fromText } from "translucent-cardano";
 import * as P from "../../common/plutus.ts";
 import { resolveMockData } from "../utils/resolve-mock-data.ts";
 import { addressFromSeed } from "../utils/utils.ts";
@@ -14,13 +13,13 @@ describe("Simple auth NFT mint", async () => {
     const { deployerSeed, collectorSeed, userSeed, network, provider } =
       await resolveMockData();
 
-    const translucent = await Translucent.new(provider);
+    // Always apply network to the constructor.
+    const translucent = await Translucent.new(provider, network);
 
     translucent.selectWalletFromSeed(deployerSeed);
     const [utxo] = await translucent.wallet.getUtxos();
 
-    console.log(utxo);
-    console.log(provider);
+    const userAddress = await addressFromSeed(translucent, deployerSeed);
 
     const authMintingPolicy = new P.OneshotAuthToken({
       transactionId: { hash: utxo.txHash },
@@ -29,26 +28,18 @@ describe("Simple auth NFT mint", async () => {
 
     const policyId = translucent.utils.mintingPolicyToId(authMintingPolicy);
 
-    //const asset: Asset = {} /// [policyId + fromText("a")]: 1n }
-    let assets: Assets = {};
-    const assetId = policyId + "a";
-    assets[assetId] = 1n;
-
-    const userAddress = await addressFromSeed(translucent, userSeed)
+    const mintVal = { [policyId + fromText("a")]: 1n };
     const tx = await translucent
       .newTx()
       .collectFrom([utxo])
-      .payToAddress(userAddress, assets )
+      // TODO: Translucent does not allow paying to different address than the signer.
+      .payToAddress(userAddress, mintVal)
       .attachMintingPolicy(authMintingPolicy)
-      .mintAssets(assets, Data.void())
+      .mintAssets(mintVal, Data.void())
       .complete();
 
-    console.log( tx.txComplete.to_json());
     const signedTx = await tx.sign().complete();
-    console.log(signedTx.txSigned.to_json());
 
     expect(signedTx.submit()).resolves.toBeDefined();
   });
 });
-
-

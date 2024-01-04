@@ -59,46 +59,7 @@ git clone https://github.com/bloxbean/yaci-devkit
 
 ```
 
-## Initialise the development environment.
-
-Create `.env` files for each environment e.g. `.env.local`, `.env.preview`, `.env.preprod` and `.env.mainnet`
-
-The `.env` template
+### Yaci-devkit's env file
 
 ```bash
-NETWORK="Preview"
-PLUTUS_VERSION="PlutusV2"
-# In V2 use "Blake2b_224" instead
-HASH_ALG ="Sha2_256"
-
-# In Ada
-DEPOSIT_BASE=1750
-
-# In days
-LOCKING_DAYS=20
-
-# In, days after bootstrap (Mainnet default: 183, 365)
-DEACTIVATION_TIME=1
-COLLECTION_TIME=2
-
-# Only exists on mainnet.
-# In development a very simple NFT minting policy is used for testing.
-ADAHANDLE = ""
-
-# Provider's settings for
-
-# Currently the only valid options are:
-# "KupmiosV5", "Kupmios", "Blockfrost" and "Maestro"
-PROVIDER="KupmiosV5"
-
-# Blockfrost
-BLOCKFROST_URL="http://localhost:8080/api/v0"
-BLOCKFROST_API_KEY="previewCQ....LF"
-
-# Maestro
-MAESTRO_API_KEY="CjL6...zhc"
-
-# Kupo and Ogmios combo e.g. Yaci-devkit or similar
-OGMIOS_URL="http://localhost:1337"
-KUPO_URL="http://localhost:1442"
-```
+topup_addresses=addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:10000,addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:500,addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:50,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:10000,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:500,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:50,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:10000,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:500,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:50```

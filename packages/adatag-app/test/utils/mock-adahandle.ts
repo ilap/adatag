@@ -5,6 +5,7 @@ import {
   Data,
   Emulator,
   Translucent,
+  fromText,
   generateSeedPhrase,
 } from "translucent-cardano";
 
@@ -27,7 +28,7 @@ export async function mintAdahandle(
 
   let assets: Assets = {};
   adatags.forEach((adatag) => {
-    const assetId = policyId + adatag;
+    const assetId = policyId + fromText(adatag);
     assets[assetId] = 1n;
   });
 
