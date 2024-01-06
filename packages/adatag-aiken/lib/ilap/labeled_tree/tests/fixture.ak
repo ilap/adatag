@@ -1,8 +1,7 @@
 use aiken/bytearray
 // use aiken/builtin
 use aiken/string
-use ilap/labeled_tree/hash.{hash_val, root_hash}
-use ilap/labeled_tree/proofs.{empty_hash}
+use ilap/labeled_tree/hash.{empty_hash, hash_val, root_hash}
 use ilap/labeled_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 
 /// Generate a path from a nood to the root using empty_hash as other child of a node

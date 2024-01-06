@@ -1,10 +1,18 @@
+# dotenv environment variable files
+keys/**
+!keys/*template.json
+secrets/**
+!secrets/*template.json
+.env.*
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 *.lockb
-secrets/**
-keys/*
-!keys/*template.json
-# Logs
 
+# Logs
 logs
 _.log
 npm-debug.log_
@@ -101,14 +109,7 @@ web_modules/
 
 .yarn-integrity
 
-# dotenv environment variable files
-keys/**
-secrets/**
-.env.*
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+
 
 # parcel-bundler cache (https://parceljs.org/)
 

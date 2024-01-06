@@ -1,6 +1,6 @@
 {
   "network": "Custom",
-  "hashAlg": "Sha2_256",
+  "hashAlg": "SHA2_256",
   "genesisTransaction": "762f4f65254db5f03434dc55d5a735da960deff863f694b129e736ed2ef058ff",
   "bootstrapTime": {
     "epoch": 1704349451681,

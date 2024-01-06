@@ -1,0 +1,164 @@
+import { describe, test, expect, afterEach, beforeEach, jest } from 'bun:test'
+import * as P from './plutus.ts'
+
+import {
+  C,
+  Data,
+  Datum,
+  Emulator,
+  OutRef,
+  Redeemer,
+  Script,
+  Translucent,
+  fromHex,
+  fromText,
+  networkToId,
+  utxoToCore,
+} from 'translucent-cardano'
+import { emptyHash } from '../lib/labeled-tree/types.ts'
+import { hashVal } from '../lib/labeled-tree/types.ts'
+import { resolveMockData } from 'test/utils/resolve-mock-data.ts'
+
+const stringifyData = (data: any) =>
+  JSON.stringify(
+    data,
+    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
+    '  ',
+  )
+
+type Operation = 'AdatagAdded' | 'AdatagRemoved'
+
+const rootVal = { xi: '0', xa: '`', xb: 'b' }
+
+const emptyProof: P.Proof = { NodeHash: { hash: emptyHash } }
+const proof: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: { NodeHash: { hash: emptyHash } },
+    right: { NodeHash: { hash: emptyHash } },
+  },
+}
+
+const proof1: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: proof,
+    right: proof,
+  },
+}
+
+const proof2: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: proof1,
+    right: proof1,
+  },
+}
+const proof3: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: proof2,
+    right: proof2,
+  },
+}
+const proof4: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: proof3,
+    right: proof3,
+  },
+}
+const proof5: P.Proof = {
+  HashNode: {
+    hash: hashVal(rootVal),
+    left: proof4,
+    right: proof4,
+  },
+}
+const rdmr: P.MintRedeemer = {
+  Minting: [
+    {
+      updateVal: rootVal,
+      appendVal: rootVal,
+      proof: proof5,
+    },
+  ],
+}
+
+const mintRedeemer: P.MintRedeemer = {
+  Minting: [
+    {
+      updateVal: rootVal,
+      appendVal: rootVal,
+      proof: proof,
+    },
+  ], // Use 'as const' to assert that Minting is a tuple with a single element
+}
+
+//const rdmr = Data.to(mintRedeemer, P.AdatagAdatagMinting.rdmr, 'proof')
+
+//const casted = Data.castTo(rdmr, P.AdatagAdatagMinting.rdmr, "Proof");
+//const casted = Data.to(rdmr, P.AdatagAdatagMinting.rdmr, "proof");
+
+Bun.env.ENVIRONMENT = 'Development'
+Bun.env.NETWORK = 'Custom'
+Bun.env.PROVIDER = 'Emulator'
+
+//console.log(`Casted Redeemer : ${stringifyData(casted)}`)
+const { deployerSeed, collectorSeed, userSeed, network, provider } =
+  await resolveMockData()
+
+const translucent = await Translucent.new(provider, 'Custom')
+
+const referenceScript = new P.AlwaysFailAlwaysFail()
+const alwaysFailHash = translucent.utils.validatorToScriptHash(referenceScript)
+const cred = translucent.utils.scriptHashToCredential(alwaysFailHash)
+const referenceAddress = translucent.utils.credentialToAddress(cred)
+
+console.log(`RefAddr:  ${referenceAddress}`)
+console.log(`NW ID:  ${networkToId('Custom')}`)
+
+const nwid = 0
+const ch = C.ScriptHash.from_hex(cred.hash)
+const c = C.StakeCredential.from_scripthash(ch)
+console.log(c)
+console.log(ch)
+
+const a = C.EnterpriseAddress.new(0, c).to_address().to_bech32(undefined)
+
+console.log(a)
+
+//const coreUtxo = utxoToCore(utxo);
+
+//console.log(C.Address.from_bech32("addr_test1wqngsmuxtsg7fg6r0fpthq524n63zen29gx0duluzwzdfacn04t3m").to_json());
+//const authToken = "54269c4b7fbfdd483fc7daf6e4c06d290af8eca008f9610872ef8eb5"
+//const p = (Data.castTo(fromHex(authToken), { dataType: 'list', items: [{ dataType: 'bytes' }] } as any)) as Data[];
+
+//console.log(Data.to(p))
+
+const os: Script = {
+  type: 'PlutusV2',
+  script:
+    '59047e01000033232323232323232322322223232533300a32323232533300e3370e900118068008991919191919191919191919299980d19b8748000c0640044c8c8c8c8c8c8c94ccc090c09c0084c8c94ccc08ccdc3a400860440022646464646464a66605266446666006646600200202a44a666060002297adef6c6013232323253330313371e911000021003133035337606ea4008dd3000998030030019bab3032003375c606000460680046064002004002a66605600a290010a40026eb8c008c09c014dd71804181380289929998151999801000813199b8c480012002375c6012605000c90010a99981519b87332300100122533302f0011480004cdc024004660040046064002646600200200444a66605e002297ae0133030302d3031001330020023032001480104c8c8c8c94ccc0b8cdc39bad3016302c00a337006eb4c058c0b00a520021533302e3371290000008a99981719b8700133700004a66605c010290010a4002266e3cdd7180398160149bae3007302c00a14a0294052818011bae3003302b0093001375c6004605404e46464a66605c66e1c00920601533302e3370e00290010a40002c26464666002002900024000444a66606466e1c00401040084ccc00c00cc94ccc0cd4ccc0cccdc4a40c0002266e24005207214a0266e00cdc1001a402866e040052060163371c00e00266e000052002371a0066e34008cdc7000a4000460606062606260620022c2c6eacc034c09c024588888c8c94ccc0c4c0d00084c8c94ccc0c0cdc7801003099b8700100514a06eb4c0c4008dd718178008b18190009919299981719b874800800452f5bded8c026eacc0ccc0b0008c0b0004c8cc004004014894ccc0c40045300103d87a800013232323253330323371e012004266e95200033036374c00297ae0133006006003375660660066eb8c0c4008c0d4008c0cc0048c0b4c0b8c0b8c0b8c0b8c0b8004cdd79805181200126103d8798000301d0013029001302100116300130200022302730283028001163025001323300100100c22533302400114bd7009919299981199baf300b302100200513302700233004004001133004004001302800230260013023001301b3001301b0022302230230013020001301800116323300100100922533301e00114c103d87a800013232533301d3375e600a603600401c266e952000330210024bd70099802002000981100118100009180f0009bab301c001301c001301b00237586032002603200260300046eb0c058004c038014c050004c03000458c048004c048008c040004c02000c526136563001004232533300a3370e90000008991919191919191919191919299980c980e00109924c64a66602e66e1d20000011533301a301500a14985854ccc05ccdc3a40040022a666034602a0142930b0b180a8048b1bae301a001301a002375c603000260300046eb8c058004c058008dd7180a000980a001180900098090011bad30100013008002163008001375c0024600a6ea80048c00cdd5000ab9a5573aaae7955cfaba05742ae893011e581c2229785186d719da6260fa5f7073eb08cd48c59b35253e1f4ee7fd360001',
+}
+//8202590481
+const ns: Script = {
+  type: 'PlutusV2',
+  script:
+    '59047e01000033232323232323232322322223232533300a32323232533300e3370e900118068008991919191919191919191919299980d19b8748000c0640044c8c8c8c8c8c8c94ccc090c09c0084c8c94ccc08ccdc3a400860440022646464646464a66605266446666006646600200202a44a666060002297adef6c6013232323253330313371e911000021003133035337606ea4008dd3000998030030019bab3032003375c606000460680046064002004002a66605600a290010a40026eb8c008c09c014dd71804181380289929998151999801000813199b8c480012002375c6012605000c90010a99981519b87332300100122533302f0011480004cdc024004660040046064002646600200200444a66605e002297ae0133030302d3031001330020023032001480104c8c8c8c94ccc0b8cdc39bad3016302c00a337006eb4c058c0b00a520021533302e3371290000008a99981719b8700133700004a66605c010290010a4002266e3cdd7180398160149bae3007302c00a14a0294052818011bae3003302b0093001375c6004605404e46464a66605c66e1c00920601533302e3370e00290010a40002c26464666002002900024000444a66606466e1c00401040084ccc00c00cc94ccc0cd4ccc0cccdc4a40c0002266e24005207214a0266e00cdc1001a402866e040052060163371c00e00266e000052002371a0066e34008cdc7000a4000460606062606260620022c2c6eacc034c09c024588888c8c94ccc0c4c0d00084c8c94ccc0c0cdc7801003099b8700100514a06eb4c0c4008dd718178008b18190009919299981719b874800800452f5bded8c026eacc0ccc0b0008c0b0004c8cc004004014894ccc0c40045300103d87a800013232323253330323371e012004266e95200033036374c00297ae0133006006003375660660066eb8c0c4008c0d4008c0cc0048c0b4c0b8c0b8c0b8c0b8c0b8004cdd79805181200126103d8798000301d0013029001302100116300130200022302730283028001163025001323300100100c22533302400114bd7009919299981199baf300b302100200513302700233004004001133004004001302800230260013023001301b3001301b0022302230230013020001301800116323300100100922533301e00114c103d87a800013232533301d3375e600a603600401c266e952000330210024bd70099802002000981100118100009180f0009bab301c001301c001301b00237586032002603200260300046eb0c058004c038014c050004c03000458c048004c048008c040004c02000c526136563001004232533300a3370e90000008991919191919191919191919299980c980e00109924c64a66602e66e1d20000011533301a301500a14985854ccc05ccdc3a40040022a666034602a0142930b0b180a8048b1bae301a001301a002375c603000260300046eb8c058004c058008dd7180a000980a001180900098090011bad30100013008002163008001375c0024600a6ea80048c00cdd5000ab9a5573aaae7955cfaba05742ae893011e581c2229785186d719da6260fa5f7073eb08cd48c59b35253e1f4ee7fd360001',
+}
+
+const osh = translucent.utils.validatorToScriptHash(os)
+const osc = translucent.utils.scriptHashToCredential(osh)
+const osa = translucent.utils.credentialToAddress(osc)
+
+const nsh = translucent.utils.validatorToScriptHash(ns)
+const nsc = translucent.utils.scriptHashToCredential(nsh)
+const nsa = translucent.utils.credentialToAddress(nsc)
+
+console.log(`Oh: ${osh}`)
+console.log(`Oc: ${stringifyData(osc)}`)
+console.log(`Oa: ${osa}`)
+console.log(`NH: ${nsh}`)
+console.log(`NC: ${stringifyData(nsc)}`)
+console.log(`NA: ${nsa}`)

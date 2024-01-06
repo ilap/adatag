@@ -4,10 +4,10 @@ import {
   Translucent,
   generateSeedPhrase,
   getAddressDetails,
-} from "translucent-cardano";
-import * as PlutusParams from "../config/plutus-params.json";
-import { ProviderFactory } from "../common/provider-factory.ts";
-import { Bootstrap } from "./bootstrap.ts";
+} from 'translucent-cardano'
+import * as PlutusParams from '../config/plutus-params.json'
+import { ProviderFactory } from '../common/provider-factory.ts'
+import { Bootstrap } from './bootstrap.ts'
 
 /*
   The Bootstrap process requires the following steps:
@@ -26,53 +26,53 @@ Deploy Plutus scripts on-chain (applicable even in the emulator):
 */
 
 async function generateAccount(assets: Assets) {
-  const seedPhrase = generateSeedPhrase();
+  const seedPhrase = generateSeedPhrase()
   return {
     seedPhrase,
-    address: await (await Translucent.new(undefined, "Custom"))
+    address: await (await Translucent.new(undefined, 'Custom'))
       .selectWalletFromSeed(seedPhrase)
       .wallet.address(),
     assets,
-  };
+  }
 }
 
-const OWNER = await generateAccount({ lovelace: 75_000_000_000n });
-const COLLECTOR = await generateAccount({ lovelace: 100_000_000n });
-const USER = await generateAccount({ lovelace: 100_000_000n });
+const OWNER = await generateAccount({ lovelace: 75_000_000_000n })
+const COLLECTOR = await generateAccount({ lovelace: 100_000_000n })
+const USER = await generateAccount({ lovelace: 100_000_000n })
 
-const env = "Development";
-const network = "Custom";
-const provider = "Emulator";
+const env = 'Development'
+const network = 'Custom'
+const provider = 'Emulator'
 
 const pr = ProviderFactory.createProvider(env, network, provider, [
   OWNER,
   COLLECTOR,
   USER,
-]);
+])
 
 // The transaction is built, but signed and submitted.
 
-const translucent = await Translucent.new(pr);
+const translucent = await Translucent.new(pr)
 
-translucent.selectWalletFromSeed(OWNER.seedPhrase);
-const [utxo] = await translucent.wallet.getUtxos();
+translucent.selectWalletFromSeed(OWNER.seedPhrase)
+const [utxo] = await translucent.wallet.getUtxos()
 
-const { paymentCredential } = getAddressDetails(COLLECTOR.address);
+const { paymentCredential } = getAddressDetails(COLLECTOR.address)
 
 // Access the params object for the specified network
-const params = PlutusParams[network];
+const params = PlutusParams[network]
 
 // Create a newParams object by spreading the values from the original params
 const testParams = {
   ...params,
   collectorAddress: COLLECTOR.address,
-};
+}
 
 const plutus = await Bootstrap.deployAndSave(
-  "../config/app-emulator-config.json",
+  '../config/app-emulator-config.json',
   translucent,
   utxo,
   testParams,
-);
+)
 
-console.log(JSON.stringify(plutus, null, "  "));
+console.log(JSON.stringify(plutus, null, '  '))

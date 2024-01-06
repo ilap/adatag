@@ -1,11 +1,15 @@
+use aiken/bytearray
+use aiken/cbor
+use ilap/adatag/types as adatag
+use ilap/labeled_tree/hash.{
+  combine_three_hashes, empty_hash, hash_val, root_hash,
+}
 use ilap/labeled_tree/proofs.{append_check}
 use ilap/labeled_tree/tests/fixture.{generate_proof}
-
-//use aiken/cbor
+use ilap/labeled_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 
 test test_append_check_2_1() {
   let (adatag, tree_size, root, root1, nun, nun1, proof, _) = generate_proof(2)
-  //cbor.diagnostic(proof) == @"a"
   append_check(adatag, tree_size, root, root1, nun, nun1, proof)
 }
 
@@ -33,4 +37,46 @@ test test_append_check_2_64() {
   let (adatag, tree_size, root, root1, nun, nun1, proof, _) =
     generate_proof(128)
   append_check(adatag, tree_size, root, root1, nun, nun1, proof)
+}
+
+test test_initial_added_state() {
+  let adatag = "adam"
+  let tree_size = "1"
+  let rootVal = Val { xi: "0", xa: "`", xb: "b" }
+  let rootVal1 = Val { xi: "0", xa: "`", xb: adatag }
+  let nodeVal = Val { xi: tree_size, xa: adatag, xb: "b" }
+  let hr = hash_val(rootVal)
+  let hr1 = hash_val(rootVal1)
+  let hn = hash_val(nodeVal)
+  let pl = NodeHash { hash: empty_hash }
+
+  let tree =
+    HashNode {
+      hash: hr,
+      left: NodeHash { hash: empty_hash },
+      right: NodeHash { hash: empty_hash },
+    }
+  let tree1 =
+    HashNode {
+      hash: hr1,
+      left: HashNode {
+        hash: hn,
+        left: NodeHash { hash: empty_hash },
+        right: NodeHash { hash: empty_hash },
+      },
+      right: NodeHash { hash: empty_hash },
+    }
+
+  let proof = HashNode { hash: hr, left: pl, right: pl }
+
+  //let rh = root_hash(tree1)
+  //cbor.diagnostic(tree1) == @"aa"
+  // Passes
+  let ma =
+    adatag.Minting(
+      adatag.MintRedeemer { update_val: rootVal, append_val: rootVal, proof },
+    )
+
+  cbor.diagnostic(root_hash(tree1)) == @"aa"
+  //append_check(adatag, tree_size, root_hash(tree), root_hash(tree1), rootVal, rootVal, proof)
 }

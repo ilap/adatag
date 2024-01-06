@@ -1,24 +1,4 @@
-import { applyParamsToScript, Data, Validator } from 'translucent-cardano'
-
-export type Proof =
-  | {
-      HashNode: { hash: string; left: Proof; right: Proof }
-    }
-  | {
-      NodeHash: { hash: string }
-    }
-
-export type MintRedeemer =
-  | {
-      Minting: [
-        {
-          updateVal: { xi: string; xa: string; xb: string }
-          appendVal: { xi: string; xa: string; xb: string }
-          proof: Proof
-        },
-      ]
-    }
-  | 'Burning'
+import { applyParamsToScript, Data, Validator } from '../translucent/index.ts'
 
 export interface AdatagAdatagMinting {
   new (params: {
@@ -30,15 +10,15 @@ export interface AdatagAdatagMinting {
     lockingDays: bigint
     adahandle: string
   }): Validator
-  // It can be the MintRedeemer type too
-  // MintRedeemer
   rdmr:
     | {
         Minting: [
           {
             updateVal: { xi: string; xa: string; xb: string }
             appendVal: { xi: string; xa: string; xb: string }
-            proof: Proof
+            proof:
+              | { HashNode: { hash: string; left: Data; right: Data } }
+              | { NodeHash: { hash: string } }
           },
         ]
       }
@@ -396,18 +376,3 @@ export const TimeDepositTimedeposit = Object.assign(
     },
   },
 ) as unknown as TimeDepositTimedeposit
-export function MintRedeemer(
-  mintRedeemer: {
-    Minting: [
-      {
-        updateVal: { xi: string; xa: string; xb: string }
-        appendVal: { xi: string; xa: string; xb: string }
-        proof: Proof
-      },
-    ]
-  },
-  MintRedeemer: any,
-  arg2: string,
-) {
-  throw new Error('Function not implemented.')
-}

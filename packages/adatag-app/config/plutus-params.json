@@ -1,6 +1,6 @@
 {
   "Custom": {
-    "hashAlg": "Sha2_256",
+    "hashAlg": "SHA2_256",
     "collectorAddress": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
     "collectionTime": 0.08,
     "depositBase": 1750,
@@ -9,7 +9,7 @@
     "adahandle": "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4"
   },
   "Preview": {
-    "hashAlg": "Sha2_256",
+    "hashAlg": "SHA2_256",
     "collectorAddress": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
     "collectionTime": 2,
     "depositBase": 1750,

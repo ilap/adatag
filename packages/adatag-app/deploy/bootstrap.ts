@@ -1,69 +1,77 @@
-import { Script, Data, Assets, Translucent, UTxO } from "translucent-cardano";
-import * as P from "../common/plutus.ts";
-import sha256 from "sha256";
-import blake2b_224 from "blake2b";
-import { BootstrapDetails, PlutusParams } from "./types.ts";
+import {
+  Script,
+  Data,
+  Assets,
+  Translucent,
+  UTxO,
+  fromText,
+  fromHex,
+} from 'translucent-cardano'
+import * as P from '../common/plutus.ts'
+import sha256 from 'sha256'
+import blake2b_224 from 'blake2b'
+import { BootstrapDetails, PlutusParams } from './types.ts'
 
 const emptyBlake2b224 = [
   0x83, 0x6c, 0xc6, 0x89, 0x31, 0xc2, 0xe4, 0xe3, 0xe8, 0x38, 0x60, 0x2e, 0xca,
   0x19, 0x02, 0x59, 0x1d, 0x21, 0x68, 0x37, 0xba, 0xfd, 0xdf, 0xe6, 0xf0, 0xc8,
   0xcb, 0x07,
-];
+]
 
 const emptySha2256 = [
   0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99,
   0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95,
   0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
-];
+]
 
 export class Bootstrap {
   // Utility function to calculate days
-  public static days = (n: string): number => Math.floor(eval(n) * 86400000);
+  public static days = (n: string): number => Math.floor(eval(n) * 86400000)
 
   // Placeholder details for the Bootstrap class
   private static defaultDetails: BootstrapDetails = {
-    network: "",
-    hashAlg: "",
-    genesisTransaction: "",
+    network: '',
+    hashAlg: '',
+    genesisTransaction: '',
     bootstrapTime: {
       epoch: 0,
-      date: "",
+      date: '',
     },
     referenceScript: {
-      scriptHash: "",
-      scriptAddress: "",
+      scriptHash: '',
+      scriptAddress: '',
     },
     authTokenScript: {
-      policyId: "",
+      policyId: '',
       params: {
         genesis_utxo: {
-          txHash: "",
+          txHash: '',
           outputIndex: 0,
         },
       },
     },
     timelockScript: {
-      scriptHash: "",
-      scriptAddress: "",
+      scriptHash: '',
+      scriptAddress: '',
       params: {
-        collectorAddr: "",
+        collectorAddr: '',
         collectionTime: {
           epoch: 0,
-          date: "",
+          date: '',
         },
       },
       refIndex: 0,
     },
     stateholderScript: {
-      scriptHash: "",
-      scriptAddress: "",
+      scriptHash: '',
+      scriptAddress: '',
       params: {
-        authToken: "",
+        authToken: '',
       },
       refIndex: 0,
     },
     adatagMinting: {
-      policyId: "",
+      policyId: '',
       params: {
         lockingDays: {
           days: 0,
@@ -71,14 +79,14 @@ export class Bootstrap {
         },
         deactivationTime: {
           epoch: 0,
-          date: "",
+          date: '',
         },
         depositBase: 0,
-        adahandle: "",
+        adahandle: '',
       },
       refIndex: 0,
     },
-  };
+  }
 
   // Deploys the contract, saves the result to a file, and returns the details
   public static async deployAndSave(
@@ -87,9 +95,9 @@ export class Bootstrap {
     deployerUtxo: UTxO,
     params: PlutusParams,
   ): Promise<BootstrapDetails> {
-    const result = await this.deploy(translucent, deployerUtxo, params);
-    Bun.write(Bun.file(file), JSON.stringify(result, null, "  "));
-    return result;
+    const result = await this.deploy(translucent, deployerUtxo, params)
+    Bun.write(Bun.file(file), JSON.stringify(result, null, '  '))
+    return result
   }
 
   public static async deploy(
@@ -97,7 +105,7 @@ export class Bootstrap {
     deployerUtxo: UTxO,
     params: PlutusParams,
   ): Promise<BootstrapDetails> {
-    const epoch = Date.now();
+    const epoch = Date.now()
     const defaultDetails: BootstrapDetails = {
       ...this.defaultDetails,
       network: translucent.network,
@@ -106,32 +114,32 @@ export class Bootstrap {
         epoch: epoch,
         date: new Date(epoch).toString(),
       },
-    };
+    }
 
     const refDetails = this.getReferenceDetails(
       translucent,
       params,
       defaultDetails,
-    );
+    )
     const { authMintingPolicy, authDetails } = this.getAuthTokenScript(
       translucent,
       deployerUtxo,
       refDetails,
-    );
+    )
     const { timelockScript, timelockDetails } = this.getTimelockDetails(
       translucent,
       params,
       authDetails,
-    );
+    )
     const { mintingPolicy, stateholderValidator, mintingDetails } =
-      this.getMintingDetails(translucent, params, timelockDetails);
+      this.getMintingDetails(translucent, params, timelockDetails)
 
     return await this.buildTx(translucent, deployerUtxo, mintingDetails, {
       authMintingPolicy,
       timelockScript,
       stateholderValidator,
       mintingPolicy,
-    });
+    })
   }
 
   private static getReferenceDetails(
@@ -139,12 +147,12 @@ export class Bootstrap {
     params: PlutusParams,
     details: BootstrapDetails,
   ) {
-    const referenceScript = new P.AlwaysFailAlwaysFail();
+    const referenceScript = new P.AlwaysFailAlwaysFail()
     const alwaysFailHash =
-      translucent.utils.validatorToScriptHash(referenceScript);
+      translucent.utils.validatorToScriptHash(referenceScript)
     const referenceAddress = translucent.utils.credentialToAddress(
       translucent.utils.scriptHashToCredential(alwaysFailHash),
-    );
+    )
 
     return {
       ...details,
@@ -152,7 +160,7 @@ export class Bootstrap {
         scriptAddress: referenceAddress,
         scriptHash: alwaysFailHash,
       },
-    };
+    }
   }
 
   private static getAuthTokenScript(
@@ -163,8 +171,8 @@ export class Bootstrap {
     const authMintingPolicy = new P.OneshotAuthToken({
       transactionId: { hash: deployerUtxo.txHash },
       outputIndex: BigInt(deployerUtxo.outputIndex),
-    });
-    const policyId = translucent.utils.mintingPolicyToId(authMintingPolicy);
+    })
+    const policyId = translucent.utils.mintingPolicyToId(authMintingPolicy)
 
     return {
       authMintingPolicy,
@@ -180,7 +188,7 @@ export class Bootstrap {
           },
         },
       },
-    };
+    }
   }
 
   private static getTimelockDetails(
@@ -189,16 +197,16 @@ export class Bootstrap {
     details: BootstrapDetails,
   ) {
     const collectionTime =
-      details.bootstrapTime.epoch + this.days(params.collectionTime.toString());
-    const addr = translucent.utils.getAddressDetails(params.collectorAddress);
+      details.bootstrapTime.epoch + this.days(params.collectionTime.toString())
+    const addr = translucent.utils.getAddressDetails(params.collectorAddress)
     const timeLock = new P.TimeDepositTimedeposit({
       collector: addr.paymentCredential!.hash,
       collectionTime: BigInt(collectionTime),
-    });
-    const timeLockHash = translucent.utils.validatorToScriptHash(timeLock);
+    })
+    const timeLockHash = translucent.utils.validatorToScriptHash(timeLock)
     const timelockAddress = translucent.utils.credentialToAddress(
       translucent.utils.scriptHashToCredential(timeLockHash),
-    );
+    )
 
     return {
       timelockScript: timeLock,
@@ -217,7 +225,7 @@ export class Bootstrap {
           refIndex: -1,
         },
       },
-    };
+    }
   }
 
   private static getMintingDetails(
@@ -225,20 +233,21 @@ export class Bootstrap {
     params: PlutusParams,
     details: BootstrapDetails,
   ) {
-    const authPolicyId = details.authTokenScript.policyId;
-    const stateholderValidator = new P.StateHolderStateHolder(authPolicyId);
+    const authPolicyId = details.authTokenScript.policyId
+    const stateholderValidator = new P.StateHolderStateHolder(authPolicyId)
+
     const stateholderHash =
-      translucent.utils.validatorToScriptHash(stateholderValidator);
+      translucent.utils.validatorToScriptHash(stateholderValidator)
     const stateholderCredential =
-      translucent.utils.scriptHashToCredential(stateholderHash);
+      translucent.utils.scriptHashToCredential(stateholderHash)
     const stateholderAddress = translucent.utils.credentialToAddress(
       stateholderCredential,
-    );
+    )
 
     const deactivationTime =
       details.bootstrapTime.epoch +
-      this.days(params.deactivationTime.toString());
-    const lockingDays = this.days(params.lockingDays.toString());
+      this.days(params.deactivationTime.toString())
+    const lockingDays = this.days(params.lockingDays.toString())
 
     const scriptPparams = {
       authToken: authPolicyId,
@@ -248,10 +257,10 @@ export class Bootstrap {
       depositBase: BigInt(params.depositBase),
       lockingDays: BigInt(lockingDays),
       adahandle: params.adahandle,
-    };
+    }
 
-    const mintingPolicy = new P.AdatagAdatagMinting(scriptPparams);
-    const mintingPolicyId = translucent.utils.mintingPolicyToId(mintingPolicy);
+    const mintingPolicy = new P.AdatagAdatagMinting(scriptPparams)
+    const mintingPolicyId = translucent.utils.mintingPolicyToId(mintingPolicy)
 
     return {
       mintingPolicy,
@@ -283,7 +292,7 @@ export class Bootstrap {
           refIndex: -1,
         },
       },
-    };
+    }
   }
 
   private static async buildTx(
@@ -291,13 +300,13 @@ export class Bootstrap {
     deployerUtxO: UTxO,
     details: BootstrapDetails,
     scripts: {
-      authMintingPolicy: Script;
-      timelockScript: Script;
-      stateholderValidator: Script;
-      mintingPolicy: Script;
+      authMintingPolicy: Script
+      timelockScript: Script
+      stateholderValidator: Script
+      mintingPolicy: Script
     },
   ) {
-    const refAddr = details.referenceScript.scriptAddress;
+    const refAddr = details.referenceScript.scriptAddress
     const tx = translucent
       .newTx()
       .collectFrom([deployerUtxO])
@@ -315,57 +324,58 @@ export class Bootstrap {
         refAddr,
         { inline: Data.void(), scriptRef: scripts.timelockScript },
         {},
-      );
+      )
 
-    let assets: Assets = {};
-    const sateholderAddress = details.stateholderScript.scriptAddress;
+    let assets: Assets = {}
+    const sateholderAddress = details.stateholderScript.scriptAddress
 
     for (let i = 97; i <= 122; i++) {
-      const val = [48, i - 1, i + 1];
-      const hash_alg = details.hashAlg;
-      let root_hash;
+      const val = [48, i - 1, i + 1]
+      const hash_alg = details.hashAlg
+      let root_hash
 
-      if (hash_alg === "Sha2_256") {
-        const hash_val = sha256(Array.from(val), { asBytes: true });
-        const root = hash_val.concat(emptySha2256, emptySha2256);
-        root_hash = sha256(Array.from(root));
-      } else if (hash_alg === "Blake2b_224") {
-        const hash_val = blake2b_224(28).update(Uint8Array.from(val)).digest();
+      if (hash_alg === 'SHA2_256') {
+        const hash_val = sha256(Array.from(val), { asBytes: true })
+        const root = hash_val.concat(emptySha2256, emptySha2256)
+        root_hash = sha256(Array.from(root))
+      } else if (hash_alg === 'Blake2b_224') {
+        const hash_val = blake2b_224(28).update(Uint8Array.from(val)).digest()
         const root = Buffer.concat([
           hash_val,
           Uint8Array.from(emptyBlake2b224),
           Uint8Array.from(emptyBlake2b224),
-        ]);
-        root_hash = blake2b_224(28).update(root).digest("hex");
+        ])
+        root_hash = blake2b_224(28).update(root).digest('hex')
       } else {
-        throw new Error(`Invalid hashing algorithm: ${hash_alg}`);
+        throw new Error(`Invalid hashing algorithm: ${hash_alg}`)
       }
 
-      const state: P.StateHolderStateHolder["oldState"] = {
+      const state: P.StateHolderStateHolder['oldState'] = {
         operationCount: 0n,
-        operation: "AdatagRemoved",
-        adatag: "",
-        size: "0",
+        operation: 'AdatagRemoved',
+        adatag: fromText(''),
+        size: fromText('0'),
         rootHash: root_hash,
         mintingPolicy: details.adatagMinting.policyId,
-      };
+      }
 
-      const id = Data.to(state, P.StateHolderStateHolder.oldState);
+      const id = Data.to(state, P.StateHolderStateHolder.oldState)
 
-      const assetId = details.authTokenScript.policyId + i.toString(16);
-      assets[assetId] = 1n;
-      tx.payToContract(sateholderAddress, { inline: id }, { [assetId]: 1n });
+      const assetId = details.authTokenScript.policyId + i.toString(16)
+      assets[assetId] = 1n
+      tx.payToContract(sateholderAddress, { inline: id }, { [assetId]: 1n })
     }
 
     const txCompleted = await tx
       .attachMintingPolicy(scripts.authMintingPolicy)
       .mintAssets(assets, Data.void())
-      .complete();
+      .complete()
 
-    const signedTx = await txCompleted.sign().complete();
+    const signedTx = await txCompleted.sign().complete()
 
     // DEBUG: console.log(`\n\n Transaction: \n ${signedTx.txSigned.to_json()}`)
-    const txHash = await signedTx.submit();
+    const txHash = await signedTx.submit()
+    await translucent.awaitTx(txHash)
     // DEBUG:  console.log(`TxHash ${txHash}`)
 
     const finalDetails = {
@@ -383,7 +393,7 @@ export class Bootstrap {
         refIndex: 2,
       },
       genesisTransaction: txHash,
-    };
-    return finalDetails;
+    }
+    return finalDetails
   }
 }

@@ -41,7 +41,7 @@ $ vi ./config/plutus-params.json
 ```json
 {
   "Custom": {
-    "hashAlg": "Sha2_256",
+    "hashAlg": "SHA2_256",
     "collectorAddress": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
     "collectionTime": 0.08,
     "depositBase": 1750,
@@ -50,7 +50,7 @@ $ vi ./config/plutus-params.json
     "adahandle": "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4"
   },
   "Preview": {
-    "hashAlg": "Sha2_256",
+    "hashAlg": "SHA2_256",
     "collectorAddress": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
     "collectionTime": 2,
     "depositBase": 1750,
@@ -284,18 +284,18 @@ Required variables, parameters:
 
 ```typescript
 // Should we add adatag to find our utxos easier?
-const utxos = findBeneficiaryUtxos(deploy.timelock.address, pkh, Date.now());
+const utxos = findBeneficiaryUtxos(deploy.timelock.address, pkh, Date.now())
 // All utxos have a valid datum thereofre deadline
 const earliestDeadline = utxos.arr.reduce(function (utxo, v) {
-  let deadline = utxo.datum.deadline;
-  return deadline < v ? deadline : v;
-});
+  let deadline = utxo.datum.deadline
+  return deadline < v ? deadline : v
+})
 const refUtxo = translucent.utxosByOutRef([
   {
     txHash: deploy.genesis_transaction,
     outputIndex: deploy.timelock.reference_index,
   },
-]);
+])
 
 const tx = translucent
   .newTx()
@@ -305,14 +305,14 @@ const tx = translucent
   // (3,4,5) the timelock UTXO
   // it can home multiple claims, but all of the utxo's deadline must ha passed
   // their deadline.
-  .collectFrom([utxos], "Redeem")
+  .collectFrom([utxos], 'Redeem')
   // beneficiary. (pkh === beneficiary) from previous search
   .addSignerKey(pkh)
   // Important (5)
   // select the min from all utxos' datum.deadline
   // to pass. Also it must in the past.
   .validFrom(Number(earliestDeadline))
-  .complete();
+  .complete()
 ```
 
 #### Collect
@@ -331,18 +331,18 @@ const refUtxo = translucent.utxosByOutRef([
     txHash: deploy.genesis_transaction,
     outputIndex: deploy.timelock.reference_index,
   },
-]);
+])
 
 // Reduce the nr. of utxos to fit in a tx.
 // It's caclulated that about 80 utxos could be Phase 2 validated in a tx.
-const utxos = reduceUtxosToProperSeize(utxosAt(timeDepositAddress));
+const utxos = reduceUtxosToProperSeize(utxosAt(timeDepositAddress))
 
 const tx = translucent
   .newTx()
   .readFrom([refUtxo]) // timelock script (1,2)
   // Subset of all unclaimed time-lock-deposits and donations.
-  .collectFrom(utxos, "Collect")
+  .collectFrom(utxos, 'Collect')
   // We must have the collector's sk to be able to add it as a signer
   .addSignerKey(collectorPkh)
-  .complete();
+  .complete()
 ```

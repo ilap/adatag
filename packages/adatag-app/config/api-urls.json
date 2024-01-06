@@ -1,6 +1,6 @@
 {
   "Blockfrost": {
-    "Custom": "http://localhost:8080/api/v0",
+    "Custom": "http://localhost:8080/api/v1",
     "Preview": "https://cardano-preview.blockfrost.io/api/v0/",
     "Preprod": "https://cardano-preprod.blockfrost.io/api/v0/",
     "Mainnet": "https://cardano-mainnet.blockfrost.io/api/v0/"

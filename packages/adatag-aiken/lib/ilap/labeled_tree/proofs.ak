@@ -1,47 +1,9 @@
 use aiken/bytearray
 use aiken/cbor
-use ilap/labeled_tree/hash.{combine_three_hashes, hash_val}
+use ilap/labeled_tree/hash.{
+  combine_three_hashes, empty_hash, hash_val, root_hash,
+}
 use ilap/labeled_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
-
-//use aiken/cbor
-// Blake2b_224
-// pub const empty_hash = #[0x83, 0x6c, 0xc6, 0x89, 0x31, 0xc2, 0xe4, 0xe3, 0xe8, 0x38, 0x60, 0x2e, 0xca, 0x19, 0x02, 0x59, 0x1d, 0x21, 0x68, 0x37, 0xba, 0xfd, 0xdf, 0xe6, 0xf0, 0xc8, 0xcb,0x07,]
-
-// sha2_256
-pub const empty_hash =
-  #[0xe3,
-    0xb0,
-    0xc4,
-    0x42,
-    0x98,
-    0xfc,
-    0x1c,
-    0x14,
-    0x9a,
-    0xfb,
-    0xf4,
-    0xc8,
-    0x99,
-    0x6f,
-    0xb9,
-    0x24,
-    0x27,
-    0xae,
-    0x41,
-    0xe4,
-    0x64,
-    0x9b,
-    0x93,
-    0x4c,
-    0xa4,
-    0x95,
-    0x99,
-    0x1b,
-    0x78,
-    0x52,
-    0xb8,
-    0x55,
-  ]
 
 /// 
 /// The `append_values` is a function that creates the required 3 values from the
@@ -222,22 +184,26 @@ pub fn validate_proof(
 
 test test_initial_state() {
   let val = Val { xi: "0", xa: "`", xb: "b" }
+  let val1 = Val { xi: "0", xa: "`", xb: "adam" }
+  let val2 = Val { xi: "1", xa: "adam", xb: "b" }
   let hv = hash_val(val)
+  let hv1 = hash_val(val1)
+  let hv2 = hash_val(val2)
 
   //let proof = HashNode { hash:hv, left: NodeHash { hash: empty_hash}, right: NodeHash { hash: empty_hash } }
   let proof2 =
     HashNode {
-      hash: hv,
-      left: NodeHash { hash: empty_hash },
-      right: HashNode {
-        hash: hv,
+      hash: hv1,
+      left: HashNode {
+        hash: hv2,
         left: NodeHash { hash: empty_hash },
         right: NodeHash { hash: empty_hash },
       },
+      right: NodeHash { hash: empty_hash },
     }
 
-  //let rh = root_hash(proof2)
-  cbor.diagnostic(proof2) == @"aa"
+  let rh = root_hash(proof2)
+  cbor.diagnostic(rh) == @"aa"
   //cbor.serialise(proof2) == #"11"
   // &&
   //rh == combine_three_hashes(hv, empty_hash, empty_hash) 

@@ -1,0 +1,11 @@
+{
+  "deployer": {
+    "seed": "old drift ... client"
+  },
+  "collector": {
+    "seed": ""
+  },
+  "user": {
+    "seed": ""
+  }
+}

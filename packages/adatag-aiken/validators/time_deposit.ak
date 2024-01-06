@@ -1,5 +1,7 @@
 use aiken/interval
 use aiken/list
+use aiken/cbor
+
 use aiken/time.{PosixTime}
 use aiken/transaction.{
   OutputReference, ScriptContext, Spend, Transaction, TransactionId,
@@ -23,16 +25,17 @@ fn valid_claim(
   let void_datum: Data = Void
   // Any void datum is handled as donation, meaning only the collector can claim it.
   // It's anti pattern but we allow any wrongly formed datums for collections
+  trace(@"Alma")
   let valid =
     if void_datum == datum {
-      is_coll
+      is_coll?
     } else {
       expect _d: TimeDepositDatum = datum
-      time_elapsed(context.transaction.validity_range, time)
+      time_elapsed(context.transaction.validity_range, time)?
     }
 
   let signed_by = list.has(context.transaction.extra_signatories, cred)?
-  valid && signed_by
+  valid? && signed_by?
 }
 
 /// TimeDeposit validator is for redeeming or collect the locked deposit 
@@ -105,4 +108,24 @@ test test_timedeposit_validator() {
   // FIXME: // cbor.diagnostic(Void) == @"a"
   timedeposit(params: params, datum: datum, rdmr: rdmr, ctx: context)
   //True
+}
+
+
+test test_timelock_datum () {
+
+  let utxo =
+    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+
+  //let input = Input { output_reference: utxo, output }
+
+  let tx = Transaction { 
+      ..transaction.placeholder(),
+    }
+    let ctx = ScriptContext { purpose: Spend(utxo), transaction: tx }
+
+  let void_datum: Data = Void
+  let a = Void
+  valid_claim(True, Void, "00", 0, ctx)
+  //cbor.diagnostic(a) == @"a"
+
 }

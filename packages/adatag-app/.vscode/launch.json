@@ -8,11 +8,22 @@
       "type": "bun",
       "internalConsoleOptions": "neverOpen",
       "request": "launch",
-      "name": "Debug Test File",
+      "name": "Dev Test Debug File",
       "program": "${file}",
       "cwd": "${workspaceFolder}",
       "stopOnEntry": false,
-      "args": ["--timeout", "360000"],
+      "args": ["--env-file", ".env", "--timeout", "360000"],
+      "watchMode": false
+    },
+    {
+      "type": "bun",
+      "internalConsoleOptions": "neverOpen",
+      "request": "launch",
+      "name": "Int Test Debug File",
+      "program": "${file}",
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false,
+      "args": ["--env-file", ".env.integration", "--timeout", "360000"],
       "watchMode": false
     },
     {
