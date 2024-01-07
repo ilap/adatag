@@ -1,0 +1,20 @@
+// See details here:
+// https://nx.dev/nx-api/nx/executors/run-commands
+// https://nx.dev/reference/project-configuration#targets
+// https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json
+{
+  "name": "adatag-aiken",
+  "version": "0.1.0",
+  "root": "packages/adatag-aiken/",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "options": { "cwd": "packages/adatag-aiken" },
+      "command": "aiken check"
+    },
+    "build": {
+      "options": { "cwd": "packages/adatag-aiken" },
+      "command": "aiken build"
+    }
+  }
+}

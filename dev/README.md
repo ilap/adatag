@@ -59,10 +59,88 @@ git clone https://github.com/bloxbean/yaci-devkit
 
 ```
 
-### Yaci-devkit's env file
+## Environments
 
-These adresses are based on the test users's (deployer, collector, user) seed. Replace it accordingly.
+### Repository structure:
+
+- The project, `@Adatag`, is hosted on GitHub as a monorepo.
+- It utilises `NX` for effective management of a package-based monorepo structure with diverse packages such as TypeScript, Aiken, Plutus, Dart, etc., located under the `./package` directory.
+
+### Development Workflow:
+
+- Development is split into three main environments: Development, Integration, and Production.
+- In the Development environment, all builds generate debug/trace outputs. On-chain/off-chain tests use local resources, such as the Plutus script running Emulator, providing mock API and mock blockchain functionalities.
+
+### Integration Environment:
+
+In the Integration environment, on-chain/off-chain dApp tests use real API providers with three types of blockchain endpoints:
+1. Custom: A private network that can be easily spun up and turned down as a local blockchain cluster.
+2. Preview Network: A public Cardano blockchain.
+3. Preprod Network: Also a public network, similar to the mainnet configuration.
+
+### Production Environment:
+
+In the Production environment, all builds remove debug symbols (from app etc.) and traces from the compiled Plutus scripts. 
+This environment is meant for release, and no tests are executed directly here. 
+All tests must have passed in the Development and Integration stages.
+
+### Configuration Overview:
+
+Switching between environments, networks, and API providers is managed using specific `.env` files.
+
+See the table below for the current configuration:
+| Environment 	| Network  	| API Provider        	| Av. 	| Comment 	|
+|-------------	|----------	|---------------------	|-----	|---------	|
+| Development 	| Emulator 	| Emulator            	| Yes 	|         	|
+| Integration 	| Custom   	| KupmiosV5           	| Yes 	|         	|
+| Integration 	| Preview  	| Blockfrost          	| Yes 	|         	|
+| Integration 	| Preprod  	| Private Ogmios/Kupo 	| Yes 	|         	|
+| Production  	| Mainnet  	| Private Ogmios/Kupo 	| Yes 	|         	|
+
+
+## Integration Settings
+
+### Custom Network using Yaci-Devkit
+
+#### Requirements for Testing:
+
+- Ensure proper funds and users are set up for testing.
+- Update the `./dev/yaci-devkit/env` file with addresses for test users (deployer, collector, user).
+
+#### Example Topup in env file
+
+```
+topup_addresses=<address:amount>,...,<address:amount>
+```
+
+
+#### Time Configuration:
+
+- The dApp's on-chain validation requires proper validity range therefore, ensure the system start and slot duration are set.
+- Modify yaci-devkit/ssh.sh for dynamic slot durations in Custom networks.
+
+ 
+ ```diff
+ --- ./ssh.sh	2024-01-07 13:21:38
++++ ./ssh_old.sh	2024-01-07 13:22:45
+@@ -5,5 +5,5 @@
+     CMD="docker compose"
+ fi
+
+-$CMD --env-file env  exec yaci-cli /bin/bash "$@"
++$CMD --env-file env  exec yaci-cli /bin/bash
+```
+
+```bash
+./ssh.sh egrep -i "slot[dl]|start" /clusters/default/genesis/{byron,shelley}/genesis.json
+```
+
+
+#### Currently used topup addresses and amounts
 
 ```bash
 topup_addresses=addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:10000,addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:500,addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg:50,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:10000,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:500,addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp:50,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:10000,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:500,addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m:50
 ```
+
+> Note: These adresses are based on the test users's (deployer, collector, user) seed. So, replace it accordingly.
+

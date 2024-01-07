@@ -4,9 +4,8 @@
   "type": "module",
   "scripts": {
     "test:dev": "NETWORK=Custom ENVIRONMENT=Development PROVIDER=Emulator bun test && echo OK",
-    "test:integration": "docker-compose ls | grep 'yaci-devkit.*running' 2>&1 >/dev/null && NETWORK=Custom ENVIRONMENT=Integration PROVIDER=KupmiosV5 bun test",
-    "build-runtime": "esbuild --target=esnext  --bundle src/runtime/index.ts --format=iife --platform=browser --global-name=BUN_RUNTIME > src/runtime.out.js; cat src/runtime.footer.js >> src/runtime.out.js",
-    "build-fallback": "esbuild --target=esnext  --bundle src/fallback.ts --format=iife --platform=browser --minify > src/fallback.out.js",
+    "test:int": "docker-compose ls | grep 'yaci-devkit.*running' 2>&1 >/dev/null && NETWORK=Custom ENVIRONMENT=Integration PROVIDER=KupmiosV5 bun test --timeout 600000",
+    "build": "esbuild --target=esnext  --bundle src/runtime/index.ts --format=iife --platform=browser --global-name=BUN_RUNTIME > src/runtime.out.js; cat src/runtime.footer.js >> src/runtime.out.js",
     "typecheck": "tsc --noEmit && cd test && bun run typecheck",
     "fmt": "prettier --write --cache './{src,test,common,config,deploy}/**/*.{mjs,ts,tsx,js,jsx}'",
     "lint": "eslint './**/*.d.ts' --cache",

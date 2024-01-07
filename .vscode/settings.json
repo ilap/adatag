@@ -1,5 +1,6 @@
 {
-    "deno.enable": true,
-    "deno.lint": true,
-    "deno.unstable": true
+    // Added for disabling comment error in SJON files
+    "files.associations": {
+        "*.json": "jsonc"
+    },
 }

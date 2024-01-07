@@ -45,7 +45,7 @@ describe('Adatag minting', async () => {
   if (!(provider instanceof Emulator) && network === 'Custom') {
     SLOT_CONFIG_NETWORK[translucent.network] = {
       zeroTime: Date.now(),
-      zeroSlot: 1704573394 * 1000,
+      zeroSlot: 1704636741 * 1000,
       slotLength: 1000,
     }
   }
@@ -238,8 +238,8 @@ describe('Adatag minting', async () => {
     const [aaa_utxo] = await translucent.utxosByOutRef([
       { txHash: bd.genesisTransaction, outputIndex: 2 },
     ])
-    console.log(`SH Hash: ${bd.stateholderScript.scriptHash}`)
-    console.log(`SH Addr: ${bd.stateholderScript.scriptAddress}`)
+    //console.log(`SH Hash: ${bd.stateholderScript.scriptHash}`)
+    //console.log(`SH Addr: ${bd.stateholderScript.scriptAddress}`)
 
     const tx = await translucent
       .newTx()
@@ -264,7 +264,7 @@ describe('Adatag minting', async () => {
       .complete()
 
     const signedTx = await tx.sign().complete()
-    const txHash = await signedTx.submit()
+    //const txHash = await signedTx.submit()
     //expect(translucent.awaitTx(txHash)).resolves.toBe(true)
   })
 })

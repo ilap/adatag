@@ -52,7 +52,7 @@ describe('Adatag minting', async () => {
   if (!(provider instanceof Emulator) && network === 'Custom') {
     SLOT_CONFIG_NETWORK[translucent.network] = {
       zeroTime: Date.now(),
-      zeroSlot: 1704573394 * 1000,
+      zeroSlot: 1704636741 * 1000,
       slotLength: 1000,
     }
   }
