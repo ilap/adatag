@@ -1,0 +1,28 @@
+// See details here:
+// https://nx.dev/nx-api/nx/executors/run-commands
+// https://nx.dev/reference/project-configuration#targets
+// https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json
+{
+  "name": "aiken",
+  "version": "0.1.0",
+  "root": "contracts/aiken/",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "dependsOn": ["build", "lint"],
+      "options": { "cwd": "contracts/aiken" },
+      "command": "aiken check --no-traces"
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "options": { "cwd": "contracts/aiken" },
+      "command": "aiken build"
+    }
+    ,    
+      "lint": {
+      "dependsOn": ["^build"],
+      "options": { "cwd": "contracts/aiken" },
+      "command": "aiken fmt --check"
+    }
+  }
+}

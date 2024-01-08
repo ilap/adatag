@@ -1,16 +1,18 @@
 {
-  "name": "adatag-dapp",
+  "name": "adatag",
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": {},
+  "dependencies": { "eslint": "^8.56.0" },
   "devDependencies": {
     "@nx-bun/nx": "1.2.0",
     "@nx/js": "17.2.8",
     "nx": "17.2.8"
   },
   "workspaces": [
-    "packages/*"
+    "apps/*",
+    "libs/*",
+    "contracts/*"
   ]
 }
