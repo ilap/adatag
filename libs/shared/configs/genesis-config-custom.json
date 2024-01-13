@@ -1,0 +1,59 @@
+{
+  "network": "Custom",
+  "hashAlg": "SHA2_256",
+  "genesisTransaction": "762f4f65254db5f03434dc55d5a735da960deff863f694b129e736ed2ef058ff",
+  "bootstrapTime": {
+    "epoch": 1704349451681,
+    "date": "Thu Jan 04 2024 07:24:11 GMT+0100 (Central European Standard Time)"
+  },
+  "referenceScript": {
+    "scriptAddress": "addr_test1wpn2vamfahgv2n2ldmyt5wf9899lpe8ur79lhcapx844y0qrnvrgh",
+    "scriptHash": "66a67769edd0c54d5f6ec8ba3925394bf0e4fc1f8bfbe3a131eb523c"
+  },
+  "authTokenScript": {
+    "policyId": "5a6efa9ea4dd30a8678e61b13e96bd3ef7287c1c0cd9c2134e222285",
+    "params": {
+      "genesis_utxo": {
+        "txHash": "c61749caffac4dc9be30d6935600c87a34f0d08329b3f1471857d96ed110ba8f",
+        "outputIndex": 0
+      }
+    }
+  },
+  "timelockScript": {
+    "scriptHash": "357e919181d3df2074dfb889320fd032d541cf485f3920164d6c88c5",
+    "scriptAddress": "addr_test1wq6hayv3s8fa7gr5m7ugjvs06qed2sw0fp0njgqkf4kg33g7nv3zx",
+    "params": {
+      "collectorAddr": "addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp",
+      "collectionTime": {
+        "epoch": 1704356363681,
+        "date": "Thu Jan 04 2024 09:19:23 GMT+0100 (Central European Standard Time)"
+      }
+    },
+    "refIndex": 2
+  },
+  "stateholderScript": {
+    "scriptHash": "c602ce4cb35464809a66f25df2623818eacf2daea7f754bf4e08e5f5",
+    "scriptAddress": "addr_test1wrrq9njvkd2xfqy6vme9munz8qvw4ned46nlw49lfcywtagm94fue",
+    "params": {
+      "authToken": "5a6efa9ea4dd30a8678e61b13e96bd3ef7287c1c0cd9c2134e222285"
+    },
+    "refIndex": 0
+  },
+  "adatagMinting": {
+    "policyId": "4e5f42abcc5ca764829be0297dbc8b7081c4e7ced867850b5940cfce",
+    "params": {
+      "lockingDays": {
+        "days": 0.02,
+        "ms": 1728000
+      },
+      "deactivationTime": {
+        "epoch": 1704352907681,
+        "date": "Thu Jan 04 2024 08:21:47 GMT+0100 (Central European Standard Time)"
+      },
+      "depositBase": 1750,
+      "adahandle": "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4"
+    },
+    "refIndex": 1
+  }
+}
+

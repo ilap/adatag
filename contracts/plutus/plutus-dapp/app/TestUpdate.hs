@@ -7,8 +7,8 @@
 
 import Data.Maybe (fromJust, fromMaybe)
 import qualified Debug.Trace
-import qualified GHC.Generics as LabeledTree
-import LabeledTree
+import qualified GHC.Generics as IntegriTree
+import IntegriTree
 import PlutusLedgerApi.V2
 import PlutusPrelude ((<|>))
 import PlutusTx.Maybe (isJust)
@@ -24,7 +24,7 @@ import PlutusTx.Prelude
 import qualified GHC.TypeLits as PlutusTx.Builtins
 
 {-
-append :: LabeledTree -> BuiltinByteString -> LabeledTree -> LabeledTree -> LabeledTree
+append :: IntegriTree -> BuiltinByteString -> IntegriTree -> IntegriTree -> IntegriTree
 append LabeledEmpty _ _ _ = LabeledEmpty
 append _ _ LabeledEmpty _ = LabeledEmpty
 append _ _ _ LabeledEmpty = LabeledEmpty
@@ -68,7 +68,7 @@ append tree x (LabeledNode vnu _ _) (LabeledNode vna lna rna)
 --     or a type (`Val`, `HashNode`).
 --
 -- It returns a proof when the target node is the ancestor of the given node, otherwise `Nothing`.
-{-mkProof :: LabeledTree -> LabeledTree -> ProofType -> Bool -> Maybe TreeProof
+{-mkProof :: IntegriTree -> IntegriTree -> ProofType -> Bool -> Maybe TreeProof
 mkProof LabeledEmpty _ _ _ = Nothing
 mkProof _ LabeledEmpty _ _ = Nothing
 mkProof (LabeledNode val _ _) ancestor proofType asHash = go [] ancestor

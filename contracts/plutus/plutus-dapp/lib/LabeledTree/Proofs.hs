@@ -3,15 +3,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 
-module LabeledTree.Proofs where
+module IntegriTree.Proofs where
 
-import LabeledTree.Hash
-import LabeledTree.Val
+import IntegriTree.Hash
+import IntegriTree.Val
 import PlutusTx.IsData qualified as PlutusTx
 import PlutusTx.Prelude hiding (toList)
 import Prelude qualified as Haskell
 
-{- | `ProofTree` is the compact version of a LabeledTree used for constructing proofs.
+{- | `ProofTree` is the compact version of a IntegriTree used for constructing proofs.
 
 It consists of nodes representing either a leaf node with a hash value (`ProofLeaf`)
 or an internal node with a labeled value (`ProofNode`) and its corresponding proof subtrees.

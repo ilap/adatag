@@ -7,21 +7,47 @@
   "version": "0.1.0",
   "root": "contracts/aiken/",
   "projectType": "library",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*.ak"]
+  },
   "targets": {
     "test": {
-      "dependsOn": ["build", "lint"],
-      "options": { "cwd": "contracts/aiken" },
-      "command": "aiken check --no-traces"
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "contracts/aiken"
+      },
+      "configurations": {
+        "dev": {
+          "command": "aiken check"
+        },
+        "prod": {
+          "command": "aiken check -D --no-traces"
+        }
+      },
+      "defaultConfiguration": "dev"
     },
     "build": {
-      "dependsOn": ["^build"],
-      "options": { "cwd": "contracts/aiken" },
-      "command": "aiken build"
-    }
-    ,    
-      "lint": {
-      "dependsOn": ["^build"],
-      "options": { "cwd": "contracts/aiken" },
+      "executor": "nx:run-commands",
+      "dependsOn": ["lint"],
+      "options": {
+        "cwd": "contracts/aiken"
+      },
+      "configurations": {
+        "dev": {
+          "command": "aiken build -k"
+        },
+        "prod": {
+          "command": "aiken build -D"
+        }
+      },
+      "defaultConfiguration": "dev"
+    },
+    "lint": {
+      //"dependsOn": ["^build"],
+      "options": {
+        "cwd": "contracts/aiken"
+      },
       "command": "aiken fmt --check"
     }
   }

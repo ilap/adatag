@@ -17,17 +17,17 @@ module Adatag.SimpleValidator where
 import Utilities (wrapPolicy)
 import Utilities.Serialise
 import Prelude (IO, Show)
-import qualified LabeledTree.Proofs as LT
-import qualified LabeledTree.Val as LT
+import qualified IntegriTree.Proofs as LT
+import qualified IntegriTree.Val as LT
 import qualified Prelude as Haskell
-import LabeledTree.Val
-import LabeledTree.Proofs
+import IntegriTree.Val
+import IntegriTree.Proofs
 import PlutusTx.Builtins
 import PlutusTx
 import PlutusLedgerApi.V2
 import PlutusTx.Bool
 import Utilities.PlutusTx (wrapValidator)
-import LabeledTree
+import IntegriTree
 import qualified PlutusTx.Prelude as PlutusTx
 import PlutusTx.Prelude
 ---------------------------------------------------------------------------------------------------

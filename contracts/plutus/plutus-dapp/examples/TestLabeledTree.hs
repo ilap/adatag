@@ -2,7 +2,7 @@ module Main where
 
 {-- FIXME }
 import Data.ByteString.UTF8
-import LabeledTree.Tree
+import IntegriTree.Tree
 import System.IO ()
 
 main :: IO ()

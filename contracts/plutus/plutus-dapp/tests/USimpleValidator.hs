@@ -15,7 +15,7 @@
 module Main where
 
 import Adatag.SimpleValidator
-import LabeledTree (Hash, ProofTree (..), Val (..), emptyHash, rootHash')
+import IntegriTree (Hash, ProofTree (..), Val (..), emptyHash, rootHash')
 import Plutus.Model
 import Plutus.Model.V2 (mkTypedValidator)
 import PlutusLedgerApi.V2
@@ -26,7 +26,7 @@ import Prelude (($))
 import Prelude qualified as Haskell
 import PlutusTx.Integer
 import Control.Monad (replicateM)
-import LabeledTree.Val (hashVal)
+import IntegriTree.Val (hashVal)
 
 import Data.Functor.Identity (Identity)
 import Cardano.Ledger.BaseTypes qualified as Alonzo

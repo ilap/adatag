@@ -4,15 +4,30 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
-  "dependencies": { "eslint": "^8.56.0" },
+  "dependencies": {
+    "translucent": "file:./libs/translucent"
+  },
   "devDependencies": {
     "@nx-bun/nx": "1.2.0",
     "@nx/js": "17.2.8",
-    "nx": "17.2.8"
+    "@types/bun": "latest",
+    "nx": "17.2.8",
+    "@nx/devkit": "^17.2.8",
+    "@nx/eslint-plugin": "^17.2.8",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.18.1",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "bun-types": "latest",
+    "fast-check": "^3.15.0"
   },
   "workspaces": [
     "apps/*",
     "libs/*",
     "contracts/*"
-  ]
+  ],
+  "module": "index.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.3.3"
+  }
 }

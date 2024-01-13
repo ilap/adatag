@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 
-module LabeledTree.Hash where
+module IntegriTree.Hash where
 
 import Data.ByteString.Base16 qualified as Haskell.Base16
 import Data.Text qualified as Haskell.Text

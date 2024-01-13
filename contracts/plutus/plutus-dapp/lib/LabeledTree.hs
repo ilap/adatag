@@ -1,12 +1,12 @@
-module LabeledTree (
+module IntegriTree (
   module X,
 )
 where
 
-import LabeledTree.Hash as X
-import LabeledTree.LabeledTree as X
-import LabeledTree.Proofs as X
-import LabeledTree.Val as X
+import IntegriTree.Hash as X
+import IntegriTree.IntegriTree as X
+import IntegriTree.Proofs as X
+import IntegriTree.Val as X
 
 -- TODO: v comment out this below on release
-import LabeledTree.Utils as X
+import IntegriTree.Utils as X

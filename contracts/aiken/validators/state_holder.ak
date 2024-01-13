@@ -10,9 +10,9 @@ use ilap/adatag/types.{AdatagAdded, ScriptHash, TreeState}
 use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 
 //use aiken/cbor
-//use ilap/labeled_tree/hash.{combine_three_hashes, hash_val}
-//use ilap/labeled_tree/types as tree
-//use ilap/labeled_tree/proofs.{empty_hash}
+//use ilap/integri_tree/hash.{combine_three_hashes, hash_val}
+//use ilap/integri_tree/types as tree
+//use ilap/integri_tree/proofs.{empty_hash}
 
 /// This is a simple parameterized validator designed for handling (by UtxOs) control
 /// NFT tokens and the state of a tree used for minting and burning adatags.

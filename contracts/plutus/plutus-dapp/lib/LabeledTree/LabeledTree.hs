@@ -10,11 +10,11 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 
 {- |
-Module      : LabeledTree
+Module      : IntegriTree
 Description : A Complete Binary Tree-based data structure for data integrity verification.
 License     : GPL-3
 
-The 'LabeledTree' module provides a data structure designed for verifying data integrity, akin to Merkle trees.
+The 'IntegriTree' module provides a data structure designed for verifying data integrity, akin to Merkle trees.
 It offers proofs for membership, non-membership, and updates (insertion and removal). The tree enforces uniqueness
 using open intervals.
 
@@ -41,43 +41,43 @@ Example Usage:
 > proof = generateProof updatedTree
 > isIntegrityVerified = verifyProof proof
 -}
-module LabeledTree.LabeledTree where
+module IntegriTree.IntegriTree where
 
-import LabeledTree.Hash
-import LabeledTree.Val
+import IntegriTree.Hash
+import IntegriTree.Val
 import PlutusPrelude hiding (toList)
 import PlutusTx qualified
 import PlutusTx.Prelude hiding (toList)
 import Prelude qualified as Haskell
 
--- * LabeledTree
+-- * IntegriTree
 
-{- | The 'LabeledTree' is a Complete Binary Tree-based data structure designed for verifying data integrity,
+{- | The 'IntegriTree' is a Complete Binary Tree-based data structure designed for verifying data integrity,
 similar to Merkle trees. It includes proofs for membership, non-membership, and updates (insertation into
 and removal from the tree).
 It uses open interval for enforce uniqueness of the elements in the tree.
 -}
-data LabeledTree
+data IntegriTree
   = LabeledEmpty
-  | LabeledNode Val LabeledTree LabeledTree
+  | LabeledNode Val IntegriTree IntegriTree
   deriving (Haskell.Eq, Haskell.Show)
 
-instance Eq LabeledTree where
-  (==) :: LabeledTree -> LabeledTree -> Bool
+instance Eq IntegriTree where
+  (==) :: IntegriTree -> IntegriTree -> Bool
   LabeledEmpty == LabeledEmpty = True
   (LabeledNode v0 _ _) == (LabeledNode v1 _ _) = v0 == v1
   _ == _ = False
 
-size :: LabeledTree -> Integer
+size :: IntegriTree -> Integer
 size LabeledEmpty = 0
 size (LabeledNode _ l r) = 1 + size l + size r
 
-{- | Construct a 'LabeledTree' from a list of elements (`[Val]`) using level-order construction.
+{- | Construct a 'IntegriTree' from a list of elements (`[Val]`) using level-order construction.
 
 The time- and space complexity of the algorithm is O(n) as we iterate through elements
 of the binary tree for level order traversal only once.
 -}
-fromList :: [Val] -> LabeledTree
+fromList :: [Val] -> IntegriTree
 fromList xs = go 1
   where
     len = length xs
@@ -89,21 +89,21 @@ fromList xs = go 1
               rnode = go (2 * idx + 1)
            in LabeledNode (Val idx a' b') lnode rnode
 
-{- | Deconstruct a 'LabeledTree' back to a list of elements (`[Val]`) using
+{- | Deconstruct a 'IntegriTree' back to a list of elements (`[Val]`) using
 the Level Order Traversal (Breadth-First Search or BFS).
 
 >>> toList (fromList xs) == xs
 True
 -}
-toList :: LabeledTree -> [Val]
+toList :: IntegriTree -> [Val]
 toList tree = go [tree]
   where
     go [] = []
     go (LabeledEmpty : rest) = go rest
     go (LabeledNode val left right : rest) = val : go (rest ++ [left, right])
 
--- | Obtain the root hash of a 'LabeledTree'.
-rootHash :: LabeledTree -> Hash
+-- | Obtain the root hash of a 'IntegriTree'.
+rootHash :: IntegriTree -> Hash
 rootHash =
   \case
     LabeledEmpty -> hash ""
@@ -114,7 +114,7 @@ rootHash =
 
 It returns a node that contains the provided `Val` otherwise it returns Nothing.
 -}
-findNodeByVal :: LabeledTree -> Val -> Maybe LabeledTree
+findNodeByVal :: IntegriTree -> Val -> Maybe IntegriTree
 findNodeByVal LabeledEmpty _ = Nothing
 findNodeByVal node@(LabeledNode v left right) targetVal
   | v == targetVal = Just node
@@ -125,7 +125,7 @@ findNodeByVal node@(LabeledNode v left right) targetVal
 It returns a node whose Val is valid for the element, otherwise it returns Nothing.
 I.e.: x = x' or x = x" of the Val (x', x") when x ∈ T, or x' < x < x" when x ∉ T
 -}
-findValidNode :: LabeledTree -> BuiltinByteString -> Maybe LabeledTree
+findValidNode :: IntegriTree -> BuiltinByteString -> Maybe IntegriTree
 findValidNode LabeledEmpty _ = Nothing
 findValidNode node@(LabeledNode val left right) e
   | valid e val = Just node
@@ -137,7 +137,7 @@ It takes the tree and two nodes to find their lowest common ancestor if any
 
 It returns the LCA node of an empty node if no LCA.
 -}
-findLca :: LabeledTree -> LabeledTree -> LabeledTree -> LabeledTree
+findLca :: IntegriTree -> IntegriTree -> IntegriTree -> IntegriTree
 findLca LabeledEmpty _ _ = LabeledEmpty
 findLca root@(LabeledNode _ left right) n1 n2
   | root == n1 || root == n2 = root
@@ -148,4 +148,4 @@ findLca root@(LabeledNode _ left right) n1 n2
     l = findLca left n1 n2
     r = findLca right n1 n2
 
-PlutusTx.unstableMakeIsData ''LabeledTree
+PlutusTx.unstableMakeIsData ''IntegriTree

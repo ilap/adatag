@@ -19,6 +19,17 @@
             "type": "bun",
             "internalConsoleOptions": "neverOpen",
             "request": "launch",
+            "name": "Dev Test Debug File",
+            "program": "${file}",
+            "args": ["--env-file", "${workspaceFolder}.env", "--timeout", "45000"],
+            "cwd": "${workspaceFolder}/apps/adatag-cli",
+            "stopOnEntry": true,
+            "watchMode": false
+        },
+        {
+            "type": "bun",
+            "internalConsoleOptions": "neverOpen",
+            "request": "launch",
             "name": "Run File",
             "program": "${file}",
             "cwd": "${workspaceFolder}",

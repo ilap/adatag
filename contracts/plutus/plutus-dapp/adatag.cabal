@@ -69,7 +69,7 @@ common common-test
                         , tasty
                         , tasty-quickcheck
                         , plutus-simple-model
-                        , adatag:labeled-tree
+                        , adatag:integri-tree
                         , cardano-ledger-alonzo
                         , cardano-ledger-babbage
     hs-source-dirs:     tests
@@ -93,19 +93,19 @@ library
                         Utilities.Serialise
 
 
-  build-depends:        adatag:labeled-tree
+  build-depends:        adatag:integri-tree
 
-library                 labeled-tree
+library                 integri-tree
   import:               common-all
   hs-source-dirs:       lib
   exposed-modules:
-                        LabeledTree
+                        IntegriTree
                         -- TODO: v Remove this from release
-                        LabeledTree.Utils
-                        LabeledTree.Val
-                        LabeledTree.Hash
-                        LabeledTree.Proofs
-                        LabeledTree.LabeledTree
+                        IntegriTree.Utils
+                        IntegriTree.Val
+                        IntegriTree.Hash
+                        IntegriTree.Proofs
+                        IntegriTree.IntegriTree
 
 
 executable            bootstrap
@@ -113,18 +113,18 @@ executable            bootstrap
      hs-source-dirs:   app
      main-is:          Main.hs
      build-depends:    adatag
-                       -- , adatag:labeled-tree
+                       -- , adatag:integri-tree
 
 executable            update
      import:           common-all
      hs-source-dirs:   app
      main-is:          TestUpdate.hs
      build-depends:    random
-                       , adatag:labeled-tree
+                       , adatag:integri-tree
                        , adatag
 
 -- TODO: implement it.
---executable            labeled-tree
+--executable            integri-tree
 --     import:           common-all
 --     hs-source-dirs:   examples
 --     main-is:          TestLabeledTree.hs

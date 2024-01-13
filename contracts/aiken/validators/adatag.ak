@@ -13,8 +13,8 @@ use ilap/adatag/types.{
   ScriptHash, TimeDepositDatum, TreeState,
 }
 use ilap/adatag/utils.{find_script_inputs, output_has_token, time_elapsed}
-use ilap/labeled_tree/proofs.{append_check}
-use ilap/labeled_tree/tests/fixture as tree_fixture
+use ilap/integri_tree/proofs.{append_check}
+use ilap/integri_tree/tests/fixture as tree_fixture
 
 validator(params: MintParams) {
   fn adatag_minting(rdmr: MintAction, ctx: ScriptContext) -> Bool {

@@ -30,7 +30,7 @@ of its addresses.
 module Adatag.StateHolder where
 
 import Adatag.Utils
-import LabeledTree.Hash qualified as LT
+import IntegriTree.Hash qualified as LT
 import PlutusCore.Version (plcVersion100)
 import PlutusLedgerApi.V2
 import PlutusLedgerApi.V2.Contexts (

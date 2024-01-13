@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 
-module LabeledTree.Val where
+module IntegriTree.Val where
 
-import LabeledTree.Hash
+import IntegriTree.Hash
 import PlutusTx qualified
 import PlutusTx.Prelude hiding (toList)
 import PlutusTx.Show
@@ -12,7 +12,7 @@ import Prelude qualified as Haskell
 {- | Val
 
 The `Val` type represents the constraint data as interval set used for storing and validating elements in the tree.
-In a `LabeledTree`, each element must fall within the initial constraint, forming two nodes
+In a `IntegriTree`, each element must fall within the initial constraint, forming two nodes
 that contain the element for every existing element in the tree.
 For any non-existing but valid element (lower bound < element < upper bound),
 there will be only one node. All other elements are considered invalid.

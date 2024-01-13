@@ -45,7 +45,7 @@ import PlutusTx.Prelude (
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Prelude (IO, Semigroup ((<>)), mconcat)
 import Prelude qualified as Haskell
-import LabeledTree.Proofs (ProofTree(ProofLeaf))
+import IntegriTree.Proofs (ProofTree(ProofLeaf))
 
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- TESTING MAIN ----------------------------------------------

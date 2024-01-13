@@ -7,7 +7,7 @@
 use aiken/hash
 use aiken/time.{PosixTime}
 use aiken/transaction/credential.{Script, VerificationKey}
-use ilap/labeled_tree/types.{Proof, Val}
+use ilap/integri_tree/types.{Proof, Val}
 
 pub type TokenName =
   ByteArray

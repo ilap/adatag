@@ -1,0 +1,29 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "esnext",
+    "module": "es2022",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "types": ["bun-types", "bun"],
+    "paths": {
+      "@adatag/shared/plutus": ["libs/shared/src/plutus/index"],
+      "@adatag/shared/utils": ["libs/shared/src/utils/index"],
+      "@adatag/shared/test-utils": ["libs/shared/src/test-utils/index"],
+      "@adatag/shared/config": ["libs/shared/src/config/index"],
+      "@adatag/integri-tree": ["libs/integri-tree/src/index"],
+      "translucent-cardano": ["libs/translucent/index"],
+    }
+  },
+  "exclude": ["node_modules", "tmp", "contracts"]
+}

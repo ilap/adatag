@@ -77,11 +77,11 @@ import PlutusTx.Prelude (
 import Utilities (wrapPolicy)
 import Utilities.Serialise
 import Prelude (IO, Show)
-import qualified LabeledTree.Proofs as LT
-import qualified LabeledTree.Val as LT
+import qualified IntegriTree.Proofs as LT
+import qualified IntegriTree.Val as LT
 import qualified Prelude as Haskell
-import LabeledTree.Val
-import LabeledTree.Proofs
+import IntegriTree.Val
+import IntegriTree.Proofs
 
 
 ---------------------------------------------------------------------------------------------------

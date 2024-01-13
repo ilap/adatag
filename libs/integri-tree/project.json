@@ -1,0 +1,45 @@
+{
+  "name": "integri-tree",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integri-tree/src",
+  "projectType": "library",
+  "implicitDependencies": ["aiken"],
+  "targets": {
+    "build": {
+      "dependsOn": ["^build"],
+      "executor": "@nx-bun/nx:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "entrypoints": ["libs/integri-tree/src/index.ts"],
+        "outputPath": "dist/integri-tree",
+        "tsConfig": "libs/integri-tree/tsconfig.lib.json",
+        "smol": false,
+        "bun": true
+      },
+      "configurations": {
+        "dev": {},
+        "prod": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx-bun/nx:test",
+      "dependsOn": ["^build"],
+      "options": {
+        "smol": false,
+        "bail": true,
+        "bun": false
+      },
+      "configurations": {
+        "dev": {"{options.timeout}": 15000},
+        "prod": {"{options.timeout}": 65000}
+      },
+      "defaultConfiguration": "dev"
+    }
+  }
+}

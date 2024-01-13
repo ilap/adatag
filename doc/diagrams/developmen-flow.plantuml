@@ -1,0 +1,27 @@
+@startuml "@development workflow"
+
+state "Aiken" as A {
+    json "Targets" as AT {
+    "test": "aiken check",
+    "build":"aiken build",
+    "lint": "aiken fmt"
+    }
+    json "Configurations" as AC {
+    "dev" : ["aiken check -D","aiken build --keep-traces","aiken fmt"],
+    "prd" : "wihtout traces"
+    }
+}
+state "Onchain-deployment" as statOeI {
+    json "Targets" as OT {
+    "test": "",
+    "build":"builds plutus.ts",
+    "lint": ""
+    }
+    json "Configurations" as OC {
+    "dev" : "with traces",
+    "prd" : "wihtout traces"
+    }
+}
+
+  ' JU1 -down[hidden]-> JU2
+@enduml

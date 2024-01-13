@@ -39,7 +39,7 @@ import System.IO
 import Test.Tasty (defaultMain, testGroup)
 import Prelude (Bool (..), Show (show))
 import Prelude qualified as Haskell
-import LabeledTree (ProofTree (..), Hash, emptyHash, Val(..), rootHash')
+import IntegriTree (ProofTree (..), Hash, emptyHash, Val(..), rootHash')
 
 
 

@@ -1,4 +1,13 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
+# Remove any sensitive data
+**/keys/*.json
+!**/keys/*template.json
+.env*
+
+
+# Untrack yaci and translucent.
+libs/translucent
+dev/yaci-devkit
 
 # compiled output
 dist
@@ -38,25 +47,4 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.nx/cache
-
-# editor temp files
-*#
-.#*
-*~
-.*.swp
-# *.bak -- I name things to .bak and will forget about this and it will end poorly
-
-**/*.env
-**/*env
-
-assets
-assets/**
-
-**/*.lock
-
-.DS_Store
-package-lock*
-
-.nx/installation
 .nx/cache
