@@ -1,6 +1,7 @@
 import {
   Assets,
   MintingPolicy,
+  Network,
   Translucent,
   generateSeedPhrase,
 } from 'translucent-cardano'

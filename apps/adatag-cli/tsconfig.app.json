@@ -1,9 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    //"types": []
-  },
+  "compilerOptions": {},
   "exclude": [
     "src/**/*.spec.ts"
   ],

@@ -1,41 +1,67 @@
 {
   "name": "shared",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/shared/src",
+  "sourceRoot": "libs/shared",
   "projectType": "library",
-  "implicitDependencies": ["aiken"],
+  "implicitDependencies": [
+    "aiken",
+    "chain"
+  ],
   "targets": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "@nx-bun/nx:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
-        "tsConfig": "libs/shared-config/tsconfig.lib.json",
+        "tsConfig": "libs/shared/tsconfig.lib.json",
         "smol": false,
         "bun": true
       },
       "configurations": {
+        "int": {},
         "dev": {},
         "prod": {}
       },
       "defaultConfiguration": "dev"
     },
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": [
+        "^lint"
+      ],
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
-      "executor": "@nx-bun/nx:test",
-      "dependsOn": ["^build"],
+      "executor": "nx:run-commands",
+      // BUG: bun executor does not allow env variables
+      //"executor": "@nx-bun/nx:test",
+      "dependsOn": [
+        "^build",
+        { "projects": "chain", "target": "spin-up", "params": "forward" }
+      ],
       "options": {
-        "smol": false,
-        "bail": true,
-        "bun": false
+        "cwd": "libs/shared"
       },
       "configurations": {
-        "dev": {"{options.timeout}": 15000},
-        "prod": {"{options.timeout}": 65000}
+        "int": {
+          "commands": [
+            "bun test --env-file .env",
+            "echo INT",
+            "pwd"
+          ]
+        },
+        "dev": {
+          "command": "echo DEV"
+        },
+        "prd": {
+          "command": "echo PRD"
+        }
       },
       "defaultConfiguration": "dev"
     }

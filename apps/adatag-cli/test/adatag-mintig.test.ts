@@ -19,8 +19,15 @@ import { resolveMockData, stringifyData } from '@adatag/shared/test-utils'
 
 import { emptyHash, hashVal, rootHash } from '@adatag/integri-tree'
 
+/*
+  https://github.com/input-output-hk/plutus-pioneer-program/blob/b55a7d2409cbf09a04ab471796f410083129acb6/code/Week03/lucid-ref-script/src/index.js
 
-describe('@adatag minting', async () => {
+  Note: Topup the user's wallet
+  Collector address : addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg
+  Deployer address  : addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp
+  Test User address : addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m
+*/
+describe('Adatag minting', async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
   // Bun.env.ENVIRONMENT = "Integration";
   // Bun.env.NETWORK = "Custom";
@@ -134,7 +141,7 @@ describe('@adatag minting', async () => {
       },
     ])
 
-    // console.log(`Stakeholder Ref UTxO: ${stringifyData(mpref)}`)
+    //// console.log(`Stakeholder Ref UTxO: ${stringifyData(mpref)}`)
 
     //if (params.deactivationTime > Date.now()) {
     //  const deposit = 1750 // TODO: calcDeposit(adatag, deploy.adatag_minting.params.deposit_base)
@@ -185,14 +192,14 @@ describe('@adatag minting', async () => {
 
     // Construct mintingpolicy redeem
 
-    console.log(`New state: ${stringifyData(newState)}`)
+   // console.log(`New state: ${stringifyData(newState)}`)
 
     const mintValue = { [mp + fromText(adatag)]: 1n }
     const authToken = {
       [bd.authTokenScript.policyId + fromText(adatag[0])]: 1n,
     }
     const state = Data.to(newState, P.StateHolderStateHolder.oldState)
-    console.log(`### NEW_STATE: ${state}`)
+   // console.log(`### NEW_STATE: ${state}`)
     const rootVal1 = { xi: fromText('0'), xa: fromText('`'), xb: fromText('b') }
     const mintRedeemer: P.MintRedeemer = {
       Minting: [
@@ -210,14 +217,14 @@ describe('@adatag minting', async () => {
     const userAddress = await translucent.wallet.address()
     //const [user_utxo] = await translucent.wallet.getUtxos()
 
-    console.log(`Redeemer : ${rdmr}`)
+   // console.log(`Redeemer : ${rdmr}`)
     //console.log(`User money: ${stringifyData(user_utxo.assets)}`)
-    console.log(`Autr money: ${stringifyData(auth_utxo.assets)}`)
+   // console.log(`Autr money: ${stringifyData(auth_utxo.assets)}`)
 
-    console.log(`SH UTXO: ${stringifyData(shref)}`)
-    console.log(`SH Addr   : ${bd.stateholderScript.scriptAddress}`)
-    console.log(`SH Hash   : ${bd.stateholderScript.scriptHash}`)
-    console.log(`MP Plolicy: ${bd.adatagMinting.policyId}`)
+   // console.log(`SH UTXO: ${stringifyData(shref)}`)
+   // console.log(`SH Addr   : ${bd.stateholderScript.scriptAddress}`)
+   // console.log(`SH Hash   : ${bd.stateholderScript.scriptHash}`)
+   // console.log(`MP Plolicy: ${bd.adatagMinting.policyId}`)
 
     const time =
       translucent.provider instanceof Emulator

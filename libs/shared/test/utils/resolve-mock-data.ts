@@ -1,5 +1,5 @@
 import { Network, Provider } from 'translucent-cardano'
-import { ProviderFactory } from '../utils'
+import { ProviderFactory } from '../../src/utils'
 import { generateAccountWithSeed } from './utils'
 import * as Seeds from '../../keys/test-users-seed.json'
 

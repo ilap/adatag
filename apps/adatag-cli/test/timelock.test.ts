@@ -90,7 +90,7 @@ describe('Adatag minting', async () => {
     const txHash = await signedTx.submit()
     expect(translucent.awaitTx(txHash)).resolves.toBe(true)
   }),
-    test('On-chain mint adatag', async () => {
+    test('Collect with all time passed', async () => {
       if (translucent.provider instanceof Emulator) {
         translucent.provider.awaitBlock(30)
       }

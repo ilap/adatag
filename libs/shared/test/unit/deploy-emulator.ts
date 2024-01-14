@@ -1,7 +1,7 @@
 import { Assets, Translucent, generateSeedPhrase } from 'translucent-cardano'
 import * as GenesisParams from '../../configs/genesis-params.json'
-import { ProviderFactory } from './provider-factory'
-import { Bootstrap } from './bootstrap'
+import { ProviderFactory } from '../../src/utils/provider-factory'
+import { Bootstrap } from '../../src/utils/bootstrap'
 
 /*
   The Bootstrap process requires the following steps:

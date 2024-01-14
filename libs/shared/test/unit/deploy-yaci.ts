@@ -1,12 +1,13 @@
 import { Translucent } from 'translucent-cardano'
 import * as GenesisParams from '../../configs/genesis-params.json'
-import { ProviderFactory } from './provider-factory'
-import { Bootstrap } from './bootstrap'
+import { ProviderFactory } from '../../src/utils/provider-factory'
+import { Bootstrap } from '../../src/utils/bootstrap'
 import * as Seeds from '../../keys/test-users-seed.json'
 /*
   https://github.com/input-output-hk/plutus-pioneer-program/blob/b55a7d2409cbf09a04ab471796f410083129acb6/code/Week03/lucid-ref-script/src/index.js
 
 */
+
 const env = 'Integration'
 const network = 'Custom'
 const provider = 'KupmiosV5'

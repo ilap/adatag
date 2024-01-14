@@ -1,0 +1,75 @@
+{
+  "name": "chain",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/yaci/",
+  "projectType": "library",
+  "implicitDependencies": [
+    "aiken"
+  ],
+  "targets": {
+    "spin-up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        // "args": "",
+        // "envFile": "{workspaceRoot}/env",
+        "color": true,
+        "cwd": "tools/yaci",
+        "env": {
+          "YACI_CLI_CMD": "java -jar yaci-cli.jar 'create-node -o 1 --start'"
+        }
+      },
+      "configurations": {
+        "int": {
+          "commands": [
+            "docker-compose --env-file env kill ",
+            "sleep 5",
+            "docker compose --env-file env up --wait --wait-timeout 30",
+            "echo yaci has started; pwd",
+            "bun run waitfor.ts 10000 30 2>/dev/null",
+            "export ALMAALMA=almaalma"
+          ]
+        },
+        "dev": {
+          "command": "echo CHAIN DEV"
+        },
+        "prd": {"command": "echo CHAIN PRD"}
+      },
+      "defaultConfiguration": "int"
+    },
+    "tear-down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "tools/yaci",
+        "color": true
+      },
+      "configurations": {
+        "int": {
+          "command": "docker-compose --env-file env kill"
+        },
+        "dev": {},
+        "prd": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+    "test": {
+      // "executor": "nx:run-commands",
+      "executor": "@nx-bun/nx:test",
+      "options": {
+        "cwd": "tools/yaci"
+      },
+      "configurations": {
+        "int": {
+          "command": "echo YACI INT"
+        },
+        "dev": {
+          "command": "echo  YACI DEV"
+        },
+        "prd": {
+          "command": "echo YACI PRD"
+        }
+      },
+      "defaultConfiguration": "int"
+    }
+  }
+}

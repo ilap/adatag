@@ -1,4 +1,4 @@
-import * as P from '../plutus/index.js'
+import * as P from '../../src/plutus/index.js'
 import {
   Address,
   Assets,
