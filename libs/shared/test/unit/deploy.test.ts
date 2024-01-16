@@ -66,15 +66,8 @@ describe('Adatag minting', async () => {
     translucent.selectWalletFromSeed(deployerSeed)
     const [utxo] = await translucent.wallet.getUtxos()
 
-    console.log(`Before deploy`)
+
     const result = await Bootstrap.deploy(translucent, utxo, testParams)
-    console.log(`after deploy`)
     expect(result).toBeDefined()
-    console.log(
-      `NETWORK: ${network}, ${Bun.env.ENVIRONMENT}, ${Bun.env.NETWORK} ${Bun.env.PROVIDER}`,
-    )
-    //deployed = true
-    //GenesisConfig = result
-    //console.log(result)
   })
 })
