@@ -2,5 +2,5 @@
 // - plutus.ts // This must be regenerated manually
 // - genesis-config-${network}.json // This is a generated config by deploy.
 // - genesis-params.json // Static params, that contains all networks' params.
-export * from './plutus';
-export * from './plutus-recursive';
+export * from './plutus'
+export * from './plutus-recursive'

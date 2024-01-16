@@ -1,21 +1,13 @@
 import { describe, test, expect } from 'bun:test'
 
-import {
-  Data,
-  Emulator,
-  SLOT_CONFIG_NETWORK,
-  Translucent,
-  fromText,
-} from 'translucent-cardano'
-
+import { Data, Emulator, Translucent, fromText } from 'translucent-cardano'
 
 import * as P from '@adatag/shared/plutus'
 
 import { GenesisConfig, genesisParams } from '@adatag/shared/config'
 import { Bootstrap } from '@adatag/shared/utils'
 
-
-import { resolveMockData, stringifyData } from '@adatag/shared/test-utils'
+import { resolveMockData, setSloctConfig } from '@adatag/shared/test-utils'
 
 import { emptyHash, hashVal, rootHash } from '@adatag/integri-tree'
 
@@ -36,15 +28,14 @@ describe('Adatag minting', async () => {
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
 
+  // If we want tu use validity ranges for transactin with private networks that use dynamic
+  // startup time and slot length then we need to gather the proper parameters somehow.
+  // - "Custom" assuming a private networ or Emulator.
+  // - "Preview", "Preprod" and "Mainnet" assuming the well-know parameters.
+  setSloctConfig(network, Bun.env.ENVIRONMENT || '')
+
   const translucent = await Translucent.new(provider, network)
 
-  if (!(provider instanceof Emulator) && network === 'Custom') {
-    SLOT_CONFIG_NETWORK[translucent.network] = {
-      zeroTime: Date.now(),
-      zeroSlot: 1704636741 * 1000,
-      slotLength: 1000,
-    }
-  }
   // Select the receiving wallet.
   const collectorAddress = await translucent
     .selectWalletFromSeed(collectorSeed)
@@ -122,9 +113,7 @@ describe('Adatag minting', async () => {
     // The adatag is deployed, lets mint an @adatag
     const adatag = 'adam'
 
-    //console.log(`Stateholder Hash: ${bd.stateholderScript.scriptHash}`)
-    //console.log(`Minting plolicy: ${bd.adatagMinting.policyId}`)
-
+    // get the state holder reference
     const shref = await translucent.utxosByOutRef([
       {
         txHash: bd.genesisTransaction,
@@ -132,23 +121,13 @@ describe('Adatag minting', async () => {
       },
     ])
 
-    //console.log(`Stakeholder Ref UTxO: ${stringifyData(shref)}`)
-
+    // get the minting policy reference
     const mpref = await translucent.utxosByOutRef([
       {
         txHash: bd.genesisTransaction,
         outputIndex: bd.adatagMinting.refIndex,
       },
     ])
-
-    //// console.log(`Stakeholder Ref UTxO: ${stringifyData(mpref)}`)
-
-    //if (params.deactivationTime > Date.now()) {
-    //  const deposit = 1750 // TODO: calcDeposit(adatag, deploy.adatag_minting.params.deposit_base)
-    //  const deadline =
-    //    Date.now() + Bootstrap.days(params.lockingDays.toString())
-    //  const adahandleUtxo = undefined // TODO: findWalletUtxosWithValue(translucent, params.adahandle, adatag)
-    //}
 
     // It's sittings at genesis transaction's 3rd index initially.
     // TODO: findAuthToken(bd.stateHolder.scriptAddress, bd.adatagMinting.policyId, token_name)
@@ -157,9 +136,6 @@ describe('Adatag minting', async () => {
     ])
 
     // TODO: mkProof(tree, adatag) --> const (un, un1, an, proof, newTree) =
-    // Build new proof
-    // const un = rootVal
-    // const an = rootVal
     const proof: P.Proof = oldProof
     const un1 = undefined // Simulating mint
     const { action, mintvalue } = un1
@@ -168,7 +144,6 @@ describe('Adatag minting', async () => {
 
     const mp = bd.adatagMinting.policyId
 
-    //const rh = rootHash(oldProof)
     const rhu = rootHash(updatedState)
 
     // Retrieve old state
@@ -179,8 +154,6 @@ describe('Adatag minting', async () => {
       P.StateHolderStateHolder.oldState,
     )
 
-    //console.log(`Old state: ${stringifyData(oldState)}`)
-
     const newState = {
       operationCount: oldState.operationCount + mintvalue,
       adatag: fromText(adatag),
@@ -190,16 +163,11 @@ describe('Adatag minting', async () => {
       mintingPolicy: mp,
     }
 
-    // Construct mintingpolicy redeem
-
-   // console.log(`New state: ${stringifyData(newState)}`)
-
     const mintValue = { [mp + fromText(adatag)]: 1n }
     const authToken = {
       [bd.authTokenScript.policyId + fromText(adatag[0])]: 1n,
     }
     const state = Data.to(newState, P.StateHolderStateHolder.oldState)
-   // console.log(`### NEW_STATE: ${state}`)
     const rootVal1 = { xi: fromText('0'), xa: fromText('`'), xb: fromText('b') }
     const mintRedeemer: P.MintRedeemer = {
       Minting: [
@@ -215,36 +183,16 @@ describe('Adatag minting', async () => {
 
     translucent.selectWalletFromSeed(deployerSeed)
     const userAddress = await translucent.wallet.address()
-    //const [user_utxo] = await translucent.wallet.getUtxos()
-
-   // console.log(`Redeemer : ${rdmr}`)
-    //console.log(`User money: ${stringifyData(user_utxo.assets)}`)
-   // console.log(`Autr money: ${stringifyData(auth_utxo.assets)}`)
-
-   // console.log(`SH UTXO: ${stringifyData(shref)}`)
-   // console.log(`SH Addr   : ${bd.stateholderScript.scriptAddress}`)
-   // console.log(`SH Hash   : ${bd.stateholderScript.scriptHash}`)
-   // console.log(`MP Plolicy: ${bd.adatagMinting.policyId}`)
 
     const time =
       translucent.provider instanceof Emulator
         ? translucent.provider.now()
         : Date.now()
 
-    //const [aaa_utxo] = await translucent.utxosByOutRef([
-    //  { txHash: bd.genesisTransaction, outputIndex: 2 },
-    //])
-    //console.log(`SH Hash: ${bd.stateholderScript.scriptHash}`)
-    //console.log(`SH Addr: ${bd.stateholderScript.scriptAddress}`)
-
     const tx = await translucent
       .newTx()
       .collectFrom([auth_utxo], Data.void())
       .readFrom(mpref.concat(shref))
-      //.collectFrom(shref, Data.void())
-      //.readFrom(shref)
-      //.readFrom(shref)
-      //.collectFrom([user_utxo])
       // Optional when deactivation time (16) is not reached
       // .paytoContract(timelockdeposit, { deposit }, { benef, now+ deadline}, noscript) // (8, 15,18) Optional, not required after deactivation time.
       // .collectFrom([adahandle_utxo]) // (17)
@@ -255,13 +203,12 @@ describe('Adatag minting', async () => {
         authToken,
       )
       .mintAssets(mintValue, rdmr)
-      // It is always required, as for deactivation time checking.
+      // It is always required for deactivation time checking.
       .validFrom(time)
       .complete()
 
-    // const signedTx =
-    await tx.sign().complete()
-    //const txHash = await signedTx.submit()
-    //expect(translucent.awaitTx(txHash)).resolves.toBe(true)
+    const signedTx = await tx.sign().complete()
+    const txHash = await signedTx.submit()
+    expect(translucent.awaitTx(txHash)).resolves.toBe(true)
   })
 })

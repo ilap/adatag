@@ -54,7 +54,9 @@ waitForServer(portToCheck, timeoutMilliseconds)
     if (serverInfo) {
       console.log(`Server is up! Start Time: ${serverInfo.startTime}`)
     } else {
-      console.error(`Timeout: Server did not become available within ${timeoutMilliseconds} ms.`)
+      console.error(
+        `Timeout: Server did not become available within ${timeoutMilliseconds} ms.`,
+      )
       process.exit(1)
     }
   })

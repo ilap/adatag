@@ -50,10 +50,12 @@
       },
       "configurations": {
         "int": {
+          "parallel": false,
           "commands": [
-            "bun test --env-file .env",
+            "bun test --env-file .env.int --timeout 60000",
             "echo INT",
-            "pwd"
+            "pwd",
+            "echo \"PARAMS: $NETWORK $ENVIRONMENT $PROVIDER\""
           ]
         },
         "dev": {

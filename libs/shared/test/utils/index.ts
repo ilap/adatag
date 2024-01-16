@@ -4,7 +4,4 @@ export * from './mock-adahandle'
 export * from './resolve-mock-data'
 export * from './utils'
 
-
-export {
-    seeds
-}
+export { seeds }

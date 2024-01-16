@@ -13,9 +13,9 @@ export const hashVal = (val: Val): string =>
 export const hash = (msg: string): string => hash256(msg)
 
 export function hash256(message: string): string {
-  const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(message, "hex");
-  return hasher.digest("hex")
+  const hasher = new Bun.CryptoHasher('sha256')
+  hasher.update(message, 'hex')
+  return hasher.digest('hex')
   //const hash = createHash('sha256')
   //hash.update(Buffer.from(message, 'hex'))
   //return hash.digest().toString('hex')

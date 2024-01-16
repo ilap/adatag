@@ -21,12 +21,14 @@
       },
       "configurations": {
         "int": {
+          "cache": false,
           "commands": [
             "docker-compose --env-file env kill ",
             "sleep 5",
             "docker compose --env-file env up --wait --wait-timeout 30",
             "echo yaci has started; pwd",
             "bun run waitfor.ts 10000 30 2>/dev/null",
+            "bun run waitfor_ogmios.ts \"http://localhost:1442/health\" 60",
             "export ALMAALMA=almaalma"
           ]
         },

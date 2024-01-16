@@ -7,7 +7,13 @@ import {
   fromText,
 } from 'translucent-cardano'
 import * as P from '../plutus/plutus'
-import { hash256, emptyHash, Val, combineThreeHashes, hashVal }  from '@adatag/integri-tree'
+import {
+  hash256,
+  emptyHash,
+  Val,
+  combineThreeHashes,
+  hashVal,
+} from '@adatag/integri-tree'
 //import sha256 from 'sha256'
 //import blake2b_224 from 'blake2b'
 import { GenesisConfig, GenesisParams } from '../config/types'
@@ -335,15 +341,14 @@ export class Bootstrap {
       const hash_alg = details.hashAlg
       let root_hash
 
-      const val:Val = { 
+      const val: Val = {
         xi: String.fromCharCode(48),
-        xa: String.fromCharCode(i-1),
-        xb: String.fromCharCode(i+1)
+        xa: String.fromCharCode(i - 1),
+        xb: String.fromCharCode(i + 1),
       }
 
       const hv = hashVal(val)
       root_hash = combineThreeHashes(hv, emptyHash, emptyHash)
-
 
       const state: P.StateHolderStateHolder['oldState'] = {
         operationCount: 0n,
@@ -368,10 +373,9 @@ export class Bootstrap {
 
     const signedTx = await txCompleted.sign().complete()
 
-    // DEBUG: console.log(`\n\n Transaction: \n ${signedTx.txSigned.to_json()}`)
     const txHash = await signedTx.submit()
+
     await translucent.awaitTx(txHash)
-    // DEBUG:  console.log(`TxHash ${txHash}`)
 
     const finalDetails = {
       ...details,

@@ -1,4 +1,3 @@
-
 export interface GenesisParams {
   hashAlg: string
   collectorAddress: string

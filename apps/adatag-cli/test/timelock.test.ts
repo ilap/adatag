@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test'
-import { SLOT_CONFIG_NETWORK } from 'translucent-cardano'
+import { SLOT_CONFIG_NETWORK, toHex } from 'translucent-cardano'
 
 import * as P from '@adatag/shared/plutus'
 
@@ -7,7 +7,7 @@ import { Assets, Data, Emulator, Translucent } from 'translucent-cardano'
 
 import { Bootstrap } from '@adatag/shared/utils'
 import { GenesisConfig, genesisParams } from '@adatag/shared/config'
-import { resolveMockData } from '@adatag/shared/test-utils'
+import { resolveMockData, setSloctConfig } from '@adatag/shared/test-utils'
 
 describe('Adatag minting', async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
@@ -19,19 +19,14 @@ describe('Adatag minting', async () => {
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
 
-  const translucent = await Translucent.new(provider, network)
-
-  // If we want tu use validity ranges for transactin with private networks that use dynamic
+  // If we want to use validity ranges for transactin with private networks that use dynamic
   // startup time and slot length then we need to gather the proper parameters somehow.
   // - "Custom" assuming a private networ or Emulator.
   // - "Preview", "Preprod" and "Mainnet" assuming the well-know parameters.
-  if (!(provider instanceof Emulator) && network === 'Custom') {
-    SLOT_CONFIG_NETWORK[translucent.network] = {
-      zeroTime: Date.now(),
-      zeroSlot: 1704636741 * 1000,
-      slotLength: 1000,
-    }
-  }
+  setSloctConfig(network, Bun.env.ENVIRONMENT || '')
+
+  const translucent = await Translucent.new(provider, network)
+
   // Select the receiving wallet.
   const collectorAddress = await translucent
     .selectWalletFromSeed(collectorSeed)
@@ -40,7 +35,6 @@ describe('Adatag minting', async () => {
   // Access the params object for the specified network
   const params = genesisParams[network]
 
-  //let deployed = false
   let GenesisConfig: GenesisConfig
 
   test('On-chain deployment', async () => {
@@ -63,10 +57,6 @@ describe('Adatag minting', async () => {
     GenesisConfig = result
   })
 
-  /***********************************************************************************************
-   *
-   *
-   ***********************************************************************************************/
   test('Deposit timelock', async () => {
     if (translucent.provider instanceof Emulator) {
       translucent.provider.awaitBlock(30)
@@ -88,49 +78,51 @@ describe('Adatag minting', async () => {
 
     const signedTx = await tx.sign().complete()
     const txHash = await signedTx.submit()
+
     expect(translucent.awaitTx(txHash)).resolves.toBe(true)
-  }),
-    test('Collect with all time passed', async () => {
-      if (translucent.provider instanceof Emulator) {
-        translucent.provider.awaitBlock(30)
-      }
+  })
 
-      const bd = GenesisConfig
+  test('Collect with all time passed', async () => {
+    if (translucent.provider instanceof Emulator) {
+      translucent.provider.awaitBlock(30)
+    }
 
-      const lovelace: Assets = { lovelace: 1_500_000_000n }
+    const bd = GenesisConfig
 
-      const utxoRef = await translucent.utxosByOutRef([
-        {
-          txHash: bd.genesisTransaction,
-          outputIndex: bd.timelockScript.refIndex,
-        },
-      ])
+    const lovelace: Assets = { lovelace: 1_500_000_000n }
 
-      const [spendingUtxo] = await translucent.utxosAt(
-        bd.timelockScript.scriptAddress,
-      )
+    const utxoRef = await translucent.utxosByOutRef([
+      {
+        txHash: bd.genesisTransaction,
+        outputIndex: bd.timelockScript.refIndex,
+      },
+    ])
 
-      const timelockRedeemer = 'Collect'
+    const [spendingUtxo] = await translucent.utxosAt(
+      bd.timelockScript.scriptAddress,
+    )
 
-      const rdmr = Data.to(timelockRedeemer, P.TimeDepositTimedeposit.rdmr)
+    const timelockRedeemer = 'Collect'
 
-      translucent.selectWalletFromSeed(collectorSeed)
-      const userAddress = await translucent.wallet.address()
+    const rdmr = Data.to(timelockRedeemer, P.TimeDepositTimedeposit.rdmr)
 
-      const now = Date.now()
+    translucent.selectWalletFromSeed(collectorSeed)
+    const userAddress = await translucent.wallet.address()
 
-      const tx = await translucent
-        .newTx()
-        .readFrom(utxoRef)
-        .collectFrom([spendingUtxo], rdmr)
-        .addSigner(collectorAddress)
-        .payToAddress(userAddress, lovelace)
-        .validFrom(now)
-        .complete()
+    const now = Date.now()
 
-      //const signedTx =
-      await tx.sign().complete()
-      //const txHash = await signedTx.submit()
-      //expect(translucent.awaitTx(txHash)).resolves.toBe(true)
-    })
+    const tx = await translucent
+      .newTx()
+      .readFrom(utxoRef)
+      .collectFrom([spendingUtxo], rdmr)
+      .addSigner(collectorAddress)
+      .payToAddress(userAddress, lovelace)
+      .validFrom(now)
+      .complete()
+
+    const signedTx = await tx.sign().complete()
+    const txHash = await signedTx.submit()
+
+    expect(translucent.awaitTx(txHash)).resolves.toBe(true)
+  })
 })

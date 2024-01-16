@@ -11,7 +11,7 @@
             "name": "Int Test Debug File",
             "program": "${file}",
             "args": ["--env-file", ".env.integration", "--timeout", "45000"],
-            "cwd": "${workspaceFolder}/packages/adatag-app",
+            "cwd": "${workspaceFolder}/libs/shared",
             "stopOnEntry": true,
             "watchMode": false
         },

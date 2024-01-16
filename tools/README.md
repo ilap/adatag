@@ -144,3 +144,23 @@ topup_addresses=addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf
 
 > Note: These adresses are based on the test users's (deployer, collector, user) seed. So, replace it accordingly.
 
+
+
+### Low level cardano cli test
+
+1. print out the valid tx with `toHex(signedTx.txSigned.to_bytes())`
+2. log in to docker ./ssh.sh
+3. create a babage tx with:
+```bash
+$ cat << EOF > signed.tx
+{
+    "type": "Witnessed Tx BabbageEra",
+    "description": "Ledger Cddl Format",
+    "cborHex":  "84..."
+}
+EOF
+$ root@2e729ab2a6cf:/app# cardano-cli transaction submit  --testnet-magic 42 --socket-path /clusters/default/node-spo1/node.sock --tx-file tx.tx
+Command failed: transaction submit  Error: Error while submitting tx: ShelleyTxValidationError ShelleyBasedEraBabbage (ApplyTxError [UtxowFailure ...
+
+```
+

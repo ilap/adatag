@@ -1,21 +1,17 @@
 import { describe, test, expect } from 'bun:test'
 
-import {
-  Data,
-  Emulator,
-  SLOT_CONFIG_NETWORK,
-  Translucent,
-  fromText,
-} from 'translucent-cardano'
-
+import { Translucent } from 'translucent-cardano'
 
 import * as P from '@adatag/shared/plutus'
 
 import { GenesisConfig, genesisParams } from '@adatag/shared/config'
 import { Bootstrap } from '@adatag/shared/utils'
 
-
-import { resolveMockData } from '@adatag/shared/test-utils'
+import {
+  resolveMockData,
+  setSloctConfig,
+  stringifyData,
+} from '@adatag/shared/test-utils'
 
 import { emptyHash, hashVal } from '@adatag/integri-tree'
 
@@ -36,15 +32,15 @@ describe('Adatag minting', async () => {
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
 
-  const translucent = await Translucent.new(provider, network)
+  setSloctConfig(network, Bun.env.ENVIRONMENT || '')
+  console.log(`After set slotconfig time,Befoer translucen new`)
+  console.log(`Befoer translucen new ${stringifyData(provider)}`)
 
-  if (!(provider instanceof Emulator) && network === 'Custom') {
-    SLOT_CONFIG_NETWORK[translucent.network] = {
-      zeroTime: Date.now(),
-      zeroSlot: 1704636741 * 1000,
-      slotLength: 1000,
-    }
-  }
+  const translucent = await Translucent.new(provider, network)
+  console.log(`After translucen new`)
+
+  // set the start time when required
+
   // Select the receiving wallet.
   const collectorAddress = await translucent
     .selectWalletFromSeed(collectorSeed)
@@ -55,41 +51,6 @@ describe('Adatag minting', async () => {
 
   //let deployed = false
   let GenesisConfig: GenesisConfig
-
-  // Proof details
-  // Initial tree of Ta
-  const rootVal = { xi: '0', xa: '`', xb: 'b' }
-  const updatedRootVal = { xi: '0', xa: '`', xb: 'adam' }
-  const nodeVal = { xi: '1', xa: 'adam', xb: 'b' }
-
-  const e: P.Proof = { NodeHash: { hash: emptyHash } }
-
-  const oldProof: P.Proof = {
-    HashNode: {
-      // (0, 'ilap', 'b')
-      hash: hashVal(rootVal),
-      left: e,
-      right: e,
-    },
-  }
-
-  // from (0, '`', 'b') e, e
-  // to ((0, '`', 'ilap'), ( (1, 'ilap', 'b'), e, e), e)
-  const updatedState: P.Proof = {
-    HashNode: {
-      // (0, '`', 'ilap')
-      hash: hashVal(updatedRootVal),
-      left: {
-        HashNode: {
-          // (1, 'ilap', 'b')
-          hash: hashVal(nodeVal),
-          left: e,
-          right: e,
-        },
-      },
-      right: e,
-    },
-  }
 
   test('On-chain deployment', async () => {
     // Create a newParams object by spreading the values from the original params
@@ -105,11 +66,15 @@ describe('Adatag minting', async () => {
     translucent.selectWalletFromSeed(deployerSeed)
     const [utxo] = await translucent.wallet.getUtxos()
 
+    console.log(`Before deploy`)
     const result = await Bootstrap.deploy(translucent, utxo, testParams)
+    console.log(`after deploy`)
     expect(result).toBeDefined()
-
+    console.log(
+      `NETWORK: ${network}, ${Bun.env.ENVIRONMENT}, ${Bun.env.NETWORK} ${Bun.env.PROVIDER}`,
+    )
     //deployed = true
-    GenesisConfig = result
+    //GenesisConfig = result
+    //console.log(result)
   })
-
 })
