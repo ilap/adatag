@@ -1,0 +1,55 @@
+{
+    "HashNode": {
+      "hash": "65db71de034e7e470b675d7c0cc27a2c668534229321ffebdaed884177d2c5a9",
+      "left": {
+        "HashNode": {
+          "hash": "1f2817845034fd266d0eff41a4cb7771f418b4e4ca9a3fc51fd3f09f180fe0bc",
+          "left": {
+            "NodeHash": {
+              "hash": "12596a243e80554115cde7b29cb1ce60e5c96dec84b10a971cfa0e95c2aaaa83"
+            }
+          },
+          "right": {
+            "HashNode": {
+              "hash": "f2ca5e3445c7a7dee2237d367febf6a28dd834c32a667ec500da8ac6cfa09924",
+              "left": {
+                "NodeHash": {
+                  "hash": "0fbc980b6fe212686ad2538dc8d05483fc12cab29d2d2348e6bbd6a678ae01e0"
+                }
+              },
+              "right": {
+                "HashNode": {
+                  "hash": "4b93a013f7e507ac4628255c397e636783f6146e9aade0d53a227f2bc40620cb",
+                  "left": {
+                    "NodeHash": {
+                      "hash": "6666e3a61630f7c3033d46aae9c8445cbf9a92714fa007c6e390ef2bc84097a5"
+                    }
+                  },
+                  "right": {
+                    "HashNode": {
+                      "hash": "a9fa220c67a878bed0d9ccc16f6b258f63d2afd88ddd2c82fc5dcffaa76b9851",
+                      "left": {
+                        "NodeHash": {
+                          "hash": "9f3c33a541a9e1dee55445a68471108eca7446e9ec5167943447ef970423ca43"
+                        }
+                      },
+                      "right": {
+                        "NodeHash": {
+                          "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "right": {
+        "NodeHash": {
+          "hash": "f78559aa82c7ac03ea4e61fb8eb4fc4a902aadaa36c0bcb4b13cddfd222cb8b9"
+        }
+      }
+    }
+  }

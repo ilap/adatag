@@ -30,7 +30,7 @@ describe('Adatag minting', async () => {
 
   // If we want tu use validity ranges for transactin with private networks that use dynamic
   // startup time and slot length then we need to gather the proper parameters somehow.
-  // - "Custom" assuming a private networ or Emulator.
+  // - "Custom" assuming a private network or Emulator.
   // - "Preview", "Preprod" and "Mainnet" assuming the well-know parameters.
   setSloctConfig(network, Bun.env.ENVIRONMENT || '')
 
@@ -153,6 +153,9 @@ describe('Adatag minting', async () => {
       auth_utxo.datum!,
       P.StateHolderStateHolder.oldState,
     )
+
+    console.log(`Hash of the old state: ${oldState.rootHash}`)
+    console.log(`Hash of the new state: ${rhu}`)
 
     const newState = {
       operationCount: oldState.operationCount + mintvalue,

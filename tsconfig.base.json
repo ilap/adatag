@@ -17,13 +17,13 @@
     "baseUrl": ".",
     "types": ["bun-types", "bun"],
     "paths": {
-      "@adatag/shared/plutus": ["libs/shared/src/plutus/index"],
-      "@adatag/shared/utils": ["libs/shared/src/utils/index"],
-      "@adatag/shared/test-utils": ["libs/shared/test/utils/index"],
-      "@adatag/shared/config": ["libs/shared/src/config/index"],
-      "@adatag/integri-tree": ["libs/integri-tree/src/index"],
-      "translucent-cardano": ["libs/translucent/index"],
+      "@adatag/shared/plutus": ["./libs/shared/src/plutus/index"],
+      "@adatag/shared/utils": ["./libs/shared/src/utils/index"],
+      "@adatag/shared/test-utils": ["./libs/shared/test/utils/index"],
+      "@adatag/shared/config": ["./libs/shared/src/config/index"],
+      "@adatag/integri-tree": ["./libs/integri-tree/src/index"],
+      "translucent-cardano": ["./libs/translucent/index"],
     }
   },
-  "exclude": ["node_modules", "tmp", "contracts"]
+  "exclude": ["node_modules", "contracts"]
 }

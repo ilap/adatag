@@ -1,35 +1,30 @@
-import * as P from '@adatag/shared/config'
-
-//import { createHash } from 'crypto'
+import * as P from '@adatag/shared/plutus'
+import  {Val} from './types'
 
 // export const emptyHash = '836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07' // Blake2b_224
-export const emptyHash =
-  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' // SHA2_256
+export const emptyHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' // SHA2_256
 
-export type Val = { xi: string; xa: string; xb: string }
 
+/**
+ * The hash of the node's Value is the hash of the concatenated `xi`, `xa` and `xb` of the Val.
+ */
 export const hashVal = (val: Val): string =>
   hash256(Buffer.from(val.xi + val.xa + val.xb, 'utf-8').toString('hex'))
 export const hash = (msg: string): string => hash256(msg)
 
+const _hasher =  new Bun.CryptoHasher('sha256')
+
 export function hash256(message: string): string {
-  const hasher = new Bun.CryptoHasher('sha256')
-  hasher.update(message, 'hex')
-  return hasher.digest('hex')
-  //const hash = createHash('sha256')
-  //hash.update(Buffer.from(message, 'hex'))
-  //return hash.digest().toString('hex')
+  _hasher.update(message, 'hex')
+  return _hasher.digest('hex')
 }
 
-//export const hash = (message: string): string => hash256(message)
 export function combineThreeHashes(h1: string, h2: string, h3: string): string {
-  const b1 = Buffer.from(h1, 'hex')
-  const b2 = Buffer.from(h2, 'hex')
-  const b3 = Buffer.from(h3, 'hex')
+  return hash(h1 + h2 + h3)
+}
 
-  const buff = Buffer.concat([b1, b2, b3]).toString('hex')
-
-  return hash(buff)
+export function combineHashes(h1: string, h2: string): string {
+  return hash(h1 + h2)
 }
 
 export function rootHash(root: P.Proof): string {

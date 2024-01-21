@@ -5,7 +5,8 @@
   "scripts": {},
   "private": true,
   "dependencies": {
-    "translucent": "file:./libs/translucent"
+    "lodash": "^4.17.21",
+    "translucent-cardano": "https://github.com/txpipe/translucent"
   },
   "devDependencies": {
     "bun-types": "latest",

@@ -38,9 +38,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
-      // BUG: bun executor does not allow env variables
-      //"executor": "@nx-bun/nx:test",
+      "command": "bun test --timeout 60000",
       "dependsOn": [
         "^build",
         { "projects": "chain", "target": "spin-up", "params": "forward" }
@@ -49,23 +47,11 @@
         "cwd": "apps/adatag-cli"
       },
       "configurations": {
-        "int": {
-          "parallel": false,
-          "commands": [
-            "bun test --env-file .env.int --timeout 60000",
-            "echo INT",
-            "pwd",
-            "echo \"PARAMS: $NETWORK $ENVIRONMENT $PROVIDER\""
-          ]
-        },
-        "dev": {
-          "command": "echo DEV"
-        },
-        "prd": {
-          "command": "echo PRD"
-        }
+        "int": {},
+        "dev": {},
+        "prd": {}
       },
       "defaultConfiguration": "dev"
     }
   }
-}
+} 

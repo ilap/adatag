@@ -2,18 +2,13 @@ import { describe, test, expect } from 'bun:test'
 
 import { Translucent } from 'translucent-cardano'
 
-import * as P from '@adatag/shared/plutus'
-
 import { GenesisConfig, genesisParams } from '@adatag/shared/config'
 import { Bootstrap } from '@adatag/shared/utils'
 
 import {
   resolveMockData,
   setSloctConfig,
-  stringifyData,
 } from '@adatag/shared/test-utils'
-
-import { emptyHash, hashVal } from '@adatag/integri-tree'
 
 /*
   https://github.com/input-output-hk/plutus-pioneer-program/blob/b55a7d2409cbf09a04ab471796f410083129acb6/code/Week03/lucid-ref-script/src/index.js
@@ -33,14 +28,9 @@ describe('Adatag minting', async () => {
     await resolveMockData()
 
   setSloctConfig(network, Bun.env.ENVIRONMENT || '')
-  console.log(`After set slotconfig time,Befoer translucen new`)
-  console.log(`Befoer translucen new ${stringifyData(provider)}`)
-
+  
   const translucent = await Translucent.new(provider, network)
-  console.log(`After translucen new`)
-
-  // set the start time when required
-
+  
   // Select the receiving wallet.
   const collectorAddress = await translucent
     .selectWalletFromSeed(collectorSeed)
