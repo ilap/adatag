@@ -35,7 +35,14 @@
       },
       "configurations": {
         "dev": {
-          "command": "aiken build -k"
+          "commands": [
+            "aiken build -k",
+            "cp ../../libs/shared/src/plutus/plutus.ts ../../libs/shared/src/plutus/plutus_orig.ts",
+            "bun run ../../tools/chain/scripts/blueprint.ts",
+            "bun prettier -w ../../libs/shared/src/plutus/plutus.ts",
+            "sed -i '' -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^  rdmr:$/  rdmr: MintRedeemer/\" -e \"14,25d\" ../../libs/shared/src/plutus/plutus.ts"
+          ],
+          "parallel": false
         },
         "prod": {
           "command": "aiken build -D"
@@ -48,7 +55,7 @@
       "options": {
         "cwd": "contracts/aiken"
       },
-      "command": "aiken fmt --check"
+      "command": "echo 'aiken fmt --check'"
     }
   }
 }

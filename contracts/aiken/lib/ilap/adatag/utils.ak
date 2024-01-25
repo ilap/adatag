@@ -21,8 +21,9 @@ use aiken/transaction/value.{MintedValue, Value, tokens}
 use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
 use ilap/adatag/types.{ScriptHash, TokenName}
 
-pub fn debug(data) {
-  builtin.debug(cbor.diagnostic(data), data)
+pub fn debugMessage(message: String, data: Data) {
+  let prefix = builtin.append_string(message, @": ")
+  builtin.append_string(prefix, cbor.diagnostic(data))
 }
 
 pub fn has_only_token(
@@ -260,6 +261,7 @@ pub fn parse_int(string: ByteArray) -> Int {
   let fst = builtin.index_bytearray(string, 0)
   let len = bytearray.length(string)
 
+  trace debugMessage(@"fst", fst)
   if fst == 48 {
     if len == 1 {
       0
@@ -273,6 +275,9 @@ pub fn parse_int(string: ByteArray) -> Int {
       0,
       fn(byte, acc) {
         // Only digits are allowed
+        trace debugMessage(@"byte", byte)
+        trace debugMessage(@"acc", acc)
+        
         expect byte >= 48 && byte <= 57
         let num = byte - 48
         acc * 10 + num
@@ -285,4 +290,10 @@ test test_parse_ints() {
   // parse_int("12345678901") == 12345678901 && 
   // parse_int("0") == 0 && 
   parse_int("100000000000000000000000000000000000000000000") == 100000000000000000000000000000000000000000000
+}
+
+test test_parse_int_h40 () {
+  let r = parse_int(#"40") 
+  trace debugMessage(@"r", r)
+  r == 10 
 }

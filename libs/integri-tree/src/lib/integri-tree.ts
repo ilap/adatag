@@ -1,7 +1,7 @@
 import { emptyHash, hashVal, combineThreeHashes } from './hash'
-import { Proof } from '@adatag/shared/plutus'
+import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
 
-import { Val } from './types'
+import { Data, fromText } from 'translucent-cardano'
 
 /**
  * @module IntegriTree
@@ -30,7 +30,7 @@ export class IntegriTree {
   /**
    * Generates the root hash for the entire tree.
    */
-  public rootHash = (): string => this.calculateNodeHash(0)
+  public rootHash = (): string => this.hashNode(0)
 
   private isEven = (num: number) => num % 2 === 0
 
@@ -201,7 +201,7 @@ export class IntegriTree {
    * @param index - The index of the node.
    * @returns The hash for the specified node.
    */
-  private calculateNodeHash(index: number): string {
+  private hashNode(index: number): string {
     if (index >= this.elements.length) {
       return emptyHash
     }
@@ -211,8 +211,8 @@ export class IntegriTree {
     const rightChildIndex = 2 * index + 2
 
     const valHash = hashVal(val)
-    const leftHash = this.calculateNodeHash(leftChildIndex)
-    const rightHash = this.calculateNodeHash(rightChildIndex)
+    const leftHash = this.hashNode(leftChildIndex)
+    const rightHash = this.hashNode(rightChildIndex)
 
     return combineThreeHashes(valHash, leftHash, rightHash)
   }
@@ -242,45 +242,56 @@ export class IntegriTree {
     return left != null ? left : right
   }
 
+
+
   /**
-   * Generates the minimal subtree (the proof tree) for a specified element.
+   * Generates the minimal subtree (proof tree) for a specified element.
    * @param element - The element for which to generate the minimal subtree.
-   * @returns A Proof or `null` if the operation fails.
+   * @returns An update value, append value, and the proof, or throws an error if the operation fails.
    *
+   * Note: It returns hex-encoded values.
    */
-  public generateMinimalSubtree(element: string): Proof | null {
+  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } {
+
     const [updateNode, deleteNode] = this.search(element)
 
+    // FIXME: Impelent delete node proof
     if (deleteNode) {
-      // Generate proof for element deletion is not implemented yet
-      console.error(`The element (${element}) is already in the tree`)
-      return null
+      throw new Error(`Error: The element (${element}) is already in the tree.`)
     }
 
-    const appendNode = this.size === 1 ? 0 : Math.floor(this.size / 2) - 1
-
+    const appendNode = Math.floor((this.size - 1) / 2)
     // The index of LCA is always smaller or equal to the nodes' index
-    const lca =
-      updateNode === appendNode
-        ? updateNode
-        : this.findLca(0, updateNode, appendNode)
+    const lca = updateNode === appendNode ? updateNode : this.findLca(0, updateNode, appendNode)
+    const updateVal = IntegriTree.serialiseVal(this.elements[updateNode])
+    const appendVal = IntegriTree.serialiseVal(this.elements[appendNode])
 
     if (updateNode === lca) {
       // update node is the parent of the append node, so one traversal from append node is enough
       const node: Proof = this.buildProofNode(appendNode)
-      return this.buildProof(appendNode, 0, node)
+      return {
+        updateVal: updateVal,
+        appendVal: appendVal,
+        proof: this.buildProof(appendNode, 0, node)
+      }
     } else if (appendNode === lca) {
       // append node is the parent of the update node, so one traversal from update node is enough
       const node: Proof = this.buildProofNode(updateNode)
-      return this.buildProof(updateNode, 0, node)
+      
+      return {
+        updateVal: updateVal,
+        appendVal: appendVal,
+        proof: this.buildProof(updateNode, 0, node)
+      }
     } else {
       // neither of them is a parent of the other, so both nodes must traversal to the lca,
       // then select their position in the LCA, and finally
       // traversal from the LCA to the root.
       const un = this.buildProofNode(updateNode)
-      const an = this.buildProofNode(appendNode)
       const lcaUn = this.buildProof(updateNode, lca, un)
-      const lcaAn = this.buildProof(updateNode, lca, an)
+
+      const an = this.buildProofNode(appendNode)
+      const lcaAn = this.buildProof(appendNode, lca, an)
 
       if ('HashNode' in lcaUn && 'HashNode' in lcaAn) {
         const { hash, left, right } = lcaUn.HashNode
@@ -298,11 +309,38 @@ export class IntegriTree {
           },
         }
 
-        return this.buildProof(lca, 0, lcaNode)
+        return {
+          updateVal: updateVal,
+          appendVal: appendVal,
+          proof: this.buildProof(lca, 0, lcaNode)
+        }
       } else {
-        return null // Invalid tree
+        throw new Error(`Error: Invalid tree.`)
       }
     }
+  }
+
+  /**
+   * Builds theredeemer from unserialised Vals and proofs.
+   * @param updateVal - update Val
+   * @param appendVal - append Val
+   * @param proof - proof
+   * @returns return the Mint redeemer
+   * 
+   * > Note: It assumes that the val contains the hex encoded properties.
+   */
+  public static buildRedeemer(updateVal: Val, appendVal: Val, proof: Proof): string {
+    const mintRedeemer: MintRedeemer = {
+      Minting: [
+        {
+          updateVal: updateVal,
+          appendVal: appendVal,
+          proof: proof,
+        },
+      ], // Use 'as const' to assert that Minting is a tuple with a single element
+    }
+    //console.log(`Redeemer: ${stringifyData(mintRedeemer)}`)
+    return  Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof') //mintRedeemer
   }
 
   /**
@@ -313,9 +351,9 @@ export class IntegriTree {
   private buildProofNode(index: number): Proof {
     const vh = hashVal(this.elements[index])
     // Left child's hash
-    const leftHash = this.calculateNodeHash(2 * index + 1)
+    const leftHash = this.hashNode(2 * index + 1)
     // Right child's hash
-    const rightHash = this.calculateNodeHash(2 * index + 2)
+    const rightHash = this.hashNode(2 * index + 2)
     const node: Proof = {
       HashNode: {
         hash: vh,
@@ -345,13 +383,13 @@ export class IntegriTree {
     // When the fromIndex is even then it's the right one (as the index starts from `0`)
     const { left, right } = this.isEven(fromIndex)
       ? {
-          left: { NodeHash: { hash: this.calculateNodeHash(fromIndex - 1) } },
-          right: node,
-        }
+        left: { NodeHash: { hash: this.hashNode(fromIndex - 1) } },
+        right: node,
+      }
       : {
-          left: node,
-          right: { NodeHash: { hash: this.calculateNodeHash(fromIndex + 1) } },
-        }
+        left: node,
+        right: { NodeHash: { hash: this.hashNode(fromIndex + 1) } },
+      }
 
     const parentNode: Proof = {
       HashNode: { hash: vh, left: left, right: right },
@@ -359,4 +397,27 @@ export class IntegriTree {
 
     return this.buildProof(parentIndex, toIndex, parentNode)
   }
+
+  /**
+   * Serialise unserialised Vals
+   * @param val - The val to hex encode
+   * @returns The hex encoded Val
+   * 
+   * > Note: It assumes that the val does not contain hex encoded properties.
+   */
+  private static serialiseVal(val: Val): Val {
+    return {
+      xi: fromText(val.xi),
+      xa: fromText(val.xa),
+      xb: fromText(val.xb),
+    }
+  }
+}
+
+export function stringifyData(data: unknown) {
+  return JSON.stringify(
+    data,
+    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
+    '  ',
+  )
 }

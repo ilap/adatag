@@ -24,7 +24,7 @@ fn append_values(
     let l = Val { xi: idx, xa: x, xb: nuv.xb }
     let a =
       if nuv == nav {
-        nuv
+        u
       } else {
         nav
       }
@@ -129,8 +129,8 @@ pub fn validate_proof(
       let enu = hash == nuh
       let ena = hash == nah
 
-      let has_nu = has_nu || ena
-      let has_na = has_na || enu
+      let has_nu = has_nu || enu
+      let has_na = has_na || ena
 
       let (lnu, lna, lh) =
         validate_proof(
@@ -152,23 +152,37 @@ pub fn validate_proof(
           nah: nah,
           nodes: nodes,
         )
-      let is_any = enu || ena
 
-      if is_new_state && is_any {
+      // This node is either the update or append node and we calculate the new
+      // state by update the current nodes by the generated ones.
+      if is_new_state && ( enu || ena ) {
         let (nuv, nav, leaf) = nodes
-        let nvh =
-          if enu {
-            hash_val(nuv)
+
+        let (nvh, nlh, nrh) =
+          // Append and update nodes are the same
+          if nuv == nav || ena {
+            let leaf_h =
+              combine_three_hashes(hash_val(leaf), empty_hash, empty_hash)
+            let (al, ar) =
+              // The only valid combination to ensure the integrity of the tree are:
+              // 1. left and right are emtpy hashes
+              // 2. left is not empty and right is empty
+              // otherwise invalid.
+              if lh == empty_hash && rh == empty_hash {
+                (leaf_h, rh)
+              } else if lh != empty_hash && rh == empty_hash {
+                (lh, leaf_h)
+              } else {
+                // The right must always be an empty hash constraints above are not met
+                fail
+              }
+            (hash_val(nav), al, ar)
+          } else if enu {
+            // Only the val is changed
+            (hash_val(nuv), lh, rh)
           } else {
-            hash_val(nav)
-          }
-        let leaf_h =
-          combine_three_hashes(hash_val(leaf), empty_hash, empty_hash)
-        let (nlh, nrh) =
-          if lh == empty_hash {
-            (leaf_h, rh)
-          } else {
-            (lh, leaf_h)
+            // Impossible happened
+            fail
           }
 
         (lnu || rnu, lna || rna, combine_three_hashes(nvh, nlh, nrh))

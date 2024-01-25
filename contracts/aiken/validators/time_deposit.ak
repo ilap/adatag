@@ -9,7 +9,7 @@ use ilap/adatag/types.{
   Collect, Credential, Redeem, TimeDepositDatum, TimeDepositParams,
   TimeDepositRedeemer,
 }
-use ilap/adatag/utils.{debug, time_elapsed}
+use ilap/adatag/utils.{time_elapsed}
 
 //use aiken/cbor
 
@@ -21,21 +21,19 @@ fn valid_claim(
   context: ScriptContext,
 ) -> Bool {
   let void_datum: Data = Void
+
   // Any void datum is handled as donation, meaning only the collector can claim it.
   // It's anti pattern but we allow any wrongly formed datums for collections
-  trace @"Alma"
-  {
-    let valid =
-      if void_datum == datum {
-        is_coll?
-      } else {
-        expect _d: TimeDepositDatum = datum
-        time_elapsed(context.transaction.validity_range, time)?
-      }
+  let valid =
+    if void_datum == datum {
+      is_coll?
+    } else {
+      expect _d: TimeDepositDatum = datum
+      time_elapsed(context.transaction.validity_range, time)?
+    }
 
-    let signed_by = list.has(context.transaction.extra_signatories, cred)?
-    valid? && signed_by?
-  }
+  let signed_by = list.has(context.transaction.extra_signatories, cred)?
+  valid? && signed_by?
 }
 
 /// TimeDeposit validator is for redeeming or collect the locked deposit 
@@ -62,7 +60,7 @@ validator(params: TimeDepositParams) {
       // The false means it's not collection but redeem.
       Redeem -> {
         expect TimeDepositDatum { beneficiary, deadline }: TimeDepositDatum =
-          debug(datum)
+          datum
 
         valid_claim(
           is_coll: False,

@@ -1,6 +1,3 @@
-// use aiken/bytearray
-// use aiken/cbor
-//use ilap/adatag/types as adatag
 use ilap/integri_tree/hash.{empty_hash, hash_val, root_hash}
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture.{generate_proof}
@@ -46,35 +43,16 @@ test test_initial_added_state() {
   let hr = hash_val(rootVal)
   let hr1 = hash_val(rootVal1)
   let hn = hash_val(nodeVal)
-  let pl = NodeHash { hash: empty_hash }
+  let e = NodeHash { hash: empty_hash }
 
-  let tree =
-    HashNode {
-      hash: hr,
-      left: NodeHash { hash: empty_hash },
-      right: NodeHash { hash: empty_hash },
-    }
+  let tree = HashNode { hash: hr, left: e, right: e }
   let tree1 =
     HashNode {
       hash: hr1,
-      left: HashNode {
-        hash: hn,
-        left: NodeHash { hash: empty_hash },
-        right: NodeHash { hash: empty_hash },
-      },
-      right: NodeHash { hash: empty_hash },
+      left: HashNode { hash: hn, left: e, right: e },
+      right: e,
     }
 
-  let proof = HashNode { hash: hr, left: pl, right: pl }
-
-  //let rh = root_hash(tree1)
-  //cbor.diagnostic(tree1) == @"aa"
-  // Passes
-  // let ma =
-  //  adatag.Minting(
-  //    adatag.MintRedeemer { update_val: rootVal, append_val: rootVal, proof },
-  //  )
-  //cbor.diagnostic(root_hash(tree1)) == @"aa"
   append_check(
     adatag,
     tree_size,
@@ -82,6 +60,6 @@ test test_initial_added_state() {
     root_hash(tree1),
     rootVal,
     rootVal,
-    proof,
+    tree,
   )
 }

@@ -2,8 +2,7 @@ import { Data, fromText } from 'translucent-cardano'
 import { hashVal, rootHash } from '..'
 import { IntegriTree } from './integri-tree'
 import { sampleVals2 } from './integri-tree.test'
-import { Val } from './types'
-import { AdatagAdatagMinting, MintRedeemer, Proof } from '@adatag/shared/plutus'
+import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
 import { sampleVals } from './integri-tree.data'
 
 function benchIt(fn: Function) {
@@ -71,12 +70,11 @@ rs.forEach((r) => {
 // console.log(`Importing....`)
 //import { sampleVals } from './integri-tree.data'
 //console.log(`Loading from vals`)
-
 //console.log(`Hashing now`)
 
 // DEBUG: 
-const tree = IntegriTree.fromList(sampleVals)
-//const tree = IntegriTree.fromList(sampleVals2)
+//const tree = IntegriTree.fromList(sampleVals)
+const tree = IntegriTree.fromList(sampleVals2)
 //const tree = IntegriTree.fromConstraints("`", "b")
 const rh = tree.rootHash()
 
@@ -89,28 +87,19 @@ const adatag = "ubul" // lca === appenNode === updateNode
 //console.log(tree.generateMinimalSubtreeOf("ilap"))
 //tree.append(adatag)
 const st = Date.now()
-const proof: Proof = tree.generateMinimalSubtree(adatag)
+/*const mintRedeemer: MintRedeemer = tree.generateMinimalSubtree(adatag)
 const et = Date.now()
 const em = et - st
 console.log(`generateProof for ${tree.size} took ${em} milliseconds`)//tree.toList())
-console.log(`Root hash of proof: ${rootHash(proof)}`)
-console.log(`Proof: ${JSON.stringify(proof)}`)
 
-//sampleVals2.forEach((v)=>{
-//  console.log(`${v.xi}: ${v.xa},${v.xb} -- ${hashVal(v)}`)
-//})
-
-const rootVal1 = { xi: fromText('0'), xa: fromText('`'), xb: fromText('b') }
-
-const mintRedeemer: MintRedeemer = {
-  Minting: [
-    {
-      updateVal: rootVal1,
-      appendVal: rootVal1,
-      proof: proof,
-    },
-  ], // Use 'as const' to assert that Minting is a tuple with a single element
+if (typeof mintRedeemer !== 'string') {
+  const proof: Proof =  mintRedeemer.Minting[0].proof
+    
+  console.log(`Root hash of proof: ${rootHash(proof)}`)
+  console.log(`Proof: ${JSON.stringify(proof)}`)
+  console.log(`Root hash of proof: ${rootHash(proof)}`)
 }
 
 const rdmr = Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof')
-//console.log(rdmr)
+console.log(rdmr)
+*/

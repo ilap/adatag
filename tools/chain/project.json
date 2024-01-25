@@ -1,7 +1,7 @@
 {
   "name": "chain",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "tools/yaci/",
+  "sourceRoot": "tools/chain/",
   "projectType": "library",
   "implicitDependencies": [
     "aiken"
@@ -12,7 +12,7 @@
       "options": {
         "parallel": false,
         "color": true,
-        "cwd": "tools/yaci",
+        "cwd": "tools/chain",
         "env": {
           "YACI_CLI_CMD": "java -jar yaci-cli.jar 'create-node -o 1 --start'"
         }
@@ -34,7 +34,7 @@
     "tear-down": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "tools/yaci",
+        "cwd": "tools/chain",
         "color": true
       },
       "configurations": {
@@ -50,17 +50,17 @@
       // "executor": "nx:run-commands",
       "executor": "@nx-bun/nx:test",
       "options": {
-        "cwd": "tools/yaci"
+        "cwd": "tools/chain"
       },
       "configurations": {
         "int": {
-          "command": "echo YACI INT"
+          "command": "echo CHAIN INT"
         },
         "dev": {
-          "command": "echo  YACI DEV"
+          "command": "echo  CHAIN DEV"
         },
         "prd": {
-          "command": "echo YACI PRD"
+          "command": "echo CHAIN PRD"
         }
       },
       "defaultConfiguration": "int"
