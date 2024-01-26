@@ -21,13 +21,13 @@
         "int": {
           "cache": false,
           "commands": [
-            //"docker-compose --env-file env kill ",
-            "docker compose --env-file env up --wait --wait-timeout 30",
-            "bun run scripts/waitfor_ogmios.ts \"http://localhost:1442/health\" 60"
+            "docker-compose --env-file env kill ",
+            "docker compose --env-file env up -d --wait-timeout 120",
+            "bun run scripts/waitfor_ogmios.ts http://localhost:1442/health 120"
           ]
         },
-        "dev": { "command": "echo 'No spin-up is required'"},
-        "prd": {"command": "echo 'No spin-up is required'"}
+        "dev": { "command": "echo 'Dev: No spin-up is required'"},
+        "prd": {"command": "echo 'Prd: No spin-up is required'"}
       },
       "defaultConfiguration": "int"
     },
@@ -41,29 +41,10 @@
         "int": {
           "command": "docker-compose --env-file env kill"
         },
-        "dev": {},
-        "prd": {}
+        "dev": { "command": "echo 'Dev: No tear-down is required'"},
+        "prd": {"command": "echo 'Prd: No tear-down is required'"}
       },
       "defaultConfiguration": "dev"
-    },
-    "test": {
-      // "executor": "nx:run-commands",
-      "executor": "@nx-bun/nx:test",
-      "options": {
-        "cwd": "tools/chain"
-      },
-      "configurations": {
-        "int": {
-          "command": "echo CHAIN INT"
-        },
-        "dev": {
-          "command": "echo  CHAIN DEV"
-        },
-        "prd": {
-          "command": "echo CHAIN PRD"
-        }
-      },
-      "defaultConfiguration": "int"
     }
   }
 }

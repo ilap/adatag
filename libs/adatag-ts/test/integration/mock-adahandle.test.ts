@@ -4,6 +4,7 @@ import { mintAdahandle, resolveMockData } from '@adatag/shared/test-utils'
 
 test('Minting mock-adahandle', async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
+  // Note: These below will be glocally used.
   // Bun.env.ENVIRONMENT = "Development";
   // Bun.env.NETWORK = "Custom";
   // Bun.env.PROVIDER = "Emulator";

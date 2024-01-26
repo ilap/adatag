@@ -5,6 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
+    "@nx/eslint": "^17.2.8",
     "lodash": "^4.17.21",
     "translucent-cardano": "https://github.com/txpipe/translucent"
   },

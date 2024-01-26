@@ -1,9 +1,13 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
     "rootDir": ".",
+    "outDir": "./dist",
     "sourceMap": true,
-    "declaration": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -16,11 +20,12 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "types": ["bun-types", "bun"],
+    "noEmit": true,
     "paths": {
-      "@adatag/shared/plutus": ["./libs/shared/src/plutus/index"],
-      "@adatag/shared/utils": ["./libs/shared/src/utils/index"],
-      "@adatag/shared/test-utils": ["./libs/shared/test/utils/index"],
-      "@adatag/shared/config": ["./libs/shared/src/config/index"],
+      "@adatag/shared/plutus": ["./libs/adatag-ts/src/plutus/index"],
+      "@adatag/shared/utils": ["./libs/adatag-ts/src/utils/index"],
+      "@adatag/shared/test-utils": ["./libs/adatag-ts/test/utils/index"],
+      "@adatag/shared/config": ["./libs/adatag-ts/src/config/index"],
       "@adatag/integri-tree": ["./libs/integri-tree/src/index"],
       "translucent-cardano": ["./libs/translucent/index"],
     }

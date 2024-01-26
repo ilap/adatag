@@ -89,3 +89,91 @@ export async function setSloctConfig(network: Network, env: string) {
     throw Error(`Could not set the slot config`)
   }
 }
+
+
+export function generateRandomStrings(count: number, maxLength: number): Set<string> {
+  const validCharacters = 'abcdefghijklmnopqrstuvwxyz.-_';
+
+  const randomStrings: Set<string> = new Set();
+
+  for (let j = 0; j < count; j++) {
+    const stringLength = Math.floor(Math.random() * (maxLength + 1));
+    let str = '';
+
+    for (let i = 0; i < stringLength; i++) {
+      const randomIndex = Math.floor(Math.random() * validCharacters.length);
+      str += validCharacters.charAt(randomIndex);
+    }
+
+    if (str !== '') {
+      randomStrings.add(str);
+    }
+  }
+
+  return randomStrings;
+}
+
+
+export function isValidUsername(str: string): boolean {
+  const n = str.length;
+
+  return (
+    n > 0 &&
+    n <= 16 &&
+    isLowerCase(str.charCodeAt(0)) &&
+    isLowerCaseOrDigit(str.charCodeAt(n - 1)) &&
+    hasOnlyAllowedChars(str)
+  );
+}
+
+export function isLowerCase(ch: number): boolean {
+  return ch >= 97 && ch <= 122;
+}
+
+function isDigit(digit: number): boolean {
+  return digit >= 48 && digit <= 57;
+}
+
+function isLowerCaseOrDigit(ch: number): boolean {
+  return isLowerCase(ch) || isDigit(ch);
+}
+
+function isHyphen(char: number): boolean {
+  return char === 45;
+}
+
+function isUnderscore(char: number): boolean {
+  return char === 95;
+}
+
+function isDot(char: number): boolean {
+  return char === 46;
+}
+
+function isValidChar(ch: number): boolean {
+  return isLowerCase(ch) || isDigit(ch) || isHyphen(ch) || isUnderscore(ch) || isDot(ch);
+}
+
+function hasOnlyAllowedChars(str: string): boolean {
+  const n = str.length;
+
+  function go(i: number): boolean {
+    if (i >= n) {
+      return true;
+    }
+    if (!isValidChar(str.charCodeAt(i))) {
+      return false;
+    }
+    return go(i + 1);
+  }
+
+  return go(0);
+}
+
+// Example usage:
+
+//const randomStrings = generateRandomStrings(30000, 17);
+//randomStrings.forEach((name) => {
+//  console.log(`"${name}", ${isValidUsername(name)} `)
+//})
+//console.log(randomStrings);

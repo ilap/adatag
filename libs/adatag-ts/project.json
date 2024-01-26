@@ -1,0 +1,38 @@
+{
+  "name": "adatag-ts",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/adatag-ts",
+  "projectType": "library",
+  "implicitDependencies": [
+    "aiken",
+    "chain",
+    "integri-tree"
+  ],
+  "targets": {
+    "lint": {
+      "dependsOn": [
+        "^lint"
+      ],
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "command": "bun test --timeout 600000",
+      "dependsOn": [
+        { "projects": "chain", "target": "spin-up", "params": "forward" },
+        "^test"
+      ],
+      "options": {
+        "cwd": "libs/adatag-ts"
+      },
+      "configurations": {
+        "int": {},
+        "dev": {},
+        "prd": {}
+      },
+      "defaultConfiguration": "dev"
+    }
+  }
+}

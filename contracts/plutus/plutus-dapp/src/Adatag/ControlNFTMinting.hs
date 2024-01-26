@@ -28,7 +28,6 @@ import PlutusTx.Prelude (
   ($),
   (&&),
  )
-import PlutusTx.Show qualified as PlutusTx
 import Text.Printf (printf)
 import Utilities (currencySymbol)
 import Utilities.PlutusTx (wrapPolicy)

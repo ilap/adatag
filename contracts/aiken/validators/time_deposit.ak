@@ -11,8 +11,6 @@ use ilap/adatag/types.{
 }
 use ilap/adatag/utils.{time_elapsed}
 
-//use aiken/cbor
-
 fn valid_claim(
   is_coll: Bool,
   datum: Data,

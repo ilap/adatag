@@ -43,7 +43,7 @@ stringToNumber str =
     base = 2 :: Double
     priceExp = length str - 1
     number = floor (maxPrice / base ^ priceExp)
-  in if number < 5 then 5 else number
+  in max number 5
 
 
 main :: IO ()

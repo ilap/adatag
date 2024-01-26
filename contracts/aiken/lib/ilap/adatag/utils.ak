@@ -182,7 +182,7 @@ pub fn is_valid_tag(tag: ByteArray) -> Bool {
       // 1st char must be letter
       is_lowercase(fst) && // Last char must be letters or digits
       is_lowercase_or_digit(lst) && // otherwise only allowed chars.
-      has_only_valid_hars(tag)
+      has_only_valid_chars(tag)
     }
     _ -> False
   }
@@ -208,11 +208,15 @@ fn is_underscore(ch: Int) -> Bool {
   ch == 45
 }
 
-fn is_valid_char(ch: Int) -> Bool {
-  is_lowercase_or_digit(ch) || is_hyphen(ch) || is_underscore(ch)
+fn is_dot(ch: Int) -> Bool {
+  ch == 46
 }
 
-fn has_only_valid_hars(tag: ByteArray) -> Bool {
+fn is_valid_char(ch: Int) -> Bool {
+  is_lowercase_or_digit(ch) || is_hyphen(ch) || is_underscore(ch) || is_dot(ch)
+}
+
+fn has_only_valid_chars(tag: ByteArray) -> Bool {
   bytearray.foldl(
     tag,
     True,
@@ -261,7 +265,6 @@ pub fn parse_int(string: ByteArray) -> Int {
   let fst = builtin.index_bytearray(string, 0)
   let len = bytearray.length(string)
 
-  trace debugMessage(@"fst", fst)
   if fst == 48 {
     if len == 1 {
       0
@@ -275,9 +278,6 @@ pub fn parse_int(string: ByteArray) -> Int {
       0,
       fn(byte, acc) {
         // Only digits are allowed
-        trace debugMessage(@"byte", byte)
-        trace debugMessage(@"acc", acc)
-        
         expect byte >= 48 && byte <= 57
         let num = byte - 48
         acc * 10 + num
@@ -290,10 +290,4 @@ test test_parse_ints() {
   // parse_int("12345678901") == 12345678901 && 
   // parse_int("0") == 0 && 
   parse_int("100000000000000000000000000000000000000000000") == 100000000000000000000000000000000000000000000
-}
-
-test test_parse_int_h40 () {
-  let r = parse_int(#"40") 
-  trace debugMessage(@"r", r)
-  r == 10 
 }

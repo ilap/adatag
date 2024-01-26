@@ -16,7 +16,6 @@ module Adatag.AdatagMinting where
 import Adatag.StateHolder
 import Adatag.TimeDeposit
 import Adatag.Utils
-import Data.String (IsString (fromString))
 import PlutusCore.Version (plcVersion100)
 import PlutusLedgerApi.V1.Address (scriptHashAddress)
 import PlutusLedgerApi.V1.Interval hiding (singleton)
@@ -76,9 +75,8 @@ import PlutusTx.Prelude (
  )
 import Utilities (wrapPolicy)
 import Utilities.Serialise
-import Prelude (IO, Show)
+import Prelude (IO)
 import qualified IntegriTree.Proofs as LT
-import qualified IntegriTree.Val as LT
 import qualified Prelude as Haskell
 import IntegriTree.Val
 import IntegriTree.Proofs

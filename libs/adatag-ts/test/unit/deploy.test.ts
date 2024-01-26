@@ -20,10 +20,7 @@ import {
 */
 describe('Adatag minting', async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
-  // Bun.env.ENVIRONMENT = "Integration";
-  // Bun.env.NETWORK = "Custom";
-  // Bun.env.PROVIDER = "KupmiosV5";
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
 

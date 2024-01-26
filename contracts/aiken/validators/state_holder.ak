@@ -95,7 +95,7 @@ validator(auth_token: ScriptHash) {
     let old_size = parse_int(old_state.size)
     let new_size = parse_int(new_state.size)
 
-    // Tree state's saniti checks
+    // Tree state's sanity checks
     and {
       // Condition(6): the operation count is always increased
       new_state.operation_count == old_state.operation_count + 1,

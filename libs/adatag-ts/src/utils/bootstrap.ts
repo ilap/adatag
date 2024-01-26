@@ -6,11 +6,10 @@ import {
   UTxO,
   fromText,
 } from 'translucent-cardano'
-import * as P from '../plutus/plutus'
+import * as P from '../plutus'
 import {
   hash256,
   emptyHash,
-  Val,
   combineThreeHashes,
   hashVal,
 } from '@adatag/integri-tree'
@@ -341,7 +340,7 @@ export class Bootstrap {
       const hash_alg = details.hashAlg
       let root_hash
 
-      const val: Val = {
+      const val: P.Val = {
         xi: String.fromCharCode(48),
         xa: String.fromCharCode(i - 1),
         xb: String.fromCharCode(i + 1),

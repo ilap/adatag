@@ -14,11 +14,9 @@
 module Adatag.SimpleValidator where
 
 
-import Utilities (wrapPolicy)
 import Utilities.Serialise
-import Prelude (IO, Show)
+import Prelude (IO)
 import qualified IntegriTree.Proofs as LT
-import qualified IntegriTree.Val as LT
 import qualified Prelude as Haskell
 import IntegriTree.Val
 import IntegriTree.Proofs
@@ -29,7 +27,6 @@ import PlutusTx.Bool
 import Utilities.PlutusTx (wrapValidator)
 import IntegriTree
 import qualified PlutusTx.Prelude as PlutusTx
-import PlutusTx.Prelude
 ---------------------------------------------------------------------------------------------------
 ----------------------------------- ON-CHAIN / StateHolder ----------------------------------------
 

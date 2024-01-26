@@ -9,7 +9,7 @@ import { Bootstrap } from '@adatag/shared/utils'
 import { GenesisConfig, genesisParams } from '@adatag/shared/config'
 import { resolveMockData, setSloctConfig } from '@adatag/shared/test-utils'
 
-describe('Adatag minting', async () => {
+describe('Timelock Deposit Tests', async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
   // Bun.env.ENVIRONMENT = "Integration";
   // Bun.env.NETWORK = "Custom";

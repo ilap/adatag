@@ -20,10 +20,12 @@ validator(utxo_ref: OutputReference) {
     let Transaction { inputs, .. } = transaction
 
     expect Mint(_policy_id) = purpose
-    expect Some(_input) =
+    let input =
       list.find(inputs, fn(input) { input.output_reference == utxo_ref })
-
-    True
+    when input is {
+      Some(_) -> True
+      None -> False
+    }
   }
 }
 

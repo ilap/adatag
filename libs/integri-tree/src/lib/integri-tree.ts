@@ -153,7 +153,8 @@ export class IntegriTree {
    */
   append(element: string): boolean {
     const [a, b] = this.search(element)
-    if (!b) {
+
+    if(a != undefined && b == undefined) {
       this.elements.push({
         xi: this.elements.length.toString(),
         xa: element,
@@ -161,7 +162,7 @@ export class IntegriTree {
       })
       this.elements[a].xb = element
     } else {
-      return false // Element already exists
+      return false // Element already exists or invalid.
     }
     return true
   }
@@ -176,7 +177,7 @@ export class IntegriTree {
    */
   delete(element: string): boolean {
     const [a, b] = this.search(element)
-    if (b) {
+    if (b != undefined) {
       if (this.elements[a].xa === element) {
         this.elements[a].xa = this.elements[b].xa
       } else {
@@ -251,13 +252,14 @@ export class IntegriTree {
    *
    * Note: It returns hex-encoded values.
    */
-  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } {
+  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } | null{
 
     const [updateNode, deleteNode] = this.search(element)
 
     // FIXME: Impelent delete node proof
-    if (deleteNode) {
-      throw new Error(`Error: The element (${element}) is already in the tree.`)
+    if (updateNode == undefined || deleteNode != undefined) {
+      //throw new Error(`Error: The element (${element}) is invalid or already in the tree.`)
+      return null
     }
 
     const appendNode = Math.floor((this.size - 1) / 2)

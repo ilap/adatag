@@ -52,10 +52,10 @@ hasSymbol (Value mp) cur = isJust $ Map.lookup cur mp
 
   A username is valid only when:
   1. it's not empty string
-  2. max 16 letters long
-  3. it's first is any of the lowercase letters
-  4. last chars cannot be "-", "_"
-  5. only contains "a".."z", "0".."9", "_", "-" letters.
+  2. max 16 chars long
+  3. its first characters is any of the lowercase letters
+  4. last chars cannot be "-", "_", "."
+  5. only contains "a".."z", "0".."9", "_", "-", "." letters.
 -}
 {-# INLINABLE isValidUsername #-}
 isValidUsername :: BuiltinByteString -> Bool
@@ -86,6 +86,10 @@ isHyphen char = char == 45
 isUnderscore :: Integer -> Bool
 isUnderscore char = char == 95
 
+{-# INLINABLE isDot #-}
+isDot :: Integer -> Bool
+isDot char = char == 46
+
 {-# INLINABLE isValidChar #-}
 isValidChar :: Integer -> Bool
 isValidChar ch =
@@ -93,6 +97,7 @@ isValidChar ch =
     || isDigit ch
     || isHyphen ch
     || isUnderscore ch
+    || isDot ch
 
 {-# INLINABLE hasOnlyAllowedChars #-}
 hasOnlyAllowedChars :: BuiltinByteString -> Bool
