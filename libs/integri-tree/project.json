@@ -3,24 +3,36 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/integri-tree/src",
   "projectType": "library",
-  "implicitDependencies": ["aiken"],
+  "implicitDependencies": [
+    "aiken"
+  ],
   "targets": {
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": [
+        "^lint"
+      ],
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@nx-bun/nx:test",
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "options": {
         "smol": false,
         "bail": true,
         "bun": false
       },
       "configurations": {
-        "dev": {"{options.timeout}": 15000},
-        "prod": {"{options.timeout}": 65000}
+        "dev": {
+          "{options.timeout}": 15000
+        },
+        "prod": {
+          "{options.timeout}": 65000
+        }
       },
       "defaultConfiguration": "dev"
     }

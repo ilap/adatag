@@ -4,14 +4,27 @@
   "targetDefaults": {
     "build": {
       "cache": true,
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test": {
       "cache": true
     },
     "lint": {
       "cache": true
+    },
+    "@nx/vite:test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
     }
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
   },
   "nxCloudAccessToken": "YWUzOWIwMjgtMjA1OC00MDhkLTlkODQtNmFkNjAwYTExMTFjfHJlYWQtd3JpdGU="
 }

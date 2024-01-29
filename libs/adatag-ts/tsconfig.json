@@ -7,7 +7,7 @@
     "types": ["bun"]
   },
   "files": [],
-  // BUG: Requires for removing tsconfig.json error. "include": [],
+  "include": [],
   "references": [
     {
       "path": "./tsconfig.lib.json"

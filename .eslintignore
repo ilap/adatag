@@ -1,2 +1,4 @@
 node_modules
 contracts
+
+vite.config.ts

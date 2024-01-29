@@ -13,22 +13,41 @@
     "importHelpers": true,
     "target": "esnext",
     "module": "es2022",
-    "lib": ["es2020", "dom"],
+    "allowImportingTsExtensions": false,
+    "lib": [
+      "es2020"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "types": ["bun-types", "bun"],
+    "types": [
+      "bun-types",
+      "bun"
+    ],
     "noEmit": true,
     "paths": {
-      "@adatag/shared/plutus": ["./libs/adatag-ts/src/plutus/index"],
-      "@adatag/shared/utils": ["./libs/adatag-ts/src/utils/index"],
-      "@adatag/shared/test-utils": ["./libs/adatag-ts/test/utils/index"],
-      "@adatag/shared/config": ["./libs/adatag-ts/src/config/index"],
-      "@adatag/integri-tree": ["./libs/integri-tree/src/index"],
-      "translucent-cardano": ["./libs/translucent/index"],
+      "@adatag/integri-tree": [
+        "./libs/integri-tree/src/index"
+      ],
+      "@adatag/shared/config": [
+        "./libs/adatag-ts/src/config/index"
+      ],
+      "@adatag/shared/plutus": [
+        "./libs/adatag-ts/src/plutus/index"
+      ],
+      "@adatag/shared/test-utils": [
+        "./libs/adatag-ts/test/utils/index"
+      ],
+      "@adatag/shared/utils": [
+        "./libs/adatag-ts/src/utils/index"
+      ],
+      "translucent-cardano": [
+        "./libs/translucent/index"
+      ]
     }
   },
-  "exclude": ["node_modules", "contracts"]
+  "exclude": [
+    "node_modules",
+    "contracts"
+  ]
 }

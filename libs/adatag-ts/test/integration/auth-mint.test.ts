@@ -2,8 +2,6 @@ import { test, expect } from 'bun:test'
 
 import { Data, Translucent, fromText } from 'translucent-cardano'
 
-// '../../shared-config/src/index' ///plutus.ts'
-
 import { resolveMockData } from '@adatag/shared/test-utils'
 import * as P from '@adatag/shared/plutus'
 

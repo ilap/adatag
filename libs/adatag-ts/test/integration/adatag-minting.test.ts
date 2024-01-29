@@ -27,7 +27,8 @@ import { IntegriTree } from '@adatag/integri-tree'
   Test User address : addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m
 */
 
-const nr = 1000
+const mintNr = 1000
+const nr = Bun.env.ENVIRONMENT == 'Development' ? mintNr : Math.floor(mintNr / 100)
 // 16 is ok but we want to have some long name fails too.
 const adatagLength = 18
 
@@ -40,6 +41,7 @@ const elemsNumber = adatags.size
 
 describe(`Adatag minting (${elemsNumber})`, async () => {
   // The envs can be overwritten for dynamic testings, see and example below.
+  // When manually set then all tests will use the owerwrittedn values.
   //Bun.env.ENVIRONMENT = "Integration" //"Development" // "Integration";
   //Bun.env.NETWORK = "Custom";
   //Bun.env.PROVIDER = "KupmiosV5" //"Emulator" // "KupmiosV5";
@@ -117,7 +119,7 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
   const mintAmount: bigint = 1n
   const mp = bd.adatagMinting.policyId
 
-  let i = 1
+  let i = 0
   for (const adatag of adatags) {
     if (translucent.provider instanceof Emulator) {
       translucent.provider.awaitBlock(10)
@@ -134,7 +136,7 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
 
     const isValid = isValidUsername(adatag)
 
-    test(`Mint (${String(i).padStart(3, ' ')}): should ${isValid ? '\x1b[32mPASS\x1b[0m' : '\x1b[31mFAIL\x1b[0m'}: "${adatag}"`, async () => {
+    test(`Mint (${String(i++).padStart(3, ' ')}): should ${isValid ? '\x1b[32mPASS\x1b[0m' : '\x1b[31mFAIL\x1b[0m'}: "${adatag}"`, async () => {
       const tree = treeMap[authTokenName]
       const authUtxo = await translucent.utxoByUnit(authUnit)
 
@@ -213,7 +215,7 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
         expect(translucent.awaitTx(txHash)).resolves.toBe(true)
       } catch (e) {
 
-        // If something throw an error then it must be triggered by and invalid adatag.
+        // If something throw an error then it must be triggered by an invalid adatag.
         expect(isValid).toBe(false)
       }
     })

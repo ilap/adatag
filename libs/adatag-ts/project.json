@@ -21,7 +21,11 @@
     "test": {
       "command": "bun test --timeout 600000",
       "dependsOn": [
-        { "projects": "chain", "target": "spin-up", "params": "forward" },
+        {
+          "projects": "chain",
+          "target": "spin-up",
+          "params": "forward"
+        },
         "^test"
       ],
       "options": {
