@@ -21,7 +21,7 @@
       "~/*": ["./src/*"],
     },
   },
-  "files": ["./.eslintrc.cjs"],
-  "include": ["src", "./*.d.ts", "./*.config.ts"],
+  "files": ["./eslint.config.cjs"],
+  "include": ["../../*.js", "src", "./*.d.ts", "./*.config.ts"],
   "extends": "../../tsconfig.base.json"
 }

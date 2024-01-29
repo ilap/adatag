@@ -45,7 +45,7 @@ export default defineConfig({
     },
     tsconfigFileNames: ['tsconfig.app.json'],
   }),
-  //tsconfigPaths({ root: '../../' }),
+  // BUG: vite does not compile if it has this: tsconfigPaths({ root: '../../' }),
     , nxViteTsPaths(),],
 
   test: {
