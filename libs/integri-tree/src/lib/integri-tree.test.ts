@@ -1,5 +1,5 @@
 import { IntegriTree } from './integri-tree'
-import { Val } from './types'
+import * as P from '@adatag/shared/plutus'
 
 
 /*const tree = IntegriTree.fromLetter('a')
@@ -14,7 +14,7 @@ console.log(`Hash adam  : ${tree.rootHash()}`)
 console.log(tree.toString())
 console.log(tree.findLca(0, 0, 1))
 */
-export const sampleVals2: Val[] = [
+export const sampleVals2: P.Val[] = [
   { xi: '0', xa: '`', xb: 'c' },
   { xi: '1', xa: 'z', xb: '{' },
   { xi: '2', xa: 'f', xb: 'g' },

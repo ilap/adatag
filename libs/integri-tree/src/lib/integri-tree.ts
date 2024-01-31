@@ -227,7 +227,7 @@ export class IntegriTree {
    */
   public findLca(root: number, p: number, q: number): number {
     if (root == null || root >= this.size) {
-      return null
+      return -1
     }
 
     if (this.isEqual(root, p) || this.isEqual(root, q)) {
@@ -237,10 +237,10 @@ export class IntegriTree {
     const left = this.findLca(root * 2 + 1, p, q)
     const right = this.findLca(root * 2 + 2, p, q)
 
-    if (left != null && right != null) {
+    if (left != -1 && right != -1) {
       return root
     }
-    return left != null ? left : right
+    return left != -1 ? left : right
   }
 
 

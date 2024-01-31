@@ -5,7 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
-    "translucent-cardano": "https://github.com/txpipe/translucent"
+    "translucent-cardano":  "file:../web3/translucent/packages/translucent"
   },
   "devDependencies": {
     "@nx-bun/nx": "1.2.0",
@@ -20,7 +20,9 @@
     "eslint": "8.55.0",
     "eslint-plugin-json": "latest",
     "fast-check": "^3.15.0",
-    "nx": "17.2.8"
+    "nx": "17.2.8",
+    "typescript": "^5.3.3",
+    "js-sha256": "^0.11.0"
   },
   "workspaces": [
     "apps/*",

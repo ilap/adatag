@@ -1,14 +1,22 @@
 /// <reference types='vitest' />
-import { defineConfig, type UserConfig } from "vite";
+import { defineConfig } from "vite";
 import { qwikVite } from "@builder.io/qwik/optimizer";
 import { qwikCity } from "@builder.io/qwik-city/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+//import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+import wasm from "vite-plugin-wasm";
+
 
 export default defineConfig({
   root: __dirname,
-
+  esbuild: {
+    supported: {
+      'top-level-await': true
+    },
+  },
   build: {
+    target: "es2022",
     outDir: '../../dist/apps/adatag.io',
     reportCompressedSize: true,
     commonjsOptions: {
@@ -35,18 +43,24 @@ export default defineConfig({
       "Cache-Control": "public, max-age=600",
     },
   },
-
-  plugins: [qwikCity(), qwikVite({
+  envDir: '../..',
+  plugins: [wasm(), 
+    tsconfigPaths({
+      root: ".",
+      projects: [
+        "../../tsconfig.base.json"]
+    }),  
+    qwikCity(), qwikVite({
     client: {
       outDir: '../../dist/apps/adatag.io',
     },
     ssr: {
       outDir: '../../dist/apps/adatag.io',
     },
-    tsconfigFileNames: ['tsconfig.app.json'],
+    tsconfigFileNames: ['tsconfig.app.json'
+  , '../../tsconfig.base.json'],
   }),
-  // BUG: vite does not compile if it has this: tsconfigPaths({ root: '../../' }),
-    , nxViteTsPaths(),],
+  ],
 
   test: {
     reporters: ['default'],

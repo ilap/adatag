@@ -12,11 +12,8 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "esnext",
-    "module": "es2022",
-    "allowImportingTsExtensions": false,
-    "lib": [
-      "es2020"
-    ],
+    "module": "esnext",
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "resolveJsonModule": true,
@@ -24,7 +21,6 @@
       "bun-types",
       "bun"
     ],
-    "noEmit": true,
     "paths": {
       "@adatag/integri-tree": [
         "./libs/integri-tree/src/index"
@@ -40,14 +36,12 @@
       ],
       "@adatag/shared/utils": [
         "./libs/adatag-ts/src/utils/index"
-      ],
-      "translucent-cardano": [
-        "./libs/translucent/index"
       ]
     }
   },
   "exclude": [
     "node_modules",
+    "tools",
     "contracts"
   ]
 }

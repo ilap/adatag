@@ -21,7 +21,7 @@
             "request": "launch",
             "name": "Dev Test Debug File",
             "program": "${file}",
-            "args": ["--env-file", "${workspaceFolder}.env", "--timeout", "45000"],
+            "args": ["--env-file", "${workspaceFolder}/.env.test.dev", "--timeout", "45000"],
             "cwd": "${workspaceFolder}/apps/adatag-cli",
             "stopOnEntry": true,
             "watchMode": false

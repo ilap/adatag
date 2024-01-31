@@ -40,6 +40,7 @@
     "prettier": "^3.2.4",
     "undici": "*",
     "vite": "^5.0.12",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite-plugin-wasm": "^3.3.0",
+    "vite-tsconfig-paths": "^4.3.1"
   }
 }

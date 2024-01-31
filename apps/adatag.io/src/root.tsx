@@ -6,7 +6,34 @@ import {
 } from "@builder.io/qwik-city";
 import { RouterHead } from "./components/router-head/router-head";
 
+
 import "./global.css";
+
+
+/*import * as T from 'translucent-cardano'
+import * as C from '@adatag/shared/config'
+import * as TU from '@adatag/shared/test-utils'
+import * as P from '@adatag/shared/plutus'
+import * as U from '@adatag/shared/utils'
+import * as I from '@adatag/integri-tree'
+
+
+export function stringifyData(data: unknown) {
+  return JSON.stringify(
+    data,
+    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
+    '  ',
+  )
+}
+
+console.log(`############################### T: ${stringifyData(T)}`);
+console.log(`############################### C: ${stringifyData(C)}`);
+console.log(`############################### I: ${stringifyData(I)}`);
+console.log(`############################### TU: ${stringifyData(TU)}`);
+console.log(`############################### P: ${stringifyData(P)}`);
+console.log(`############################### U: ${stringifyData(U)}`);
+
+*/
 
 export default component$(() => {
   /**
@@ -15,7 +42,6 @@ export default component$(() => {
    *
    * Don't remove the `<head>` and `<body>` elements.
    */
-
   return (
     <QwikCityProvider>
       <head>

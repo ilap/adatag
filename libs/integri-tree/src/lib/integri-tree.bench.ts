@@ -1,9 +1,6 @@
-import { Data, fromText } from 'translucent-cardano'
-import { hashVal, rootHash } from '..'
+
 import { IntegriTree } from './integri-tree'
 import { sampleVals2 } from './integri-tree.test'
-import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
-import { sampleVals } from './integri-tree.data'
 
 function benchIt(fn: Function) {
   const st = Date.now()
