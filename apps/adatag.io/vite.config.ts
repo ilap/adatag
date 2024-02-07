@@ -1,78 +1,27 @@
-/// <reference types='vitest' />
-import { defineConfig } from "vite";
-import { qwikVite } from "@builder.io/qwik/optimizer";
-import { qwikCity } from "@builder.io/qwik-city/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-//import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-
-import wasm from "vite-plugin-wasm";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import wasm from 'vite-plugin-wasm'
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 
 
 export default defineConfig({
-  root: __dirname,
-  esbuild: {
-    supported: {
-      'top-level-await': true
-    },
-  },
   build: {
-    target: "es2022",
-    outDir: '../../dist/apps/adatag.io',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
+    cssCodeSplit: true,
+    target: "esnext",
   },
-  cacheDir: '../../node_modules/.vite/adatag.io',
-  server: {
-    port: 4200,
-    host: 'localhost',
-    headers: {
-      "Cache-Control": "public, max-age=0",
-    },
-    fs: {
-      // Allow serving files from the project root
-      allow: ['../../'],
-    },
-  },
-
-  preview: {
-    port: 4300,
-    host: 'localhost',
-    headers: {
-      "Cache-Control": "public, max-age=600",
-    },
-  },
-  envDir: '../..',
-  plugins: [wasm(), 
-    tsconfigPaths({
-      root: ".",
-      projects: [
-        "../../tsconfig.base.json"]
-    }),  
-    qwikCity(), qwikVite({
-    client: {
-      outDir: '../../dist/apps/adatag.io',
-    },
-    ssr: {
-      outDir: '../../dist/apps/adatag.io',
-    },
-    tsconfigFileNames: ['tsconfig.app.json'
-  , '../../tsconfig.base.json'],
-  }),
-  ],
-
-  test: {
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/adatag.io',
-      provider: 'v8',
-    },
-    globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-  },
-});
+  plugins: [wasm(), react()],
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis'
+      },
+      // Enable esbuild polyfill plugins
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true
+        })
+      ]
+    }
+  }
+})

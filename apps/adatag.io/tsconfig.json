@@ -1,56 +1,25 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "target": "esnext",
-    "module": "esnext",
-    "lib": [ "esnext", "DOM", "WebWorker", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "@builder.io/qwik",
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "incremental": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "tmp",
     "noEmit": true,
-    "types": [ "bun", "bun-types", "node", "vite/client"],
-    "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "src/*": [
-        "./src/*"
-      ],
-      "@adatag/integri-tree": [
-        "../../libs/integri-tree/src/index"
-      ],
-      "@adatag/shared/config": [
-        "../../libs/adatag-ts/src/config/index"
-      ],
-      "@adatag/shared/plutus": [
-        "../../libs/adatag-ts/src/plutus/index"
-      ],
-      "@adatag/shared/test-utils": [
-        "../../libs/adatag-ts/test/utils/index"
-      ],
-      "@adatag/shared/utils": [
-        "../../libs/adatag-ts/src/utils/index"
-      ]
-    },
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "files": [
-    "./eslint.config.cjs"
-  ],
-  "include": [
-    "../../libs/**/*.ts",
-    "../../libs/**/*.json",
-        "../../*.js",
-    "src",
-    "./*.d.ts",
-    "./*.config.ts"
-  ],
-  "extends": "../../tsconfig.base.json"
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

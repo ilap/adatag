@@ -1,0 +1,124 @@
+.full-width header .header-logo {
+  left: 0;
+}
+
+.header-container {
+  height: var(--header-height);
+  background: var(--bg-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header .header-inner {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  height: var(--header-height);
+}
+
+.full-width header .header-inner {
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .header-container {
+    background: var(--bg-header-color);
+    backdrop-filter: blur(23px) saturate(4.5);
+  }
+}
+
+.header-container.home-page-header {
+  background: transparent !important;
+  color: white;
+}
+
+.fixed-header .header-container {
+  width: 100%;
+  z-index: 40;
+}
+
+.builder-bar {
+  position: relative;
+  z-index: 50;
+}
+
+header li {
+  @apply px-2 text-right;
+  @apply py-4 lg:py-0;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+header a:hover {
+  text-decoration: underline;
+}
+
+header li svg:hover {
+  opacity: 0.8;
+}
+
+header .mobile-menu {
+  height: var(--header-height);
+  position: absolute;
+  right: 0;
+  @apply p-5 lg:hidden;
+}
+
+header .menu-toolkit {
+  @apply hidden lg:flex;
+  @apply pt-0 lg:pt-0 pb-0;
+  height: 100%;
+  align-items: center;
+}
+
+header .header-logo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: max(0px, calc(50% - 45rem));
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+}
+
+
+/** Custom CardanoWallet styles */
+
+/* Hero.css */
+
+/* Custom styles for the CardanoWallet component */
+.custom-cardano-wallet .mr-wallet-button {
+  background-color: #d51919; /* Dark background color */
+  color: #fff; /* Light text color */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px 20px; /* Padding */
+  font-size: 16px; /* Font size */
+  border: none; /* Remove border */
+  cursor: pointer; /* Show pointer cursor on hover */
+}
+
+.custom-cardano-wallet .mr-menu-list {
+  background-color: #1f1f1f; /* Dark background color */
+  color: #fff; /* Light text color */
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px; /* Padding */
+  font-size: 8px; /* Font size */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add shadow */
+}
+
+.custom-cardano-wallet .mr-menu-list span {
+  display: block; /* Make spans block elements */
+  padding: 8px 0; /* Add padding */
+  font-size: 2em;
+  line-height: 2em;
+  border-bottom: 1px solid #fff; /* Add border bottom */
+}
+
+.custom-cardano-wallet .mr-menu-list span:last-child {
+  border-bottom: none; /* Remove border bottom from last span */
+}
+

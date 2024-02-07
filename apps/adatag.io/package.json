@@ -1,46 +1,36 @@
 {
   "name": "adatag.io",
-  "description": "",
-  "engines": {
-    "node": ">=15.0.0"
-  },
+  "description": "Vite + React + TailwindCSS implementation of adatag.io",
   "private": true,
-  "trustedDependencies": [
-    "sharp"
-  ],
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "qwik build",
-    "build.client": "vite build",
-    "build.preview": "vite build --ssr src/entry.preview.tsx",
-    "build.server": "vite build -c adapters/bun/vite.config.ts",
-    "build.types": "tsc --incremental --noEmit",
-    "deploy": "echo 'Run \"npm run qwik add\" to install a server adapter'",
-    "dev": "vite --mode ssr",
-    "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
-    "fmt": "prettier --write .",
-    "fmt.check": "prettier --check .",
-    "lint": "eslint \"src/**/*.ts*\"",
-    "preview": "qwik build preview && vite preview --open",
-    "serve": "bun server/entry.bun.js",
-    "start": "vite --open --mode ssr",
-    "qwik": "qwik"
+    "dev": "vite --open",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "buffer": "^6.0.3",
+    "koios-tiny-client": "^1.1.0",
+    "stream": "^0.0.2",
+    "translucent-cardano": "^0.0.6"
   },
   "devDependencies": {
-    "@builder.io/qwik": "^1.4.2",
-    "@builder.io/qwik-city": "^1.4.2",
-    "@nx/vite": "^17.2.8",
-    "@types/eslint": "^8.56.2",
-    "@types/node": "^20.11.6",
-    "@typescript-eslint/eslint-plugin": "^6.19.1",
-    "@typescript-eslint/parser": "^6.19.1",
+    "@meshsdk/react": "^1.1.10-beta.3",
+    "@rollup/rollup-darwin-x64": "^4.9.6",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.55.0",
-    "eslint-plugin-qwik": "^1.4.2",
-    "less": "^4.2.0",
-    "prettier": "^3.2.4",
-    "undici": "*",
-    "vite": "^5.0.12",
-    "vite-plugin-wasm": "^3.3.0",
-    "vite-tsconfig-paths": "^4.3.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vite-plugin-wasm": "^3.3.0"
   }
 }
