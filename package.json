@@ -6,7 +6,7 @@
   "private": true,
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "translucent-cardano": "file:../web3/translucent/packages/translucent"
+    "translucent-cardano": "^0.0.6"
   },
   "devDependencies": {
     "@nx-bun/nx": "1.2.0",
