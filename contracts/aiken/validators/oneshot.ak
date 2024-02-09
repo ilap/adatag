@@ -1,4 +1,3 @@
-//use aiken/dict
 use aiken/list
 use aiken/transaction.{
   Input, Mint, NoDatum, Output, OutputReference, ScriptContext, Transaction,
@@ -8,13 +7,13 @@ use aiken/transaction/value
 use ilap/adatag/tests/fixture.{beneficiary_address, other_hash, own_hash}
 
 /// It does not need any check for correctness and integrity as it can be easily validated
-/// when the deployment of the adatag was adversarial  or not i.e. not the exact 26 letters were minted.
+/// when the deployment of the adatag was adversarial or not i.e. not the exact 26 letters were minted.
 /// 
 /// A very simple one shot minting policy for minting 26 one letter token names that
 /// will be used with state holder validator.
 validator(utxo_ref: OutputReference) {
   /// No any check other than the OutRef's is necessary, as the utxo garantees uniquess 
-  ///of the authorization token's policy.
+  /// of the authorization token's policy.
   fn auth_token(_r: Void, ctx: ScriptContext) -> Bool {
     let ScriptContext { transaction, purpose } = ctx
     let Transaction { inputs, .. } = transaction

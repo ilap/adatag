@@ -14,13 +14,13 @@ use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 //use ilap/integri_tree/types as tree
 //use ilap/integri_tree/proofs.{empty_hash}
 
-/// This is a simple parameterized validator designed for handling (by UtxOs) control
+/// This is a simple parameterized validator designed for handling (by UtxOs) auth
 /// NFT tokens and the state of a tree used for minting and burning adatags.
 ///
 /// For example, in a UTXO that contains the validator address, an auth token in the
 /// value field, and the state of the relevant tree in the datum field.
 ///
-/// Therefore, this validator's primary function is to transfer (spend) the control 
+/// Therefore, this validator's primary function is to transfer (spend) the auth 
 /// NFT to its own address only when a minting policy is present in the transaction
 /// and the other required conditions are met.
 ///

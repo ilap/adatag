@@ -22,14 +22,14 @@ pub type Hash =
   hash.Hash<hash.Sha2_256, ByteArray>
 
 //-----------------------------------------------------------------------------
-//-----------------------// 2. TimeDeposit types -------------------------
+//-------------------------- 2. TimeDeposit types -----------------------------
 pub type TimeDepositRedeemer {
   Collect
   Redeem
 }
 
 pub type TimeDepositDatum {
-  // Beneficiary of the locked time deposit. It can be any payment address
+  // Beneficiary of the locked time deposit. It can be any payment credential
   beneficiary: Credential,
   // Deadline to claim deposits. 
   // Preferably ~20 days (minting policy's parameter) from the date of the 
@@ -46,7 +46,7 @@ pub type TimeDepositParams {
 }
 
 //-----------------------------------------------------------------------------
-//-----------------------// 3. StateHolder types -------------------------
+//----------------------------- 3. StateHolder types --------------------------
 
 pub type OperationType {
   AdatagAdded
@@ -94,7 +94,7 @@ pub type MintParams {
   state_holder: ScriptHash,
   // TimeDeposit validator, for checking time-lock deposits' outputs.
   timedeposit_validator: ScriptHash,
-  // The date when the time lock deposit will be deactivated.
+  // The date when the time (in ms) lock deposit will be deactivated.
   deactivation_time: PosixTime,
   // The deposit is calculated based on the deposit base and the length of the @adatag being minted.
   deposit_base: Int,

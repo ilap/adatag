@@ -92,6 +92,16 @@ pub fn append_check(
 }
 
 /// Brief: Function to check the correctness of a proof
+///
+/// To ensure the integrity of a tree the following conditions must be met at inserting elements:
+/// - the appendable node right child must be an empty hash.
+/// - if the left child is an empty hash the size of the tree must be:
+///    - when size != number of nodes (i.e. initial tree has 1 noded but the size of tree is 0): an.xi * 2 + 1
+///    - when size == nr of node: an.xi * 2
+///
+/// Meaning, the tree size is always != element in the tree as the tree with no element (except the lower- and upper bounds)
+/// - tree size: number of nodes in the tree.
+/// - nr of elements: tree size - 1
 fn check_proof(
   is_new_state: Bool,
   root: Hash,
@@ -113,6 +123,8 @@ fn check_proof(
   has_nu && has_na && calculated_root == root
 }
 
+/// The proof must contain the update node and the append node and the calulated root hash
+/// must be 
 /// Brief: Recursive function to validate a proof
 pub fn validate_proof(
   is_new_state: Bool,

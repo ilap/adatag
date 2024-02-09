@@ -1,5 +1,6 @@
 use aiken/hash
 
+// FIXME: blake2b_224 will be used when Plutus V3 is available.
 pub type Hash =
   hash.Hash<hash.Sha2_256, ByteArray>
 

@@ -39,7 +39,7 @@
             "aiken build -t verbose",
             "bun run ../../tools/chain/scripts/blueprint.ts",
             "bun prettier -w ../../libs/adatag-ts/src/plutus/plutus.ts",
-            "sed -i '' -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^  rdmr:$/  rdmr: MintRedeemer/\" -e \"14,25d\" ../../libs/adatag-ts/src/plutus/plutus.ts"
+            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^  rdmr:$/  rdmr: MintRedeemer/\" -e \"14,25d\" ../../libs/adatag-ts/src/plutus/plutus.ts"
           ],
           "parallel": false
         },

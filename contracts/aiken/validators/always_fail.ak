@@ -1,3 +1,4 @@
+/// Always fail validator as reference address for adatag validators
 validator {
   fn always_fail(_d: Void, _r: Void, _ctx: Void) -> Bool {
     // --keep-traces will keep the trace message, otherwise it will prune it.
