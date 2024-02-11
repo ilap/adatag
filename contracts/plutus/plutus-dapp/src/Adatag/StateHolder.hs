@@ -13,18 +13,18 @@
 NFTs, which store the state of a tree used for minting and burning usernames.
 
 The minting policy, which is parameterised into this StateHolder, ensures the integrity
-of the control NFT's datum. The datum contains information about the current
+of the authorization Token's datum. The datum contains information about the current
 state of the usernames tree, including the number of elements in the tree, a proof of
 the tree, and the last element inserted into or removed from the tree.
 
-This StateHolder's primary function is to transfer (spend) the control NFT to its
+This StateHolder's primary function is to transfer (spend) the authorization Token to its
 own address only when a minting policy is present in the transaction.
 
 The minting policy permits minting or burning usernames only when there is only
-one control NFT in the transaction.
+one authorization Token in the transaction.
 
 This design restricts the minting and burning of usernames to one operation at a time,
-ensuring that the control NFT can only be moved from one of its addresses to another
+ensuring that the authorization Token can only be moved from one of its addresses to another
 of its addresses.
 -}
 module Adatag.StateHolder where
@@ -71,7 +71,7 @@ data TreeState = AdatagAdded | AdatagRemoved | InitialState
 
 unstableMakeIsData ''TreeState
 
--- Inline datum attached to the control NFT for carrying the state of the labeled tree.
+-- Inline datum attached to the authorization Token for carrying the state of the labeled tree.
 -- The state contains:
 -- 1. The last operation i.e. tag addedd or deleted.
 -- 2. The nr. of operations since bootsrap (initial state). It always increases.
@@ -110,7 +110,7 @@ parseValidatorDatum o = case o of
 type ControlNFT = CurrencySymbol
 
 {-
-  Assumtpion: There are only 26 control NFTs, which cyrrency symbol is specified in the validator
+  Assumtpion: There are only 26 authorization Tokens, which cyrrency symbol is specified in the validator
   params, are residing on 26 UTxOs of the. Initial UTxOs contains the initial state of each
   username trees (Ta .. Tz)
 

@@ -1,21 +1,4 @@
-# adatag
-
-
-
-Write validators in the `validators` folder, and supporting functions in the `lib` folder using `.ak` as a file extension.
-
-For example, as `validators/always_true.ak`
-
-```gleam
-validator {
-  fn spend(_datum: Data, _redeemer: Data, _context: Data) -> Bool {
-    True
-  }
-}
-```
-
 ## Diagram
-
 
 [![AdatagTransaction.drawio.png](images/AdatagTransaction.drawio.png)](https://drive.google.com/file/d/1QFfs-XG9c2l8JuDH4ZIquc3FSVDM5rVA/view?usp=sharing)
 

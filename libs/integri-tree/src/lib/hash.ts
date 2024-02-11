@@ -13,7 +13,7 @@ export const hashVal = (val: P.Val): string =>
 export const hash = (msg: string): string => hash256(msg)
 
 export function hash256(message: string): string {
-  const array = new Uint8Array(message.match(/../g).map(h => parseInt(h, 16)))
+  const array = message ? new Uint8Array(message.match(/../g).map(h => parseInt(h, 16))) : ''
   return sha256(array)
 }
 

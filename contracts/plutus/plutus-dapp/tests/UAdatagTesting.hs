@@ -301,7 +301,7 @@ bootstrapAdatag collt expt deadl maxd = do
 
 -- Build transactions that will test the following cases.
 -- 1. time-deposit: active, deadline: reached.
---    - inputs: control NFT
+--    - inputs: authorization Token
 --    - ouptus: controlNFT, time-deposit,
 --    - mintings: adatag.
 -- 2. state holder validator:

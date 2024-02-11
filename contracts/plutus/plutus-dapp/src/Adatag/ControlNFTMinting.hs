@@ -34,7 +34,7 @@ import Utilities.PlutusTx (wrapPolicy)
 import Utilities.Serialise (writeCodeToFile)
 import Prelude (IO, Show (show), String)
 
--- One-shot NFT minting policy for generating 26 control NFTs for @adatag namely "a" to "z"
+-- One-shot NFT minting policy for generating 26 authorization Tokens for @adatag namely "a" to "z"
 {-# INLINABLE cnftTypedPolicy #-}
 cnftTypedPolicy :: TxOutRef -> [TokenName] -> () -> ScriptContext -> Bool
 cnftTypedPolicy oref tnList () ctx =

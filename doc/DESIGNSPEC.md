@@ -5,7 +5,7 @@ The @adatag dApp project implements a simple but powerful NFT-based username
 management system that consists the following core components:
 
 - [On-chain logic](#on-chain-logic)
-  - [Control NFT Minting Policy](#control-nft-minting-policy)
+  - [Authorization Token Minting Policy](#control-nft-minting-policy)
   - [StateHolder Validator](#control-nft-validator)
   - [Time Deposit Validator](#time-deposit-validator)
   - [Adatag Minting Policy](#adatag-minting-policy)
@@ -13,48 +13,25 @@ management system that consists the following core components:
 
 ## On-chain logic
 
-Assumptions:
+### Authorization Token Minting Policy
 
-- A datum must be attached to an UTXO for a script address.
-- The maximum size of an inline datum in an EUTxO is 4096 bytes (4KB)
-- A transaction only passes when all of the script validators of the transaction
-  pass.
-- If there is a MintInfo in a transaction, the relevant minting script must be
-  presented in the transaction either as a reference script or as an attached
-  script to the transaction.
-- If there is an output of a token, then there must be at least one
-  non-reference input in the transaction.
-- More than one validator script can run in the same transaction.
-- Only one minting policy script can run in the same transaction for minting/burning any tokens for the same currency symbol.
-- The datums and redeemers are stored in the transaction's scriptDatahash field.
-- The scripts are stored in the witness set or at the reference script address
-  as the hash of the script/validator.
-- The order in which the scripts in a transaction are run is based on the order
-  of their policy IDs (hashes of the policy IDs).
-- Phase 1 validation fails when there is a reference input and a non-reference
-  input in the same transaction.
-- If there is a MintInfo in a transaction with a token same with a minting
-  policy Id attached to the transaction, the minting policy must be run.
-
-### Control NFT Minting Policy
-
-This is a one-time NFT creation policy used to make control NFTs (with token
-names: `"a",...,"z"`). These NFTs are used by the StateHolder and Minting Policy Plutus scripts. They hold the state (in their datum) of the associated adatag
+This is a one-time NFT creation policy used to make authorization Tokens (with token
+names: `"a",...,"z"`). These NFTs are used by the StateHolder and Minting Policy scripts. They hold the state (in their datum) of the associated adatag
 Tree (`Ta,...,Tz`), which holds the relevant public usernames. For example, the
-proof of the adatag tree `Ta`, carried by the control NFT has token name `'a'`,
+proof of the adatag tree `Ta`, carried by the authorization Token has token name `'a'`,
 only includes usernames starting with `'a'`, and so forth.
 
 ### StateHolder Validator
 
-At bootstrap, every control NFT, along with the datum containing the initial
+At bootstrap, every authorization Token, along with the datum containing the initial
 state of the relevant adatag tree, is sent to the StateHolder validator address.
-This StateHolder’s only responsibility is to transfer the control NFT from the
+This StateHolder’s only responsibility is to transfer the authorization Token from the
 StateHolder’s address (which holds the old state) to the same address (now
 containing the newly updated state by the minting script).
 
 > Note: **Importantly**, the StateHolder validator **does not** modify the tree's state; it
 > only stores the updated (by the minting script) state in the datum of its
-> address UTxO together with the control NFT token.
+> address UTxO together with the authorization Token token.
 
 
 #### Validation logic
@@ -62,7 +39,7 @@ containing the newly updated state by the minting script).
 The validation logic for handling the transfer of the relevant tree state must
 enforce that no adversarial attempt could invalidate (i.e. alter) the new state
 by allowing somehow to spend (destroy) the UTxO holding the old correct state
-and creating a new UTxO for the same address with the control NFT and invalid
+and creating a new UTxO for the same address with the authorization Token and invalid
 state (e.g. spending it without running the adatag minting script in the
 transaction).
 
@@ -71,7 +48,7 @@ same transaction as the state-holder and the optional time-lock deposti validato
 This is because it ensures that the new state
 of the adatag tree is validated before it is committed to the blockchain. If the
 minting script is not executed for the same transaction, then an attacker could
-potentially create a new UTxO for the control NFT with an invalid state, and the
+potentially create a new UTxO for the authorization Token with an invalid state, and the
 StateHolder would not be able to detect it.
 
 The StateHolder  validator checks that the adatag retrieved from the output UTxO exists in
@@ -86,10 +63,10 @@ executed in the same transaction.
 To achieve the above the following StateHolder checks need to be enforced:
 
 1. Check that its current own input (the spending UTxO that is being validated)
-   contains only one control NFT token.
+   contains only one authorization Token token.
 2. Check that the same and only token is in an output that contains the
    StateHolder address.
-   - **IMPORTANT:** as a control NFT input in the rule 1. can be a reference
+   - **IMPORTANT:** as a authorization Token input in the rule 1. can be a reference
      input too (the UTxO is not being spent but only referenced).
 3. Check that the adatag retrieved from the Output UTxO exists in the MintInfo's
    Value as the token name of the token of which currency symbol's (policy ID)
@@ -102,12 +79,12 @@ To achieve the above the following StateHolder checks need to be enforced:
 
 These above validates that:
 
-- **Only one control NFT is being spent in its current execution of the
+- **Only one authorization Token is being spent in its current execution of the
   StateHolder script.** This is because there is only one output that contains
-  only the relevant control NFT token.
+  only the relevant authorization Token token.
 - **It has a well-formed new state (a valid datum at the StateHolder's script
   address).** This is because the adatag being burned or minted is the same
-  adatag that is associated with the control NFT being transferred.
+  adatag that is associated with the authorization Token being transferred.
 - **Proof of the presence and execution of the adatag minting script in the
   current transaction.** This is because the token name of the minting/burning
   adatag is found in the MintInfo's Value and the reference input of the adatag
@@ -131,7 +108,7 @@ The time-locked deposit feature will be deactivated after a certain period
 
 Additionally, the developers (currently only ilap) reserve the right to collect
 any unclaimed time deposits around after twice the deactivation date of the
-time-locked deposit feature (set aat bootstrap time).
+time-locked deposit feature (set at bootstrap time).
 
 For example, if the deactivation time is 6 months after the system bootstrap,
 they may collect unclaimed deposits around after 12 months from the bootstrap.
@@ -154,15 +131,15 @@ To achieve the above, the following TimeDeposit checks need to be enforced:
 
 - **Beneficiary claim:**
   - Checks whether the deadline has passed.
-  - Checks that the beneficiary has a valid signature (public key hash in the
+  - Checks that the beneficiary has a valid credential (public key hash in the
     datum).
 - **Developer collect:**
   - Checks whether collect deadline time has passed.
-  - Checks that the developer has a valid signature (public key hash as
+  - Checks that the developer has a valid credential (public key hash as
     parameter).
 - **Developer donation:**
   - Checks that the input UTxO has a void/unit datum.
-  - Checks that the script address has a valid signature (the same public key
+  - Checks that the script address has a valid credential (the same public key
     hash is known to the script).
 
 ### Adatag Minting Policy
@@ -177,8 +154,8 @@ service would fail.
 This minting policy handles all of the system's business logic, including:
 
 - Time-locking deposit logic (when active)
-- Control NFT state validation
-- Proof generation and validation
+- Authorization Token state validation
+- Proof validation
 - Minting and burning logic
 
 The rules are ordered from simplest/cheapest to most complex/expensive, but this
@@ -190,7 +167,7 @@ before submitting it.
 
 The Adatag minting policy performs a number of sanity checks, including:
 
-- Validating the new state (datum in the control NFT's output) of the tree,
+- Validating the new state (datum in the authorization Token's output) of the tree,
   including:
   - Index check: The index should always be one more than the old state in the
     input datum (index is the number of operations from bootstrap).
@@ -219,7 +196,7 @@ The Adatag minting policy performs a number of sanity checks, including:
 
 #### The Most Complex Check: Minting Script Proof
 
-The most complex check is to pass the Adatag/username, the two components, and the minimal subtree (max 2*log2(n)*32 etc.) to the proof function, which will provide two proofs hashes (old and new) based on the minimal subtree, username, and two other components. The policy then compares these two proof hashes to the corresponding proofs stored in the relevant control NFT's datums  in the inputs and outputs.
+The most complex check is to pass the Adatag/username, the two components, and the minimal subtree to the proof function, which will provide two proofs hashes (old and new) based on the minimal subtree, username, and two other components. The policy then compares these two proof hashes to the corresponding proofs stored in the relevant authorization Token's datums  in the inputs and outputs.
 
 In other words, the policy verifies that the new tree proof hash is valid and derived from the old proof hash based on whether the username has been added or removed from the adatag tree.
 
@@ -231,25 +208,25 @@ In other words, the policy verifies that the new tree proof hash is valid and de
   deposit is necessary). (`relative cheap`)
 - (if creating) Checks that $adahandles are present in both input and output and
   their token names are exactly the same as the only creational username, then
-  there is not time locked deposit. (`a bit expensive`)
+  there is no time locked deposit. (`a bit expensive`)
 - (if creating) Otherwise (not present), check if lockUntil is not reached,
   checks whether a locked time output is presented with the username's public
   key hash and the correct deadline (20 days from now). (`a bit expensive`)
 
-#### StateHolder, Control NFT and minting related rules
+#### StateHolder, Authorization Token and minting related rules
 
-Contorl NFT's datum related rules
+Auth Token's datum related rules
 
-- Validates that username's first letter matches with the ouput control NFT's
-  token name (StateHolder checks equality for both anyway). (`cheap if ture`)
-- Validates that the input control NFT's datum is well-formed.
+- Validates that username's first letter matches with the ouput authorization Token's
+  token name (StateHolder checks equality for both anyway). (`cheap if true`)
+- Validates that the input authorization Token's datum is well-formed.
   (`expensive but necessary to go further`)
-- Validates that the output control NFT's datum is
+- Validates that the output authorization Token's datum is
   well-formed.(`expensive but necessary to go further`)
 - Verifies that the output NFT's datum proof != input NFT's datum proof.
   (`cheap if true`)
-- Verifies that the input control NFT's datum x != username. (`cheap if true`)
-- Verifies that the output control NFT's datum x == username. (`realtive cheap`)
+- Verifies that the input authorization Token's datum x != username. (`cheap if true`)
+- Verifies that the output authorization Token's datum x == username. (`realtive cheap`)
 - Verifies that the output NFT's datum n is input NFT's datum n+1 (if action is
   adding) or n-1 (if action is deleting). (`cheap`)
 - Verifies that the minting value's token name is username and amount is only 1
@@ -274,7 +251,7 @@ The frontend manages user inputs for username creation and deletion by reconstru
 
 Once the tree is reconstructed, it verifies the availability of the username for specific operations, such as addition and deletion.
 
-Following that, the frontend reconstructs the minimal subtree of the entire tree, which typically comprises approximately 2 * log2(n) elements, with 'n' representing the number of elements in the tree.
+Following that, the frontend reconstructs the minimal subtree of the entire tree, which typically comprises approximately 2 * 32 * 2 * log2(n) elements, with 'n' representing the number of elements in the tree.
 
 Next, a redeemer is created and passed to the transaction, containing the following data:
 
@@ -287,7 +264,7 @@ Subsequently, the frontend constructs a transaction following these steps:
 1. Allocation of inputs for the User:
    - For both username creation and deletion:
      - Collateral UTxO: This contains collateral to cover potential Phase 2 validation failures.
-     - A control NFT located on the StateHolder address, matching the username's first letter (e.g., if the username is "ilap," the control NFT is "NFT.i"). This NFT also holds the old state of the Tree in its datum.
+     - A authorization Token located on the StateHolder address, matching the username's first letter (e.g., if the username is "ilap," the authorization Token is "NFT.i"). This NFT also holds the old state of the Tree in its datum.
      - Reference script UTxOs for the StateHolder and Minting Policy (located in Always Fail validator's script addresses) are added to the inputs.
      - The user's UTxO for covering transaction fees.
    - For username creation:
@@ -296,7 +273,7 @@ Subsequently, the frontend constructs a transaction following these steps:
      - No additional inputs are required.
 2. Creation of Outputs:
    - For both username creation and deletion:
-     - The relevant control NFT (e.g., NFT."i") with the updated datum reflecting the state of the tree.
+     - The relevant authorization Token (e.g., NFT."i") with the updated datum reflecting the state of the tree.
      - The user's output for sending changes (if necessary).
    - For username deletion:
      - No additional outputs are necessary.
@@ -311,7 +288,33 @@ Subsequently, the frontend constructs a transaction following these steps:
 
 | **Module** 	| **Type** 	| **Parameters** 	| **Datum** 	| **Redeemer** 	| **Comment** 	|
 |---	|---	|---	|---	|---	|---	|
-| Control NFT 	| Minting Policy<br>(one-shot) 	| N/A 	| void 	| N/A<br><br>When it started<br>it cannot be stopped 	| It is a one-shot NFT minting policy based on a valid spendable UTxO.<br>It mints 26 control NFT "a".."z", which will be sent, one-by-one, <br>to the StateHolder's script address. 	|
+| Authorization Token 	| Minting Policy<br>(one-shot) 	| N/A 	| void 	| N/A<br><br>When it started<br>it cannot be stopped 	| It is a one-shot NFT minting policy based on a valid spendable UTxO.<br>It mints 26 authorization Token "a".."z", which will be sent, one-by-one, <br>to the StateHolder's script address. 	|
 | Time Deposit 	| Validator<br>(locked deposit <br>spending) 	| N/A 	| beneficiary<br>deadline 	| N/A<br><br>As the beneficiary<br>& deadline will be<br>in the datum of the<br>spending UTxO. 	| A very simple generic time deposit validator<br>it locks deposit till deadline.<br><br>It allows spending only after a specific time by the <br>beneficiary specified in datum.<br><br><br>The creation of the time deposit  UTxO is handled by the minting policy.<br>Spending it is handled by the Time Deposit validator.<br>the minting policy handles the logic <br>(amount, beneficiary, deadline)) of it. 	|
-| Minting Policy 	| Minting Policy<br>(Username creation,<br>deletion) 	| ControlNFT<br>TimeDeposit<br>AdaHandle<br>lockUntil<br>lockingPeriod<br>baseDeposit 	| N/A 	| action: add/delete<br>x: elem to add/del<br>nu: node to update<br>na: node to append<br>U: minimal tree 	| The most complex validator, it handles the:<br>1. time locking deposit logic:<br>  - no time locked deposit when a spendable $adahandle is present<br>  - the user already has this handle<br>  - the handle must not exist in the tree.<br>2. control NFT's (on state-holder address) <br>datum validity<br>3. the logic of proof generation and validation.<br>4. and minting burning logic. 	|
-| StateHolder 	| Validator <br>(State carrying<br>using control NFT) 	| conrolNFT<br>mintingPolicy 	| action: added/deleted/initial<br>n: nr. of elems in the Tree<br>elem: elem added/removed<br>proof: proof of the tree 	| N/A<br><br>The StateHolder's only<br>purpose is carrying the<br>control NFT and the datum<br>(state of the tree). 	| A very simple StateHolder for carrying control NFTs:<br>1. ensures just one NFT is spent<br>2. ensures the datum is not empty<br>3. ensures that minting policy in the transaction<br><br>As minting policy will handle all the business logic 	|
+| Minting Policy 	| Minting Policy<br>(Username creation,<br>deletion) 	| ControlNFT<br>TimeDeposit<br>AdaHandle<br>lockUntil<br>lockingPeriod<br>baseDeposit 	| N/A 	| action: add/delete<br>x: elem to add/del<br>nu: node to update<br>na: node to append<br>U: minimal tree 	| The most complex validator, it handles the:<br>1. time locking deposit logic:<br>  - no time locked deposit when a spendable $adahandle is present<br>  - the user already has this handle<br>  - the handle must not exist in the tree.<br>2. authorization Token's (on state-holder address) <br>datum validity<br>3. the logic of proof generation and validation.<br>4. and minting burning logic. 	|
+| StateHolder 	| Validator <br>(State carrying<br>using authorization Token) 	| conrolNFT<br>mintingPolicy 	| action: added/deleted/initial<br>n: nr. of elems in the Tree<br>elem: elem added/removed<br>proof: proof of the tree 	| N/A<br><br>The StateHolder's only<br>purpose is carrying the<br>authorization Token and the datum<br>(state of the tree). 	| A very simple StateHolder for carrying authorization Tokens:<br>1. ensures just one NFT is spent<br>2. ensures the datum is not empty<br>3. ensures that minting policy in the transaction<br><br>As minting policy will handle all the business logic 	|
+
+
+# APPENDIX
+
+## A. Assumptions
+
+- A datum must be attached to an UTXO for a script address.
+- The maximum size of an inline datum in an EUTxO is 4096 bytes (4KB)
+- A transaction only passes when all of the script validators of the transaction
+  pass.
+- If there is a MintInfo in a transaction, the relevant minting script must be
+  presented in the transaction either as a reference script or as an attached
+  script to the transaction.
+- If there is an output of a token, then there must be at least one
+  non-reference input in the transaction.
+- More than one validator script can run in the same transaction.
+- Only one minting policy script can run in the same transaction for minting/burning any tokens for the same currency symbol.
+- The datums and redeemers are stored in the transaction's scriptDatahash field.
+- The scripts are stored in the witness set or at the reference script address
+  as the hash of the script/validator.
+- The order in which the scripts in a transaction are run is based on the order
+  of their policy IDs (hashes of the policy IDs).
+- Phase 1 validation fails when there is a reference input and a non-reference
+  input in the same transaction.
+- If there is a MintInfo in a transaction with a token same with a minting
+  policy Id attached to the transaction, the minting policy must be run.

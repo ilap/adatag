@@ -1,21 +1,44 @@
-# IntegriTree Technical Specifications
+# Introducing IntegriTree: A Logarithmically Efficient Proof Scheme for Dynamic Sets
+
 
 ## Introduction
 
-IntegriTree is a complete binary tree structure designed to ensure the integrity and uniqueness of elements (using open-interval) within a decentralized environment. This document presents a detailed technical specification of IntegriTree.
+We propose IntegriTree, a new accumulator scheme for verifying sets of elements. It utilizes a complete binary-based hash tree as a compact accumulator and relies solely on a secure hash function.
 
+
+Unlike traditional hash trees, such as the Merkle tree, where values are stored only in the leaves, IntegriTree stores values in every node of the tree. This enables efficient dynamic updates, allowing elements to be added or removed as needed.
+
+Additionally, instead of storing individual values directly, IntegriTree associates (open-interval) pairs of consecutive elements with each node in the tree. This approach facilitates efficient proofs of membership, non-membership, addition, and deletion.
+
+For example, to demonstrate the absence or presence of an element `x` in the accumulated set, one must prove that a pair `(xα, xβ)`, where `xα ≺ x ≺ xβ` (absence), or either of the pairs `(xα, x)` and `(x, xβ)`, are present in the tree.
+
+Importantly, these proofs are significantly smaller than the entire set, typically scaling at a logarithmic rate with the number of elements.
+
+
+## Implementation 
+We presume that the Cardano blockchain provides the necessary security levels to ensure that all participants have access to published information and that no one can delete a submitted transaction.
+
+As a result, our implementation relies on the Cardano blockchain and the corresponding Plutus smart contract to ensure that the publication of successive accumulator values corresponding to updates of the set cannot be falsified. Specifically, even if an adversary attempts to send invalid values to the blockchain, they cannot publish altered accumulator values.
+
+
+Our implementation of the dynamic universal accumulator offers the following functionalities:
+- Adding and removing elements from the accumulated set is supported.
+- (non)membership proofs
+- Addition or removal of an element from the accumulated set can be proven.
+- All elements of the set are accumulated into a single concise value.
+- A proof exists for every element, proving whether it has been accumulated or not.
 
 ## Node Structure
 
 Each node in the IntegriTree consists of:
 
-- `Val`: A data structure containing information about the node, including the size of the tree (`xs`) and the two bounds of the open-interval (`xa` and `xb`).
+- `Val`: A data structure containing information about the node, including the index of the node in the tree in level-order i.e. size of the tree (`xi`) and the  pairs of consecutive elements (as two bounds) of the open-interval (`xa` and `xb`).
 - `Children`: left and right child nodes.
 
 Typescript's example:
 ``` typescript
 
-export type Val =  { xs: string; xa: string; xb: string }
+export type Val =  { xi: string; xa: string; xb: string }
 
 export type IntegriTree = {
   val: Val;
@@ -29,8 +52,8 @@ export type IntegriTree = {
 
 IntegriTree provides proofs for both membership and non-membership of elements in the tree:
 
-- **Membership**: If an element is in the tree, there exists at least one node where either `xa = element` or `xb = element`.
-- **Non-Membership**: If an element is not in the tree, there exists a node where `xa < element < xb`.
+- **Membership**: If an `x` element is in the tree, there exists at least one node where either `xa = x` or `xb = x`.
+- **Non-Membership**: If an element is not in the tree, there exists a node where `xa < x < xb`.
 
 
 
@@ -39,7 +62,7 @@ IntegriTree provides proofs for both membership and non-membership of elements i
 Proofs are available for appending new elements to the tree and deleting existing elements:
 
 - **Append Proof**: If an element is not in the tree, the proof contains the non-membership (update node's) `Val`, the `Val` of the node will be the parent of the new appendable node of the new element, and the minimal subtree of the two `Val`'s nodes.
-- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') `Val`'s, the `Val` of the parent node of the last (in level-oprder) node in the tree, and the minimal subtree of the three `Val`'s nodes.
+- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') `Val`'s, the `Val` of the parent node of the last (in level-order) node in the tree, and the minimal subtree of the three `Val`'s nodes.
 
 
 ### Val Types of the Proof
@@ -89,22 +112,22 @@ The tree must always maintain its completeness, enforced by the sequential index
 
 ## Technical briefs of the IntegriTree
 
-- The tree model **`T`** representing the set **`S = {x1, ..., xn}`** is and must always be a **`Complete Binary Tree`**.
+- The tree model **`T`** representing the set **`X = {x1, ..., xn}`** is and must always be a **`Complete Binary Tree`**.
 - A `Complete Binary Tree` can have an incomplete last level, as long as all the leaves in that level are arranged from left to right.
 - A **node** (**`N`**) of the `T` tree has two pointers: one to its left child, and one to its right child.
 - A **leaf** (**`L`**) is a node  that has two empty hashes (**`ε, ε`**) as its children.
-- Every node in `T` must be assigned a sequential index **`i`** starting from **`1`**, with the root of T having index 1, and this index `i` increases by 1 whenever a new node **`Ni`** is added. The value of `i` is always equal to the number of elements in `T`.
+- Every node in `T` must be assigned a sequential index **`i`** starting from **`1`**, with the root of T having index 1, and this index `i` increases by 1 whenever a new node **`Ni`** is added. The value of `i` is always equal to the number of nodes (and not the numb er of elements) in `T`.
 - Therefore, the nr. of elements of the tree is always the `tree size - 1`
 - The depth (**`d`**) is defined as the length of the simple path (number of edges) from the `root` node of `T` to node `N`.
 - The node's index (`i`) must always be exactly double of its parent's index if it's the left child, or 2 times of the parent's index plus 1 if it's the right child.
-- The integrity of T is ensured by the sequential index (`i`).
+- The integrity of `T` is ensured by the sequential index (`i`).
 - Therefore the node index determines the position of any node within the 'T' tree and positions in its parent, except for the root node (as it doesn't have a parent).
   - The position of a node in the tree is determined by **`P = i - 2^d + 1`** which means it's the **`Pth`** node on level `d` of the `T` tree.
   - The **left**/**right** position within a node follows the **`even-odd`** rule:  if its index `i` is even, the child is on the left side; otherwise, it's on the right. This position is determined by **`Pn = In - 2Ip`** (`Ip` is the parent's index)  where `Pn` is 0 when the child is on the left, 1 when it's on the right, and results in an **error** otherwise.
 - In order to keep track of changes in the state of the `T` tree, there are two types of nodes:
   - Updateable node (**`Nu`**): These nodes are already part of the tree, but their values will be updated sometime by an update process.
-  - Appendable node (**`Na`**): These are then nodes where a new leaf `L` will be appended to.
-- The right child (`Nr`) of an appendable node (`Na`), must always be an empty hash, represented as **`ε`**. The left child can be either an empty hash (**`ε`**) or a leaf.
+  - Parent node (**`Np`**): These are then nodes where a new leaf `L` will be appended to or the last leaf removed from.
+- The right child (`Nr`) of an parent node (`Np`), must always be an empty hash, represented as **`ε`**. The left child can be either an empty hash (**`ε`**) or a leaf.
 
 
 

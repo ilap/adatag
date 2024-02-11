@@ -40,7 +40,7 @@ main =
   defaultMain
     $ testGroup
       "Testing CNFT minting policy"
-      [ good "Must pass - Minting Control NFTs works       " testMintControlNFT
+      [ good "Must pass - Minting Authorization Tokens works       " testMintControlNFT
       , bad "Must fail - Minting the same NFTs twice fails" testMintControlNFTTwice
       ]
   where
@@ -59,7 +59,7 @@ nftScript :: TxOutRef -> [TokenName] -> TypedPolicy ()
 nftScript ref tn = MV2.mkTypedPolicy $ CM.cnftPolicy ref tn
 
 ---------------------------------------------------------------------------------------------------
-------------------------------------- TESTING MINTING CONTROL NFT -----------------------------------------
+------------------------------------- TESTING MINTING AUTH TOKEN -----------------------------------------
 
 mintNFTTx :: TxOutRef -> TxOut -> [TokenName] -> Value -> PubKeyHash -> Tx
 mintNFTTx ref out tn val pkh =

@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Int Test Debug File",
             "program": "${file}",
-            "args": ["--env-file", ".env.integration", "--timeout", "45000"],
+            "args": ["--env-file", ".env.test.int", "--timeout", "45000"],
             "cwd": "${workspaceFolder}/libs/adatag-ts",
             "stopOnEntry": true,
             "watchMode": false

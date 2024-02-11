@@ -3,9 +3,9 @@
 > **Note**: Developers are responsible for ensuring the proper bootstrap of the @adatag system.
 
 All unit tests assume a valid bootstrap, including:
-1. The system has valid control NFTs (`cnftpid."a"` through `cnftpid."z"`).
-2. The StateHolder uses the relevant control NFT's currency symbol as a parameter for generating its compiled code.
-3. Each control NFT is sent to a state-holder address individually, each with a valid initial state (inline datum):
+1. The system has valid authorization Tokens (`cnftpid."a"` through `cnftpid."z"`).
+2. The StateHolder uses the relevant authorization Token's currency symbol as a parameter for generating its compiled code.
+3. Each authorization Token is sent to a state-holder address individually, each with a valid initial state (inline datum):
     - Operation count: `0`
     - Adatag: `""`
     - Tree state: `Initial`
@@ -16,7 +16,7 @@ All unit tests assume a valid bootstrap, including:
     - Collector's (developer's) public key hash.
     - Collection time (twice the minting policy's deactivation time, calculated at bootstrap time).
 5. Proper setup of the MintingPolicy minting script with correct parameters, including:
-    - Correct control NFT currency symbol.
+    - Correct authorization Token currency symbol.
     - Correct StateHolder validator policy id.
     - Correct TimeLockDeposit vaildator's policy id.
     - Correct lock feature expiry time, usually around 6 months from bootstrap.

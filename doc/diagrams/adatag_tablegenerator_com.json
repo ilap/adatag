@@ -387,7 +387,7 @@
         { "value": "**Comment**", "cspan": 1, "rspan": 1, "markup": [3, 11] }
       ],
       [
-        { "value": "Control NFT", "cspan": 1, "rspan": 1, "markup": [1, 11] },
+        { "value": "Authorization Token", "cspan": 1, "rspan": 1, "markup": [1, 11] },
         {
           "value": "Minting Policy\n(one-shot)\n",
           "cspan": 1,
@@ -403,7 +403,7 @@
           "markup": [1, 3, 0, 2, 1, 36]
         },
         {
-          "value": "It is a one-shot NFT minting policy based on a valid spendable UTxO.\nIt mints 26 control NFT \"a\"..\"z\", which will be sent, one-by-one, \nto the StateHolder's script address.",
+          "value": "It is a one-shot NFT minting policy based on a valid spendable UTxO.\nIt mints 26 authorization Token \"a\"..\"z\", which will be sent, one-by-one, \nto the StateHolder's script address.",
           "cspan": 1,
           "rspan": 1,
           "markup": [1, 170]
@@ -464,7 +464,7 @@
           "markup": [1, 91]
         },
         {
-          "value": "The most complex StateHolder it handles the:\n1. time locking deposit logic:\n  - no time locked deposit when a spendable $adahandle is present\n  - the user already has this handle\n  - the handle must not exist in the tree.\n2. control NFT's (on StateHolder address) \ndatum validity\n3. the logic of proof generation and validation.\n4. and minting burning logic.",
+          "value": "The most complex StateHolder it handles the:\n1. time locking deposit logic:\n  - no time locked deposit when a spendable $adahandle is present\n  - the user already has this handle\n  - the handle must not exist in the tree.\n2. authorization Token's (on StateHolder address) \ndatum validity\n3. the logic of proof generation and validation.\n4. and minting burning logic.",
           "cspan": 1,
           "rspan": 1,
           "markup": [1, 42, 0, 312]
@@ -473,7 +473,7 @@
       [
         { "value": "StateHolder", "cspan": 1, "rspan": 1, "markup": [1, 9] },
         {
-          "value": "StateHolder \n(State carrying\nusing control NFT)",
+          "value": "StateHolder \n(State carrying\nusing authorization Token)",
           "cspan": 1,
           "rspan": 1,
           "markup": [1, 45]
@@ -491,13 +491,13 @@
           "markup": [1, 107]
         },
         {
-          "value": "N/A\n\nThe StateHolder's only\npurpose is carrying the\ncontrol NFT and the datum\n(state of the tree).",
+          "value": "N/A\n\nThe StateHolder's only\npurpose is carrying the\nauthorization Token and the datum\n(state of the tree).",
           "cspan": 1,
           "rspan": 1,
           "markup": [1, 3, 0, 2, 1, 91]
         },
         {
-          "value": "A very simple StateHolder for carrying control NFTs:\n1. ensures just one NFT is spent\n2. ensures the datum is not empty\n3. ensures that minting policy in the transaction\n\nAs minting policy will handle all the business logic",
+          "value": "A very simple StateHolder for carrying authorization Tokens:\n1. ensures just one NFT is spent\n2. ensures the datum is not empty\n3. ensures that minting policy in the transaction\n\nAs minting policy will handle all the business logic",
           "cspan": 1,
           "rspan": 1,
           "markup": [1, 50, 0, 119, 1, 52]

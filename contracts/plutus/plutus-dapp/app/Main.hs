@@ -109,7 +109,7 @@ main = do
   let oref = createOref txId idx
   let cnftSymbol = CNM.controlNFTCurrencySymbol oref
   let cnftPolicyID = scriptHash $ CNM.cnftPolicy oref CNM.letters
-  putStrLn "----- 2. Control NFT (CNFT) Minting Script -----"
+  putStrLn "----- 2. Authorization Token (CNFT) Minting Script -----"
   putStrLn $ "One-shot UTxO     : " ++ txId ++ "#" ++ show idx
   putStrLn $ "Own-hot UTxO Url  : " ++ show txIdUrl
   putStrLn $ "Own policy ID     : " ++ show cnftPolicyID
@@ -167,7 +167,7 @@ main = do
   putStrLn $ "Deactivation time : " ++ deactivationTime
 
   putStrLn "----------------  Parameters  -----------------"
-  putStrLn $ "1. Control NFT Symbol       : " ++ show cnftSymbol
+  putStrLn $ "1. Authorization Token Symbol       : " ++ show cnftSymbol
   putStrLn $ "2. StateHolder policy Id      : " ++ show stateHolderValidator
   putStrLn $ "3. Time Deposit policy Id   : " ++ show timdedepositValidator
   putStrLn $ "4. Time Deposit Lock expiry : " ++ show deactivationTime

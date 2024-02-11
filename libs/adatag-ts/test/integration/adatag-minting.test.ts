@@ -217,6 +217,7 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
 
         // If something throw an error then it must be triggered by an invalid adatag.
         expect(isValid).toBe(false)
+        //console.log(`@@@@@@@@@@@ ERROR: ${e}`)
       }
     })
   }

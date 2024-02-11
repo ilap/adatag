@@ -16,7 +16,7 @@ state "Inputs" as stateI {
         "script hash": "N/A"
         }
     }
-    state ITV2 as  "Control NFT from Tree StateHolder address" #line.dotted {
+    state ITV2 as  "Authorization Token from Tree StateHolder address" #line.dotted {
         json "TD Reference Script UTxO" as JTV2 {
         "address": "TV script address",
         "value":"CNFT.a",
@@ -68,7 +68,7 @@ state "Outputs" as stateO {
         "script hash": "N/A"
         }
     }
-    state OTV as "Control NFT to Tree StateHolder address" #line.dotted{
+    state OTV as "Authorization Token to Tree StateHolder address" #line.dotted{
         json "Output" as TV2 {
         "address": "TV script address",
         "value":"CNFT.a",
@@ -104,12 +104,12 @@ state "Outputs" as stateO {
    
    ' Transactions
    '##################################################
-   TXTV: The StateHolder is parameterized \n with the currency symbol of \n the control NFT and the minting \n script to prevent any spending \n without the Minting Policy.
+   TXTV: The StateHolder is parameterized \n with the currency symbol of \n the auth and the minting \n script to prevent any spending \n without the Minting Policy.
    TXTV: <b>Constraints</b>
   
    TXTV -down[dotted]-> TXMP
 
-   TXMP: The minting policy is parameterized \n with the currency symbol of \n the control NFT
+   TXMP: The minting policy is parameterized \n with the currency symbol of \n the authorization Token
  
 
    TXTV -right[dashed]--> OTV

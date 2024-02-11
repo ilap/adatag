@@ -85,7 +85,7 @@ timeDeposit cfg = do
         , bad "Must fail - Valid input output but two mintings" $ testInputsOutputs 2 2 -- 1 input/output and 2 mintings
         ]
     , -- We assume a proper bootstrap, so the inputs must always be correct.
-      -- Therefore, if there is any wrong input datum for a correct control NFT
+      -- Therefore, if there is any wrong input datum for a correct authorization Token
       -- then the adatag is exploited, making it useless.
       -- Therefore we do not check input datums as they're assumed to be correct.
       testGroup

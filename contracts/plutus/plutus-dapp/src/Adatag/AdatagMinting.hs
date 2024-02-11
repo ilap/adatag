@@ -85,7 +85,7 @@ import IntegriTree.Proofs
 ---------------------------------------------------------------------------------------------------
 --------------------------------------- ERROR TABLE  ----------------------------------------------
 {-
-  let checkAdatagError = 			"LT1" 	"invalid control nft or adatag"
+  let checkAdatagError = 			"LT1" 	"invalid authorization token or adatag"
   let checkActionError = 			"LT2"	"wrong redemer action or mint amount"
   let checkTreeState =        "LT3" "wrong redeemer submitted"
   let checkTimeLockDepositError = 	"TL4"	"time lock-deposit needs proper interval"
@@ -104,10 +104,10 @@ import IntegriTree.Proofs
 
 -- Minting policy parameters.
 data MintParams = MintParams
-  { mpControlNFT :: CurrencySymbol -- The control NFT that's carrying the state of the @adatag tree.
+  { mpControlNFT :: CurrencySymbol -- The authorization Token that's carrying the state of the @adatag tree.
 
   -- ^ AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
-  , mpStateHolderValidator :: PlutusV2.ScriptHash -- PlutusV2.PlutusScriptV2, -- ControlNFT StateHolder hash the control NFT resides on.
+  , mpStateHolderValidator :: PlutusV2.ScriptHash -- PlutusV2.PlutusScriptV2, -- ControlNFT StateHolder hash the authorization Token resides on.
   , mpTimeDepositValidator :: PlutusV2.ScriptHash -- PlutusV2.PlutusScriptV2, -- TimeDeposit StateHolder hash. -- for checking time-lock deposits
   , mpUserDepositFeatureExpiry :: PlutusV2.POSIXTime -- The POSIXTime (in ms) until the Lock Time Deposit Feature is active
   --  (e.g. ~6-9 months form the @adatag bootstrapping).
@@ -216,11 +216,11 @@ mintingTypedPolicy mp red ctx = do
     checkNFTBurn :: Bool
     checkNFTBurn = mintedAmount == -1 && mrAction red == DeleteAdatag
 
-    --------- StateHolder & CONTROL NFT FUNCTIONS ------------
+    --------- StateHolder & AUTH TOKEN FUNCTIONS ------------
 
-    -- Parse the contorl NFT's input and output datum residing on StateHolder script address.
-    -- We do not check control NFT integrity as it's the StateHolder's responsibility.
-    -- Though, we need the token name of the control NFT for allowing only valid usernames
+    -- Parse the Auth Token's input and output datum residing on StateHolder script address.
+    -- We do not check authorization Token integrity as it's the StateHolder's responsibility.
+    -- Though, we need the token name of the authorization Token for allowing only valid usernames
     -- that are starts with the token name.
     --
     -- 1. First we do some sanity check on the output's datum (new state) and the username

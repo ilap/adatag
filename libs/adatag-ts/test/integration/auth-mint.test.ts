@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test'
 
 import { Data, Translucent, fromText } from 'translucent-cardano'
 
-import { resolveMockData } from '@adatag/shared/test-utils'
+import { resolveMockData, stringifyData } from '@adatag/shared/test-utils'
 import * as P from '@adatag/shared/plutus'
 
 test('Simple Auth NFT mint', async () => {
@@ -32,7 +32,7 @@ test('Simple Auth NFT mint', async () => {
   const mintVal = { [policyId + fromText('a')]: 1n }
   const tx = await translucent
     .newTx()
-    //.collectFrom([utxo]) // with or without it
+    .collectFrom([utxo]) // with or without it
     // TODO: Translucent does not allow paying to different address than the signer.
     .payToAddress(userAddress, mintVal)
     .attachMintingPolicy(authMintingPolicy)

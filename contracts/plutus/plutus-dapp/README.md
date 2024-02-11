@@ -1,21 +1,21 @@
 ## Introduction
 
 The adatag developer has to provide:
-- The one-shot "Control NFT" minting policy to mint control nfts for the StateHolder
--   One "Control NFT" validator for carrying the state of the username/adatag tree state in validator address contain one control NFT and the tree state in the datum.
+- The one-shot "Authorization Token" minting policy to mint authorization tokens for the StateHolder
+-   One "Authorization Token" validator for carrying the state of the username/adatag tree state in validator address contain one authorization Token and the tree state in the datum.
 -   The "TimeDeposit" validator that un-locks the locked ADA deposit (when it's active).
 -   The "Minting" policy to mint/burn of users' adatags.
 
 ## Transactions diagrams
 
-### 1. Mint the control NFTs
+### 1. Mint the authorization Tokens
 
 ```plantuml
 @startmindmap
 !theme default from https://textchart.com/themes/
 caption figure 1
-title Mint control NFTs "a" to "z"
-* Mint Control NFTs
+title Mint authorization Tokens "a" to "z"
+* Mint Authorization Tokens
 ** NFT."a"
 ** ..
 ** NFT."z"
@@ -33,8 +33,8 @@ center footer Send all NFTs to the Developer
 
 Constraints for creating validators:
 
-1. The Tree validator (TV) must parameterized with the minting policy's script hash, to check its existence on moving control NFT.
-2. The TV must also need to be parameterised with the control NFTs currency symbol.
+1. The Tree validator (TV) must parameterized with the minting policy's script hash, to check its existence on moving authorization Token.
+2. The TV must also need to be parameterised with the authorization Tokens currency symbol.
 3. The minting NFT mist parameterised with the contol NFT currency symbol.
 4. 
 
@@ -84,7 +84,7 @@ Note: The minting script is a parameterized script contains the
 - Initial accumulator of an empty tree and
 - the empty tree itself.
 
-### 4. Initialise control NFTs
+### 4. Initialise authorization Tokens
 
 Send all NFTs (one-by-one) with their initial datum to the TV script
 
@@ -125,7 +125,7 @@ left side
 ** AFV MP: \n Redeemer : { x', nu, na, U'}
 ** AFV TV: NFT."a", datum: {n, x, Acc(U)}
 
-center footer NFT."a" is a control NFT (cNFT) sitting on the Tree Validator address \n Redemer { \n x: is the new and valid username, \n nu: updatetable node e.g. (xa, xb) ,\n na: appendable node e.g. (xa',xb'), \n U: The minimal subtree of the Ta. \n}
+center footer NFT."a" is a authorization Token (cNFT) sitting on the Tree Validator address \n Redemer { \n x: is the new and valid username, \n nu: updatetable node e.g. (xa, xb) ,\n na: appendable node e.g. (xa',xb'), \n U: The minimal subtree of the Ta. \n}
 
 @endmindmap
 ```

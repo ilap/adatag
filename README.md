@@ -23,11 +23,11 @@ Welcome to @adatag, the IntegriTree Proof of Concept (PoC)! This project serves 
 @adatag employs a complete binary data structure called IntegriTree for ensuring the integrity of the system. Unlike traditional Merkle trees where the blockchain generates the tree and users validate its integrity, IntegriTree works differently.
 
 ### How IntegriTree Works
-  - Bootstrap Protocol: Initially, the proof stored on the chain is a tree containing only one initial node. This initial bootstrap is crucial for ensuring the integrity of the system.
-  - User-Generated Proofs: Users generate proofs off-chain, which the blockchain smart contract validates. This eliminates the need for trusted users or third parties, as the chain only stores and handles states that have valid proofs.
+  - Bootstrap Protocol: Initially, the proof stored on the chain is a tree containing only one initial node that contains only the lower- and upperbound of the open interval. This initial bootstrap is crucial for ensuring the integrity of the system.
+  - User-Generated Proofs: Users generate proofs off-chain, which the blockchain smart contract validates. This eliminates the need for trusted users or third parties, as the chain only stores and handles states that have valid proofs that can be easily reconstructed by building up the tree from the minted and burned elements.
    - Enforced Integrity Logic: The integrity of the tree is enforced by specific logic implemented within the smart contracts.
 
-  See details in the [IntegriTree Technical Specification](./doc/TECHSPEC.md)
+  See details in the [Design Sepcifiation](./doc/DESIGNSPEC.md) and [IntegriTree Technical Specification](./doc/TECHSPEC.md)
 
 ### Repository Contents
 
