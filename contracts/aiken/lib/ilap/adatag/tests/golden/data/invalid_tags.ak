@@ -410,6 +410,6 @@ pub fn get_invalid_adatags() -> List<ByteArray> {
     "tenxvfzjqcidwtco_", "jmzgdqxj_-", "j_q_xhawhpqlwferw", "gkw-ezktbqpvumlc-",
     "_h.umrr.cotxd", "ha-", "_jvbo-xq", "tulk--", "kbxitpd.", "ncq-",
     "_kiiwvjva-", ".wyzb", "umcm-tzccp.", "iivz_udq-onal.k-u", "-qwje",
-    "-.uexlvjlkv", "fzmimqw.", "ilap..."
+    "-.uexlvjlkv", "fzmimqw.", "ilap...",
   ]
 }

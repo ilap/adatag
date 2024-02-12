@@ -21,7 +21,7 @@ use aiken/transaction/value.{MintedValue, Value, tokens}
 use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
 use ilap/adatag/types.{ScriptHash, TokenName}
 
-pub fn debugMessage(message: String, data: Data) {
+pub fn debug_message(message: String, data: Data) -> String {
   let prefix = builtin.append_string(message, @": ")
   builtin.append_string(prefix, cbor.diagnostic(data))
 }

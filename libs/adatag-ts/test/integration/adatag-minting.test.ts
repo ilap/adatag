@@ -27,13 +27,13 @@ import { IntegriTree } from '@adatag/integri-tree'
   Test User address : addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m
 */
 
-const mintNr = 1000
+const mintNr = 1000 * 39
 const nr = Bun.env.ENVIRONMENT == 'Development' ? mintNr : Math.floor(mintNr / 100)
 // 16 is ok but we want to have some long name fails too.
 const adatagLength = 18
 
 // it could generate duplicates
-const adatags = generateRandomStrings(nr, adatagLength)
+const adatags = generateRandomStrings(nr, adatagLength, )
 
 // real nr. of elements.
 const elemsNumber = adatags.size
@@ -161,7 +161,10 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
           : result
 
       // append returns false when it cannot append
-      tree.append(adatag)
+      if (isValid) {
+        // we only allows valid adatags
+        tree.append(adatag)
+      }
 
       // TODO: we should have some optimised function from some proof instead getting the root hash form the whole tree
       const rootHash = tree.rootHash()
@@ -213,11 +216,13 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
         const txHash = await signedTx.submit()
 
         expect(translucent.awaitTx(txHash)).resolves.toBe(true)
+        //console.log(`####ERROR? ${txHash}`)
       } catch (e) {
 
         // If something throw an error then it must be triggered by an invalid adatag.
+
+        // console.error(`@@@@@@@@@@@ ERROR: ${e}`)
         expect(isValid).toBe(false)
-        //console.log(`@@@@@@@@@@@ ERROR: ${e}`)
       }
     })
   }

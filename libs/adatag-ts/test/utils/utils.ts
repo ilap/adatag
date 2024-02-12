@@ -91,7 +91,7 @@ export async function setSloctConfig(network: Network, env: string) {
 }
 
 
-export function generateRandomStrings(count: number, maxLength: number): Set<string> {
+export function generateRandomStrings(count: number, maxLength: number, prefix = "a"): Set<string> {
   const validCharacters = 'abcdefghijklmnopqrstuvwxyz.-_';
 
   const randomStrings: Set<string> = new Set();
@@ -105,7 +105,7 @@ export function generateRandomStrings(count: number, maxLength: number): Set<str
       str += validCharacters.charAt(randomIndex);
     }
 
-    if (str !== '') {
+    if (str !== '' && str[0] === prefix) {
       randomStrings.add(str);
     }
   }

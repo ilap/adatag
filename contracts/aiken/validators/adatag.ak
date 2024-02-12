@@ -12,7 +12,9 @@ use ilap/adatag/types.{
   AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting,
   ScriptHash, TimeDepositDatum, TreeState,
 }
-use ilap/adatag/utils.{find_script_inputs, output_has_token, time_elapsed}
+use ilap/adatag/utils.{
+  find_script_inputs, is_valid_tag, output_has_token, time_elapsed,
+}
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture as tree_fixture
 
@@ -41,7 +43,7 @@ validator(params: MintParams) {
     let mint_amount =
       quantity_of(from_minted_value(mint), own_policy, new_state.adatag)
 
-    when rdmr is {
+    is_valid_tag(new_state.adatag) && when rdmr is {
       Minting(mint_redeemer) -> and {
           mint_amount == 1,
           check_timedeposit(new_state.adatag, outputs, params, validity_range),
