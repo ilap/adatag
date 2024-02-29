@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // To debug aatag.io do the following:
+            // 0. Select adatag.io as project
+            // 1. run "nx chain:spin-up:int"
+            // 2. run "cd apps/adatag.io; bun debug", it will listen on port 3000
+            // 3. Click select 
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Brave against localhost",
+            "runtimeExecutable": "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+            "userDataDir": true,        
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src",
+        }
+    ]
+}

@@ -17,7 +17,6 @@ export const Header = () => {
   );
 
   const isDark = selectedTheme === 'dark'
-  console.log(`@@@@@@ isDark`)
 
   async function getAssets() {
     if (wallet) {

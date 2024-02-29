@@ -1,0 +1,10 @@
+{
+  "name": "sqlite3-test",
+  "version": "1.0.0",
+  "description": "SQLite3 WASM Node/Browser Test",
+  "private": false,
+  "dependencies": {
+    "@streamparser/json": "^0.0.20",
+    "@sqlite.org/sqlite-wasm": "github:sqlite/sqlite-wasm#node"
+  }
+}

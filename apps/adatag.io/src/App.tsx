@@ -1,8 +1,9 @@
+import React from 'react'
 import { Header } from './components/header/Header'
 import { Hero } from './components/hero/Hero'
-import { MeshProvider } from "@meshsdk/react";
+import { MeshProvider } from '@meshsdk/react'
 
-function App () {
+const App: React.FC = () => {
   return (
     <main>
       <MeshProvider>

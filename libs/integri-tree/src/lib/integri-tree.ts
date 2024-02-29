@@ -256,7 +256,7 @@ export class IntegriTree {
 
     const [updateNode, deleteNode] = this.search(element)
 
-    // FIXME: Impelent delete node proof
+    // FIXME: Implement delete node proof
     if (updateNode == undefined || deleteNode != undefined) {
       //throw new Error(`Error: The element (${element}) is invalid or already in the tree.`)
       return null

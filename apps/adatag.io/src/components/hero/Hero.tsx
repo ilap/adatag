@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { isValidUsername, a2h } from './utils'
+import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { isValidUsername, a2h } from '../../utils'
 import './Hero.css'
 import KoiosTinyClient from 'koios-tiny-client'
+
 
 const { methods: Koios } = new KoiosTinyClient('https://api.koios.rest/api/v0')
 
@@ -98,7 +99,7 @@ export const Hero = () => {
       const assetInfo = await Koios.AssetNftAddress({
         _asset_policy: adatagPolicy,
         _asset_name: hexString
-      })
+    })
 
       const data = assetInfo?.ok?.data
 
@@ -130,6 +131,17 @@ export const Hero = () => {
   }
 
   console.log(`Translucent ${Translucent}`)
+
+  const handleButtonClick = () => {
+    // Perform the action you want to trigger here
+    console.log(`Button clicked! ${inputValue}`);
+    //const result = query(`SELECT * from a`, [])
+    console.log(`Query: ${JSON.stringify("")}`)
+};
+
+
+  const buttonDisabled = isLoading || searchState != SearchState.NotMinted
+
   return (
     <div className="container hero h-screen">
       {/* Background Gradients */}
@@ -163,8 +175,8 @@ export const Hero = () => {
         </div>
         <button
           className={`button ${inputValue ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-          disabled={isLoading || searchState === SearchState.NotMinted}
-        >
+          disabled={buttonDisabled}
+          onClick={handleButtonClick} >
           Mint adatag
         </button>
       </div>

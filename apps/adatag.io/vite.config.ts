@@ -11,6 +11,7 @@ export default defineConfig({
   },
   plugins: [wasm(), react()],
   optimizeDeps: {
+    exclude: ['@sqlite.org/sqlite-wasm'],
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
@@ -22,6 +23,17 @@ export default defineConfig({
           buffer: true
         })
       ]
+    }
+  },
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      //'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+      'Cross-Origin-Embedder-Policy': 'credentialless'
+    },
+    cors: {
+       origin: '*' // Allow requests from any origin
     }
   }
 })

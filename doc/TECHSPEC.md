@@ -2,7 +2,7 @@
 
 Verifying large sets of elements efficiently can be challenging. Traditional hash trees offer security but lack efficient updates.
 
-IntegriTree, a new accumulator scheme, leverages a complete binary hash tree for compact accumulation and dynamic updates.
+IntegriTree, a new accumulator scheme, leverages a complete binary hash tree for compact accumulation and dynamic updates which relies on a trusted Plutus script, specifically designed to perform accumulator verification.
 
 ## Key features:
 
@@ -11,7 +11,7 @@ IntegriTree, a new accumulator scheme, leverages a complete binary hash tree for
 - Offers proofs for membership, non-membership, addition, and deletion.
 - Proof size scales logarithmically with the number of elements.
 
-> Example: Verifying the presence/absence of an element `x` in the tree `T` as a model of accumulated set `S = {x1, ..., xn}`, one must prove that a pair `(xα, xβ)`, where `xα ≺ x ≺ xβ` (absence), or either of the pairs `(xα, x)` and `(x, xβ)`, are present in the `T` tree (presence).
+> Example: Verifying the presence/absence of an element `x` in the tree `T` as a model of accumulated set `S = {x1, ..., xn}`, one must prove that a pair `(xα, xβ)`, where `xα ≺ x ≺ xβ` (absence), or either of the pairs `(xα, x)` and `(x, xβ)` (presence), are present in the `T` tree.
 
 In addition, verifying addition of an element `x` requires proving the existence of `(xα, xβ)`, where `xα ≺ x ≺ xβ` of the tree `T` to be appended, and ensuring that the pairs `(xα, x)` and `(x, xβ)`, are present in the new updated tree `T'` while maintaining completeness. Deletion from the `T` requires similar proofs.
 
@@ -23,7 +23,9 @@ In our `@adatag` Proof of Concept (PoC) implementation, the lower and upper boun
 
 ## Brief Overview of Proofs
 
-The accumulator `accN` of the tree `T` is the `hashRoot(T)`, calculated by combining the hashes of the node's value, the hashRoot of its left child, and the hashRoot of its right child: `accN = hash( hashVal(value) || hashRoot(leftChild) || hashRoot(rightChild))`, where `||` represents the concatenation of byte arrays.
+The accumulator `accT` of the tree `T` is the `hashRoot(T)`, calculated by combining the hashes of the node's value, the hashRoot of its left child, and the hashRoot of its right child: `accN = hash( hashVal(value) || hashRoot(leftChild) || hashRoot(rightChild))`, where `||` represents the concatenation of byte arrays.
+
+> Note: Any node `N` of the tree `T` can be accumulated in the same way as above.
 
 The proof provided by IntegriTree consists of a compact path (minimal subtree) from the root node `Nr` to the provable node(s), ensuring that the root hash of this subtree matches the root hash of the entire tree `T`, and at least one (depends on the proof type) node's value of the provable node is included in the proof.
 
@@ -44,7 +46,7 @@ During validation, the Plutus script checks the following:
 
 During the validation the value where:
 1. the current node's `valHash == hashVal(Vu)`, the `hashVal` will be replaced by `Vu'` and where
-2. the current nodes's `valHash == hashVal(Vp)`, the `hashVal` will be replaced with `Vp'` and one of the children will be replaced by the `hash( hashVal(Vl) || empty_hash || empty_hash)`
+2. the current nodes's `valHash == hashVal(Vp)`, the `hashVal` will be replaced with `Vp'` and one of its children will be replaced by the `hash( hashVal(Vl) || empty_hash || empty_hash)`
 
 > Note: which children is replaced is depends on the new tree size (even-odd rule)
 
@@ -62,7 +64,7 @@ The state change will be bound to and carried by an authorization token held at 
 
 Each state change (element added or removed) is validated by the corresponding Plutus minting script (mint/burn). This validation process is based on the old state, the user's input as redeemer, and the provided new state by the user(s) as an inline datum of the Extended UTXO (EUTxO) containing the authorization token.
 
-Note: The redeemer contains the proof(s) and the required values (`Val`s) are required for minting and burning elements.
+> Note: The redeemer contains the proof(s) and the required values (`Val`s) are required for minting and burning elements.
 
 Therefore, the validation process utilizes these three parts:
 - The existing old state stored on chain as an EUTxO.
@@ -95,10 +97,38 @@ export type IntegriTree = {
   left: IntegriTree;
   right: IntegriTree;
 }
-
 ```
 
+> Note: the current typescript implementation of IntegriTree uses an array of Vals for efficient operations.
 
+### Root Hash Calculation of IntegriTree
+
+The off-chain root hash calculateion of the tree or any of its branch is calculated using the following function:
+``` typescript
+
+  /**
+   * Calculates the hash for a specified node in the tree.
+   * @param index - The index of the node.
+   * @returns The hash for the specified node.
+   */
+  private hashNode(index: number): string {
+    if (index >= this.elements.length) {
+      return emptyHash
+    }
+
+    const val = this.elements[index]
+    const leftChildIndex = 2 * index + 1
+    const rightChildIndex = 2 * index + 2
+
+    const valHash = hashVal(val)
+    const leftHash = this.hashNode(leftChildIndex)
+    const rightHash = this.hashNode(rightChildIndex)
+
+    return combineThreeHashes(valHash, leftHash, rightHash)
+  }
+```
+
+> Note: A compact array based structure is used for off-chain representation of the tree.
 
 ## Minimal Subtree (Proof)
 
@@ -124,8 +154,7 @@ export type TreeProof =
 
 This structure regenerates the exact hash of the tree as the whole IntegriTree would be hashed.
 
-In merkle tree the leaf pairs (that contain data) are hashed up to the tr
-ee while in IntegriTree the nodes' values (`Val`) are part of the proof.
+In merkle tree the leaf pairs (that contain data) are hashed up to the tree while in IntegriTree the nodes' values (`Val`) are part of the proof.
 For example, for the following Proof
 
 ``` typescript
@@ -143,6 +172,21 @@ const proof = HashNode {
 It's easily can be proven that "adam" is in the tree, but "aby" is not, having a `Val { xi: "1", xa: "a", xb: "adam"}` and the Proof
 as the proof's `rootHash(proof)` exactly the same with the rootHash of the whole integritree, and the hash of proof contains the hash of the required proovable `Val`
 
+
+### Root Hash Calculation of the minimal subtree
+
+The root hash of the minimal subtree use similar function as in the IntegriTree, see the `aiken`'s implementation below:
+
+``` gleam
+pub fn root_hash(root: Proof) -> Hash {
+  when root is {
+    NodeHash { hash } -> hash
+    HashNode { hash, left, right } ->
+      combine_three_hashes(hash, root_hash(left), root_hash(right))
+  }
+}
+```
+
 ## Membership and Non-Membership Proofs
 
 IntegriTree provides proofs for both membership and non-membership of elements in the tree:
@@ -155,28 +199,19 @@ IntegriTree provides proofs for both membership and non-membership of elements i
 Proofs are available for appending new elements to the tree and deleting existing elements:
 
 - **Append Proof**: If an element is not in the tree, the proof contains the non-membership (update node's) value `Vu`, the value `Vp` of the node will be the parent of the new appendable node of the new element, and the minimal subtree of the two `Val`'s nodes.
-- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') values the `Vu1` and `Vu2`,  and the value `Vp` the parent node of the last (in level-order) node in the tree, and the minimal subtree create from the nodes of the three values.
+- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') values the `Vu1` and `Vu2` (the `(xα, x)` and `(x, xβ)`),  and the value `Vp` the parent node of the last (in level-order) node in the tree, and the minimal subtree create from the nodes of the three values.
 
 
 ### Val Types of the Proof
 
-There are two types of Vals in the Proof:
+There are two types of Vals are used with the Proof:
 
-- **Updateable Node's (`Nu`)**: Nodes' val that are already part of the tree but may have their values updated.
-- **Parent Node's (`Np`)**: Nodes' val where a new leaf will be appended to or removed from.
-
-
-## Root Hash Calculation
-
-The root hash of the tree or any of its branch is calculated using the following formula:
-```
-const rootHash = hash(hashVal(nodeVal) || hashRoot(leftChild) || hashRoot(rightChild))
-```
+- **Updateable Node's (`Nu`'s)**: Nodes' val that are already part of the tree but may have their values updated.
+- **Parent Node's (`Np`'s)**: Nodes' val where a new leaf will be appended to or removed from.
 
 ## Completeness Enforcement
 
-The tree must always maintain its completeness, enforced by the sequential index of nodes in the tree.
-
+The tree must always maintain its completeness which enforced by the sequential index of nodes in the tree.
 
 ## Technical briefs of the IntegriTree
 
