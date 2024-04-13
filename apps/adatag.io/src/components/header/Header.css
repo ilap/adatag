@@ -94,7 +94,7 @@ header .header-logo {
 .custom-cardano-wallet .mr-wallet-button {
   background-color: #d51919; /* Dark background color */
   color: #fff; /* Light text color */
-  border-radius: 8px; /* Rounded corners */
+  border-radius: 32px; /* Rounded corners */
   padding: 10px 20px; /* Padding */
   font-size: 16px; /* Font size */
   border: none; /* Remove border */

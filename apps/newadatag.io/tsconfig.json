@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@adatag/integri-tree": [
+        "../../libs/integri-tree/src/index.ts"
+      ],
+      "@adatag/shared/config": [
+        "../../libs/deployment-ts/src/config/index.ts"
+      ],
+      "@adatag/shared/plutus": [
+        "../../libs/deployment-ts/src/plutus/index.ts"
+      ],
+      "@adatag/shared/test-utils": [
+        "../../libs/deployment-ts/test/utils/index.ts"
+      ],
+      "@adatag/shared/utils": [
+        "../../libs/deployment-ts/src/utils/index.ts"
+      ]
+    }
+  },
+  "include": ["src", "../../libs/"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+}

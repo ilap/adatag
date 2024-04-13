@@ -6,39 +6,46 @@
   "type": "module",
   "scripts": {
     "debug": "vite --port 3000",
-    "dev": "vite --open",
+    "dev": "vite --open --port 4000",
+    "sync": "cp -fp ../../libs/deployment-ts/configs/genesis-config-custom.json src/configs/genesis-config.json; cp -fp ../../libs/deployment-ts/src/plutus/plutus.ts src/configs/",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@streamparser/json": "^0.0.20",
     "buffer": "^6.0.3",
     "koios-tiny-client": "^1.1.0",
     "node-fetch": "^2.7.0",
-    "stream": "^0.0.2",
     "stream-json": "^1.8.0",
-    "translucent-cardano": "^0.0.6",
-    "@streamparser/json": "^0.0.20"
+    "@nextui-org/react": "^2.2.10",
+    "react-confetti": "^6.1.0",
+    "flowbite-react": "^0.8.0"
   },
   "devDependencies": {
     "@meshsdk/react": "^1.1.10-beta.3",
     "@rollup/rollup-darwin-x64": "^4.9.6",
-    "@sqlite.org/sqlite-wasm": "^3.45.1-build1",
+    "@sqlite.org/sqlite-wasm": "github:sqlite/sqlite-wasm#node",
     "@types/node-fetch": "^2.6.11",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
+    "@types/react-modal": "^3.16.3",
     "@types/stream-json": "^1.7.7",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "comlink": "~4.4.1",
+    "cors-anywhere": "^0.4.4",
     "eslint": "^8.55.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-modal": "^3.16.1",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
-    "vite-plugin-wasm": "^3.3.0"
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-wasm": "^3.3.0",
+    "@rollup/plugin-typescript": "^11.1.6"
   }
 }

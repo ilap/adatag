@@ -9,7 +9,13 @@ export const emptyHash =
  * The hash of the node's Value is the hash of the concatenated `xi`, `xa` and `xb` of the Val.
  */
 export const hashVal = (val: P.Val): string =>
-  hash256(Buffer.from(val.xi + val.xa + val.xb, 'utf-8').toString('hex'))
+  hash256(stringToHex(val.xi + val.xa + val.xb))
+
+// FIXME: Buffer is not compatible with browsers Buffer.from(val.xi + val.xa + val.xb, 'utf-8').toString('hex')
+function stringToHex(input) {
+    return input.split('').map(char => char.charCodeAt(0).toString(16)).join('');
+}
+
 export const hash = (msg: string): string => hash256(msg)
 
 export function hash256(message: string): string {

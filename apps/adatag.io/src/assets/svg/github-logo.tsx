@@ -3,6 +3,10 @@ interface GithubLogoProps {
   height: number
 }
 
+/**
+ * This SVG is donwloaded from:
+ * https://www.svgrepo.com/vectors
+ */
 export const GithubLogo = ({ width, height }: GithubLogoProps) => (
   <svg
     viewBox="0 0 16 16"

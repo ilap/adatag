@@ -3,6 +3,10 @@ interface AdatagLogoProps {
   height: number
 }
 
+/**
+ * This SVG is donwloaded from:
+ * https://www.svgrepo.com/vectors
+ */
 export const AdatagLogo = ({ width, height }: AdatagLogoProps) => (
   <svg
     width={width}

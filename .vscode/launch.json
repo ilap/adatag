@@ -11,7 +11,7 @@
             "name": "Int Test Debug File",
             "program": "${file}",
             "args": ["--env-file", ".env.test.int", "--timeout", "45000"],
-            "cwd": "${workspaceFolder}/libs/adatag-ts",
+            "cwd": "${workspaceFolder}/libs/deployment-ts",
             "stopOnEntry": true,
             "watchMode": false
         },

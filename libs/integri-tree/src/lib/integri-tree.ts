@@ -252,7 +252,7 @@ export class IntegriTree {
    *
    * Note: It returns hex-encoded values.
    */
-  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } | null{
+  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } | null {
 
     const [updateNode, deleteNode] = this.search(element)
 

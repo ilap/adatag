@@ -142,8 +142,8 @@ fn has_valid_deposit(base: Int, deposit: Int, adatag_len: Int) -> Bool {
     5 -> deposit >= base / 16
     //   ~54 ADA
     6 -> deposit >= base / 32
-    //     5 ADA otherwise
-    _ -> deposit >= 5
+    //     15 ADA otherwise
+    _ -> deposit >= 15
   }
 }
 

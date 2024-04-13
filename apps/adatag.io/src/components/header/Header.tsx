@@ -1,29 +1,29 @@
-import ThemeToggle from "../theme-toggle/ThemeToggle";
-import { GithubLogo } from "../../assets/svg/github-logo";
-import { DiscordLogo } from "../../assets/svg/discord-logo";
-import { AdatagLogo } from "../../assets/svg/adatag-logo";
+import ThemeToggle from '../theme-toggle/ThemeToggle'
+import { GithubLogo } from '../../assets/svg/github-logo'
+import { DiscordLogo } from '../../assets/svg/discord-logo'
+import { AdatagLogo } from '../../assets/svg/adatag-logo'
 
-import { useWallet, CardanoWallet } from "@meshsdk/react";
+import { useWallet, CardanoWallet } from '@meshsdk/react'
 
-import "./Header.css";
-import { useState } from "react";
+import './Header.css'
+import { useState } from 'react'
 
 export const Header = () => {
-  const { connected, wallet } = useWallet();
-  const [assets, setAssets] = useState<null | any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const { connected, wallet } = useWallet()
+  const [assets, setAssets] = useState<null | any>(null)
+  const [loading, setLoading] = useState<boolean>(false)
   const [selectedTheme, setSelectedTheme] = useState(
-    () => localStorage.getItem("selectedTheme") || ""
-  );
+    () => localStorage.getItem('selectedTheme') || '',
+  )
 
   const isDark = selectedTheme === 'dark'
 
   async function getAssets() {
     if (wallet) {
-      setLoading(true);
-      const _assets = await wallet.getAssets();
-      setAssets(_assets);
-      setLoading(false);
+      setLoading(true)
+      const _assets = await wallet.getAssets()
+      setAssets(_assets)
+      setLoading(false)
     }
   }
 
@@ -77,5 +77,5 @@ export const Header = () => {
         </div>
       </header>
     </>
-  );
-};
+  )
+}

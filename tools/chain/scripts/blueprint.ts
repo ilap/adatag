@@ -277,4 +277,4 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`;
   }
 }
 
-parseBlueprint("./plutus.json", "../../libs/adatag-ts/src/plutus/plutus.ts")
+parseBlueprint("./plutus.json", "../../libs/deployment-ts/src/plutus/plutus.ts")

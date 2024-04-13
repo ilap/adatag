@@ -40,15 +40,16 @@
 
 @layer base {
   :root {
-    --brand: hsl(197, 92%, 53%);
-    --at-background: hsl(270, 100%, 99%);
-    --at-on-background: hsl(213, 100%, 12%);
-    --at-primary: hsl(0, 0%, 100%);
-    --at-on-primary: hsl(160, 39%, 9%);
-    --at-secondary: var(--brand);
-    --at-on-secondary: hsl(0, 0%, 100%);
-    --accent1: hsl(6, 100%, 80%);
+    --brand: hsl(200, 70%, 50%);
+    --background: hsl(220, 30%, 95%);
+    --on-background: hsl(210, 15%, 30%);
+    --primary: hsl(240, 50%, 80%);
+    --on-primary: hsl(210, 25%, 15%);
+    --secondary: var(--brand);
+    --on-secondary: hsl(210, 10%, 90%);
+    --accent: hsl(30, 100%, 70%);
   }
+
 
   @media (prefers-color-scheme: dark) {
     :root {
@@ -163,6 +164,10 @@ h3 {
   margin: 0;
 }
 
+.highlight {
+  color: var(--at-secondary);
+}
+
 h1 {
   font-weight: 700;
   text-align: center;
@@ -208,7 +213,7 @@ h3 {
 .input {
   color: var(--brand);
   border-radius: 8px;
-  padding: 15px 25px;
+ /* padding: 15px 25px;*/
   margin-right: 10px;
   font-size: 0.8rem;
 }
@@ -232,7 +237,7 @@ a.button,
 button {
   background: var(--at-secondary);
   border: none;
-  border-radius: 8px;
+  border-radius: 24px;
   cursor: pointer;
   font-size: 0.8rem;
   padding: 15px 25px;

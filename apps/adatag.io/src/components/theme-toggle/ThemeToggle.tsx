@@ -4,7 +4,7 @@ import './ThemeToggle.css'
 
 const ThemeToggle = () => {
   const [selectedTheme, setSelectedTheme] = useState(
-    () => localStorage.getItem('selectedTheme') || ''
+    () => localStorage.getItem('selectedTheme') || '',
   )
 
   useEffect(() => {

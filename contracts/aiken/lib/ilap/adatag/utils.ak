@@ -62,14 +62,14 @@ pub fn find_script_inputs(
 ) -> List<Input> {
   inputs
     |> list.filter(
-         fn(input) {
-           when input.output.address.payment_credential is {
-             ScriptCredential(addr_script_hash) ->
-               script_hash == addr_script_hash
-             _ -> False
-           }
-         },
-       )
+        fn(input) {
+          when input.output.address.payment_credential is {
+            ScriptCredential(addr_script_hash) ->
+              script_hash == addr_script_hash
+            _ -> False
+          }
+        },
+      )
 }
 
 pub fn output_has_token(
@@ -80,16 +80,16 @@ pub fn output_has_token(
   let result =
     outputs
       |> list.filter_map(
-           fn(output) {
-             let v = output.value
+          fn(output) {
+            let v = output.value
 
-             if value.quantity_of(v, policy_id, asset_name) > 0 {
-               Some(True)
-             } else {
-               None
-             }
-           },
-         )
+            if value.quantity_of(v, policy_id, asset_name) > 0 {
+              Some(True)
+            } else {
+              None
+            }
+          },
+        )
       |> list.head
   //|> Some
   when result is {
@@ -119,20 +119,20 @@ pub fn find_script_input_datum(
 ) -> List<Datum> {
   inputs
     |> list.filter_map(
-         fn(input) {
-           let output = input.output
+        fn(input) {
+          let output = input.output
 
-           when input.output.address.payment_credential is {
-             ScriptCredential(addr_script_hash) ->
-               if script_hash == addr_script_hash {
-                 Some(output.datum)
-               } else {
-                 None
-               }
-             VerificationKeyCredential(_) -> None
-           }
-         },
-       )
+          when input.output.address.payment_credential is {
+            ScriptCredential(addr_script_hash) ->
+              if script_hash == addr_script_hash {
+                Some(output.datum)
+              } else {
+                None
+              }
+            VerificationKeyCredential(_) -> None
+          }
+        },
+      )
 }
 
 pub fn signed_by(tx_signatures: List<ScriptHash>, beneficiary: ByteArray) {

@@ -26,16 +26,16 @@
         "./libs/integri-tree/src/index"
       ],
       "@adatag/shared/config": [
-        "./libs/adatag-ts/src/config/index"
+        "./libs/deployment-ts/src/config/index"
       ],
       "@adatag/shared/plutus": [
-        "./libs/adatag-ts/src/plutus/index"
+        "./libs/deployment-ts/src/plutus/index"
       ],
       "@adatag/shared/test-utils": [
-        "./libs/adatag-ts/test/utils/index"
+        "./libs/deployment-ts/test/utils/index"
       ],
       "@adatag/shared/utils": [
-        "./libs/adatag-ts/src/utils/index"
+        "./libs/deployment-ts/src/utils/index"
       ]
     }
   },

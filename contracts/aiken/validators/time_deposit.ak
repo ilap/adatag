@@ -123,3 +123,19 @@ test test_timelock_datums() {
   valid_claim(True, void_datum, cred, 0, ctx)?
   //&& valid_claim(True, valid_datum, cred, 0, ctx)? 
 }
+// FIXME: test the followings:
+// 1. Collect & Void Datum: PASS Anytime
+// 2. Collect & Valid Datum
+//  - Before coll time: Fail
+//  - At coll time: Pass
+//  - After coll time: Pass
+
+//
+// 3. Redeem & Void Datum: FAIL Anytime
+
+//    
+// 4. Redeem & Valid Datum
+//  - Before deadline: Fail
+//  - At deadline: Pass
+//  - After deadline: Pass
+//  - Beneficiary is not the Signatory: Fail

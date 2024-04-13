@@ -3,6 +3,10 @@ interface DiscordLogoProps {
   height: number
 }
 
+/**
+ * This SVG is donwloaded from:
+ * https://www.svgrepo.com/vectors
+ */
 export const DiscordLogo = ({ width, height }: DiscordLogoProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
