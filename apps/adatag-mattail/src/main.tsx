@@ -8,7 +8,7 @@ import { MeshProvider } from '@meshsdk/react'
 import { WorkerContextProvider } from './context/WorkerContextProvider.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  //<React.StrictMode>
     <WorkerContextProvider>
       <MeshProvider>
         <NextUIProvider>
@@ -16,5 +16,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </NextUIProvider>
       </MeshProvider>
     </WorkerContextProvider>
-  </React.StrictMode>,
+  //</React.StrictMode>,
 )

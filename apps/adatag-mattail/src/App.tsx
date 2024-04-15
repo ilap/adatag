@@ -1,7 +1,7 @@
 import React from 'react'
 
-import Header from './components/organism/Header/Header'
-import HeroSection from './components/organism/Hero/Hero'
+import Header from './components/organisms/Header/Header'
+import HeroSection from './components/organisms/Hero/Hero'
 
 import { useWallet } from '@meshsdk/react'
 const App: React.FC = () => {

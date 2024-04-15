@@ -18,7 +18,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "@meshsdk/react": "^1.1.10-beta.3",
+    "@meshsdk/react": "^1.1.10-beta.4",
+    "@meshsdk/core": "^1.5.12",
     "axios": "^1.6.8"
   },
   "devDependencies": {

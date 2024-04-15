@@ -13,7 +13,7 @@ import { KUPO_URL, OGMIOS_URL, NETWORK, ENV } from '../configs/settings'
 import { AdatagMintingService } from '../services/MintingService'
 import * as Config from '../configs/genesis-config.json'
 import { useAddress, useAssets, useWallet } from '@meshsdk/react'
-import { WrappedWallet } from '../services/WrappedApi'
+import { WalletInstanceWrapper } from '../services/WalletInstanceWrapper'
 import { user as userSeed } from '../configs/test-users-seed.json'
 
 interface UseMintingResult {
@@ -29,7 +29,7 @@ interface UseMintingResult {
 }
 
 const useMinting = (): UseMintingResult => {
-  //const { wallet, connected, name, connecting, connect, disconnect, error } = useWallet()
+  const { wallet, connected } = useWallet()
   //const assets = useAssets();
   const address = useAddress()
 
@@ -42,6 +42,9 @@ const useMinting = (): UseMintingResult => {
 
   const handleMint = async ( adatag: string, useAdaHandle: boolean, deposit: bigint, ) => {
     try {
+
+      if (!connected) throw Error(`Wallet is not connected.`)
+
       setIsMinting(true)
       setMintingProgress(`Started buildint transaction`)
 
@@ -54,13 +57,23 @@ const useMinting = (): UseMintingResult => {
       )
 
       // FIXME: implement wallet connect
+      // 
+      //const walletApi = await getSelectedWallet();
+      //            translucent.selectWallet(walletApi);
+
+      const wi = wallet._walletInstance
+      
+      const walletWrapper = new WalletInstanceWrapper(wi);
+      translucent.selectWallet(walletWrapper)
+      //translucent.selectWallet()
       //translucent.selectWalletFromSeed(userSeed.seed)
-      translucent.selectWalletFromSeed(userSeed.seed)
+      //translucent.selectWalletFromSeed(userSeed.seed)
+
       const mintingService = new AdatagMintingService(translucent)
 
       // Step 1. Creating the base transaction based on the handleUtxo and deposit
       /////////////////////////////////////////////////////////////////////////////
-      setMintingProgress(`Building base transaction... ${adatag}.... ${useAdaHandle} ..... ${ deposit }`)
+      setMintingProgress(`Building base transaction.`)// ${adatag}.... ${useAdaHandle} ..... ${ deposit }`)
       await delay(2000)
       const baseTx = await mintingService.buildBaseTx(
         adatag,
@@ -106,8 +119,10 @@ const useMinting = (): UseMintingResult => {
       const txHash = await signedTx.submit()
 
       console.log(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
+      await delay(4000)
 
       setMintingProgress('Transaction submitted successfully!')
+      await delay(2000)
       setMintResult(txHash)
     } catch (error) {
       console.error('Error during minting:', error)

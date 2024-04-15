@@ -1,29 +1,37 @@
 import { useContext, useEffect, useReducer, useMemo, useCallback } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
-import { Card, CardHeader, CardBody, CardFooter, Switch, Tooltip, Chip, CircularProgress } from '@nextui-org/react';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Switch,
+  Tooltip,
+  Chip,
+  CircularProgress,
+} from '@nextui-org/react';
 import { Button } from '../../atoms/Button';
 import { Input } from '../../atoms/Input';
 import ResponsiveText from '../../atoms/ResponsiveText';
 import { useAssets } from '@meshsdk/react';
+import { AssetExtended } from '@meshsdk/core'
 import useMinting from '../../../hooks/useMinting';
-import CustomModal from '../../molecules/InformationDialog';
-import { calculateDeposit, getRarity } from './utils';
+import CustomModal from '../../molecules/CustomModal';
+import { calculateDeposit, getCaption, getRarity } from './utils';
 import { checkingCaption, guideline, timelockTooltip } from './constants';
 import { WorkerContext } from '../../../context/WorkerContextProvider';
 import useDebouncedSearch, { SearchState } from '../../../hooks/useDebouncedSearch';
 import * as Config from '../../../configs/genesis-config.json';
-import { Rarity } from './types';
+import { Action, initialState, Rarity, State } from './types';
+import MintDialog from './MintDialog';
 
-const initialState = {
-  inputValue: '',
-  isModalOpen: false,
-  useAdahandle: false,
-};
 
-const reducer = (state, action) => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case 'TOGGLE_MODAL':
-      return { ...state, isModalOpen: !state.isModalOpen };
+    case 'OPEN_MODAL':
+      return { ...state, isModalOpen: true };
+    case 'CLOSE_MODAL':
+      return { ...state, isModalOpen: false };
     case 'TOGGLE_ADAHANDLE':
       return { ...state, useAdahandle: !state.useAdahandle };
     default:
@@ -33,44 +41,46 @@ const reducer = (state, action) => {
 
 export const Mintpanel = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { inputValue, isModalOpen, useAdahandle } = state;
-
-  const assets = useAssets();
+  const { isModalOpen, useAdahandle } = state;
+  const assets: AssetExtended[] = useAssets() as unknown as AssetExtended[]
   const { checkIfAdatagMinted } = useContext(WorkerContext);
-  const { isLoading, searchState, handleChange } = useDebouncedSearch({ checkIfAdatagMinted });
-  const { isMinting, mintError, mintResult, handleMint } = useMinting({ adatag: inputValue });
-
+  const { inputValue, setInputValue, isLoading, searchState, handleChange } = useDebouncedSearch({
+    checkIfAdatagMinted
+  })
+  const { isMinting, mintError, mintResult, handleMint, mintingProgress } = useMinting();
+  
   const rarity = useMemo(() => getRarity(inputValue.length), [inputValue]);
   const buttonDisabled = useMemo(() => isMinting || isLoading || searchState !== SearchState.NotMinted, [isMinting, isLoading, searchState]);
   const deposit = useMemo(() => calculateDeposit(inputValue, 1750, 15, 6), [inputValue]);
   const date = useMemo(() => new Date(Date.now() + 20 * 86400 * 1000), []);
   const formattedDate = useMemo(() => date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }), [date]);
-  const hasAdahandle = useMemo(() => assets.some(asset => asset.assetName === inputValue && asset.policyId === Config.adatagMinting.params.adahandle), [assets, inputValue]);
+  const hasAdahandle = useMemo(() => assets?.find((asset) => asset.assetName === inputValue && asset.policyId === Config.adatagMinting.params.adahandle) !== undefined, [assets, inputValue]);
   const adahandleChecked = useMemo(() => useAdahandle && hasAdahandle, [useAdahandle, hasAdahandle]);
   const isInvalid = useMemo(() => searchState === SearchState.Error || searchState === SearchState.InvalidAdatag, [searchState]);
 
-  const toggleModal = useCallback(() => dispatch({ type: 'TOGGLE_MODAL' }), []);
-  const toggleAdahandle = useCallback(() => dispatch({ type: 'TOGGLE_ADAHANDLE' }), []);
+  const openModal = useCallback(() => {
+    dispatch({ type: 'OPEN_MODAL' });
+  }, []);
+
+  const closeModal = useCallback(() => {
+    dispatch({ type: 'CLOSE_MODAL' });
+  }, []);
 
   useEffect(() => {
-    if (mintResult || mintError) {
-      toggleModal();
-
+    if (mintResult) {
+      openModal()
+      setInputValue('')
+    } else if (mintError) {
+      openModal()
     }
-  }, [mintResult, mintError, toggleModal]);
+  }, [mintResult, mintError, openModal])
 
   return (
     <>
-      <CustomModal
-        isOpen={isModalOpen}
-        onClose={toggleModal}
-        title={mintResult ? 'Success!' : 'Error'}
-        subtitle={mintResult ? `Your operation was successful.${mintResult}` : `There was an error with your operation.${mintError?.message}`}
-        state={mintResult ? 'success' : 'error'}
-      />
+      { isModalOpen && <MintDialog isOpen={isModalOpen} onClose={closeModal} mintError={mintError} mintResult={mintResult} />}
       <Card radius="lg" className="p-4 max-w-[430px] max-h-[580px]">
         <CardHeader className="flex flex-col gap-3">
-          <LoadingSpinner isLoading={isLoading || isMinting} />
+          <LoadingSpinner isMinting={isMinting} mintingProgress={mintingProgress} />
           <CardHeaderContent
             inputValue={inputValue}
             rarity={rarity}
@@ -79,7 +89,7 @@ export const Mintpanel = () => {
             adahandleChecked={adahandleChecked}
             deposit={deposit}
             formattedDate={formattedDate}
-            onToggleAdahandle={toggleAdahandle}
+            onToggleAdahandle={() => dispatch({ type: 'TOGGLE_ADAHANDLE' })}
           />
         </CardHeader>
         <CardBody>
@@ -100,7 +110,9 @@ export const Mintpanel = () => {
           />
           <Button
             size="lg"
-            onPress={() => { handleMint(inputValue, adahandleChecked, deposit); }}
+            onPress={() => {
+              handleMint(inputValue, adahandleChecked, deposit);
+            }}
             className={`${buttonDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             isDisabled={buttonDisabled}
           >
@@ -115,17 +127,19 @@ export const Mintpanel = () => {
   );
 };
 
-const LoadingSpinner = ({ isLoading }) => (
-  isLoading && (
-    <div className="absolute inset-0 p-4 flex flex-col items-center z-10 justify-center bg-white bg-opacity-75 backdrop-blur-sm">
-      <div className="flex items-center justify-center w-full">
-        <Button isIconOnly className="cursor-pointer absolute top-1 right-1" onClick={() => { }} />
+const LoadingSpinner = ({isMinting, mintingProgress} : { isMinting: boolean, mintingProgress: string}) => {
+  return (
+    isMinting && (
+      <div className="absolute inset-0 p-4 flex flex-col items-center z-10 justify-center bg-white bg-opacity-75 backdrop-blur-sm">
+        <div className="flex items-center justify-center w-full">
+          <Button isIconOnly className="cursor-pointer absolute top-1 right-1" onClick={() => {}} />
+        </div>
+        <CircularProgress size="lg" className="p-5" />
+        <div className="font-bold text-xl p-5">{mintingProgress}</div>
       </div>
-      <CircularProgress size="lg" className="p-5" />
-      <div className="font-bold text-xl p-5">Working on it</div>
-    </div>
+    )
   )
-);
+}
 
 const CardHeaderContent = ({
   inputValue,
@@ -136,7 +150,16 @@ const CardHeaderContent = ({
   deposit,
   formattedDate,
   onToggleAdahandle
-}) => (
+}:{
+  inputValue: string,
+  rarity: Rarity,
+  useAdahandle: boolean,
+  hasAdahandle: boolean,
+  adahandleChecked: boolean,
+  deposit: bigint,
+  formattedDate: string,
+  onToggleAdahandle: any,}
+) => (
   <Card
     fullWidth
     shadow="none"

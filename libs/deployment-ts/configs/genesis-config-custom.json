@@ -1,10 +1,10 @@
 {
   "network": "Custom",
   "hashAlg": "SHA2_256",
-  "genesisTransaction": "8c68fdde7b88e3de1d60ad0222da8668d47bc7833b73a1779dbb9d9b05a2baea",
+  "genesisTransaction": "eda9258d54617b0b8b0c49fab277ca65474d2ef1a1cc592ea092138abe8db58b",
   "bootstrapTime": {
-    "epoch": 1713026980503,
-    "date": "Sat Apr 13 2024 16:49:40 GMT+0000 (Coordinated Universal Time)"
+    "epoch": 1713201845939,
+    "date": "Mon Apr 15 2024 17:24:05 GMT+0000 (Coordinated Universal Time)"
   },
   "referenceScript": {
     "scriptAddress": "addr_test1wqh89j4q7e8ud7wd2wh8sy25lwa3xhrkyhcsln0kqdtxhjgr08ngw",
@@ -20,13 +20,13 @@
     }
   },
   "timelockScript": {
-    "scriptHash": "c1bfb5c1c698cfd04b2b8ca3b6888aa30a0a64ffeaf5d59e15715661",
-    "scriptAddress": "addr_test1wrqmldwpc6vvl5zt9wx28d5g323s5znyll40t4v7z4c4vcgu5yd8g",
+    "scriptHash": "03661584b3f48f342c3e07789c11555e1eee57086d673dfbe7342a65",
+    "scriptAddress": "addr_test1wqpkv9vyk06g7dpv8crh38q3240pamjhppkkw00muu6z5egtp8nra",
     "params": {
       "collectorAddr": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
       "collectionTime": {
-        "epoch": 1713026980503,
-        "date": "Sat Apr 13 2024 16:49:40 GMT+0000 (Coordinated Universal Time)"
+        "epoch": 1713201845939,
+        "date": "Mon Apr 15 2024 17:24:05 GMT+0000 (Coordinated Universal Time)"
       }
     },
     "refIndex": 2
@@ -40,15 +40,15 @@
     "refIndex": 0
   },
   "adatagMinting": {
-    "policyId": "f50b21c4df49992d9f21825c4e6557846bfec63bdb777ec318309817",
+    "policyId": "62dcb71d48f760872a64d35182716c0d34ca1c8df3145693a2ec8cd9",
     "params": {
       "lockingDays": {
         "days": 0,
         "ms": 0
       },
       "deactivationTime": {
-        "epoch": 1713026980503,
-        "date": "Sat Apr 13 2024 16:49:40 GMT+0000 (Coordinated Universal Time)"
+        "epoch": 1713201845939,
+        "date": "Mon Apr 15 2024 17:24:05 GMT+0000 (Coordinated Universal Time)"
       },
       "depositBase": 1750,
       "adahandle": "12b96851f48bac3b2758f3e221208d584d043ec4e6715a9955d5209d"
