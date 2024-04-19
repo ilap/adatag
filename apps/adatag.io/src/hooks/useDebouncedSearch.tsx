@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { isValidUsername } from '../utils'
-import { SearchState } from '../components/hero/Hero.types'
+
+export enum SearchState {
+  Initial,
+  InvalidAdatag,
+  AlreadyMinted,
+  NotMinted,
+  Error,
+}
 
 const debounce = 700 // Debounce in milliseconds
 const delay = 1000 // Delay in milliseconds
@@ -17,10 +24,14 @@ interface UseDebouncedSearchResult {
   handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-const useDebouncedSearch = ({ checkIfAdatagMinted }: UseDebouncedSearchProps): UseDebouncedSearchResult => {
+const useDebouncedSearch = ({
+  checkIfAdatagMinted,
+}: UseDebouncedSearchProps): UseDebouncedSearchResult => {
   const [inputValue, setInputValue] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [searchState, setSearchState] = useState<SearchState>(SearchState.Initial)
+  const [searchState, setSearchState] = useState<SearchState>(
+    SearchState.Initial,
+  )
   const debounceTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -42,10 +53,14 @@ const useDebouncedSearch = ({ checkIfAdatagMinted }: UseDebouncedSearchProps): U
       if (valid) {
         // Simulate network
         await new Promise(resolve => setTimeout(resolve, delay))
-
-        const state = await checkIfAdatagMinted(inputValue) ? SearchState.AlreadyMinted : SearchState.NotMinted
-
-        setSearchState(state)
+        try {
+          const state = (await checkIfAdatagMinted(inputValue))
+          ? SearchState.AlreadyMinted
+          : SearchState.NotMinted
+          setSearchState(state)
+        } catch (e) {
+          setSearchState(SearchState.Error)
+        }  
       } else {
         setSearchState(SearchState.InvalidAdatag)
       }
@@ -65,8 +80,8 @@ const useDebouncedSearch = ({ checkIfAdatagMinted }: UseDebouncedSearchProps): U
     const { value } = event.target
     const adatag =
       value.length === 1
-        ? value.replace(/[^a-z]/gi, '')
-        : value.replace(/[^a-z\d._-]/gi, '')
+        ? value.replace(/[^a-z]/g, '')
+        : value.replace(/[^a-z\d._-]/g, '')
     setInputValue(adatag)
   }
 

@@ -94,7 +94,7 @@ export const calculateDeposit = (
 
   return len > maxLength
     ? BigInt(minDeposit)
-    : BigInt(Math.max(5, (depositBase / 2 ** (adatag.length - 1)) >> 0))
+    : BigInt(Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0))
 }
 
 interface YaciInfo {

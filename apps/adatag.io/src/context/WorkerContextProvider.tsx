@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import * as Comlink from 'comlink'
 import { TreeWorkerService } from '../workers/types'
 import TreeWorker from '../workers/TreeWorker?worker'
@@ -22,32 +22,8 @@ export const WorkerContextProvider: React.FC<WorkerContextProviderProps> = ({
     message: 'Initialising.',
   })
 
-    // Setup the worker
-    const worker = Comlink.wrap<TreeWorkerService>(new TreeWorker());
-
-    // Setup the minting service
-    /*const provider = new Kupmios(KUPO_URL, OGMIOS_URL);
-    setSloctConfig(NETWORK, ENV);
-    const translucent = Translucent.new(provider, Config.network as Network);
-    const mintingService = new AdatagMintingService(translucent);
-    
-    translucent.selectWalletFromSeed(userSeed.seed);
-  */
-
-
-  useEffect(() => {
-    /*
-    const callback = (newState: SyncState) => {
-      setSyncState(newState)
-    }
-
-    worker.setSyncStateCallback(Comlink.proxy(callback));
-
-    return () => {
-      worker.setSyncStateCallback(null);
-    }
-    */
-  }, []) // No need to include `worker` in the dependency array, as it doesn't change
+  // Setup the worker
+  const worker = Comlink.wrap<TreeWorkerService>(new TreeWorker())
 
   return (
     <WorkerContext.Provider value={worker}>

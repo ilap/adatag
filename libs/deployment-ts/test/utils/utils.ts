@@ -184,3 +184,18 @@ function hasOnlyAllowedChars(str: string): boolean {
 //  console.log(`"${name}", ${isValidUsername(name)} `)
 //})
 //console.log(randomStrings);
+
+
+export function calculateDeposit(
+  adatag: string,
+  depositBase: number,
+  minDeposit: number,
+  maxLength: number,
+): bigint {
+  const len = adatag.length
+
+  return len > maxLength
+    ? BigInt(minDeposit)
+    : BigInt(Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0))
+}
+

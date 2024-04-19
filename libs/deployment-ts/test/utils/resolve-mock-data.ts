@@ -37,13 +37,13 @@ export async function resolveMockData(): Promise<{
 
   if (providerStr === 'Emulator') {
     const deployer = await generateAccountWithSeed(deployerSeed, {
-      lovelace: 10_000_000_000n,
+      lovelace: 10_000_000_000_000n,
     })
     const collector = await generateAccountWithSeed(collectorSeed, {
-      lovelace: 10_000_000_000n,
+      lovelace: 10_000_000_000_000n,
     })
     const user = await generateAccountWithSeed(userSeed, {
-      lovelace: 10_000_000_000n,
+      lovelace: 10_000_000_000_000n,
     })
     provider = ProviderFactory.createProvider(envStr, network, providerStr, [
       deployer,

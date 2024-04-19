@@ -9,16 +9,12 @@ import {
   UTxO,
 } from 'translucent-cardano'
 import { debugMessage, delay, setSloctConfig, stringifyData } from '../utils'
-import { KUPO_URL, OGMIOS_URL, NETWORK, ENV } from '../configs/settings'
+import { KUPO_URL, OGMIOS_URL, ENV } from '../configs/settings'
 import { AdatagMintingService } from '../services/MintingService'
 import * as Config from '../configs/genesis-config.json'
 import { useAddress, useAssets, useWallet } from '@meshsdk/react'
-import { WrappedWallet } from '../services/WrappedApi'
+import { WalletInstanceWrapper } from '../services/WalletInstanceWrapper'
 import { user as userSeed } from '../configs/test-users-seed.json'
-
-interface UseMintingProps {
-  adatag: string
-}
 
 interface UseMintingResult {
   isMinting: boolean
@@ -32,8 +28,8 @@ interface UseMintingResult {
   ) => void
 }
 
-const useMinting = ({ adatag }: UseMintingProps): UseMintingResult => {
-  //const { wallet, connected, name, connecting, connect, disconnect, error } = useWallet()
+const useMinting = (): UseMintingResult => {
+  const { wallet, connected } = useWallet()
   //const assets = useAssets();
   const address = useAddress()
 
@@ -46,10 +42,16 @@ const useMinting = ({ adatag }: UseMintingProps): UseMintingResult => {
 
   const handleMint = async ( adatag: string, useAdaHandle: boolean, deposit: bigint, ) => {
     try {
+
+      if (!connected) throw Error(`Wallet is not connected.`)
+
       setIsMinting(true)
+      setMintResult(null)
+      setMintError(null)
+      setMintingProgress(`Started buildint transaction`)
 
       const provider = new Kupmios(KUPO_URL, OGMIOS_URL)
-      setSloctConfig(NETWORK, ENV)
+      setSloctConfig(Config.network as Network, ENV)
 
       const translucent = await Translucent.new(
         provider,
@@ -57,14 +59,24 @@ const useMinting = ({ adatag }: UseMintingProps): UseMintingResult => {
       )
 
       // FIXME: implement wallet connect
+      // 
+      //const walletApi = await getSelectedWallet();
+      //            translucent.selectWallet(walletApi);
+
+      const wi = wallet._walletInstance
+      
+      const walletWrapper = new WalletInstanceWrapper(wi);
+      translucent.selectWallet(walletWrapper)
+      //translucent.selectWallet()
       //translucent.selectWalletFromSeed(userSeed.seed)
-      translucent.selectWalletFromSeed(userSeed.seed)
+      //translucent.selectWalletFromSeed(userSeed.seed)
+
       const mintingService = new AdatagMintingService(translucent)
 
       // Step 1. Creating the base transaction based on the handleUtxo and deposit
       /////////////////////////////////////////////////////////////////////////////
-      setMintingProgress(`Building base transaction... ${adatag}.... ${useAdaHandle} ..... ${ deposit }`)
-      delay(4000)
+      setMintingProgress(`Building base transaction.`)// ${adatag}.... ${useAdaHandle} ..... ${ deposit }`)
+      await delay(2000)
       const baseTx = await mintingService.buildBaseTx(
         adatag,
         useAdaHandle,
@@ -75,11 +87,13 @@ const useMinting = ({ adatag }: UseMintingProps): UseMintingResult => {
       // Step 2. Building the tree's proof from cached and on-chain data.
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Creating minting details. pls be patient')
+      await delay(2000)
       const { datum, redeemer } = await createMintingDetails(adatag)
 
       // Step 3. Finalising the tx from the created datum and redeemer.
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Finalizing transaction...')
+      await delay(2000)
       const finalisedTx = await mintingService.finaliseTx(
         baseTx,
         adatag,
@@ -91,27 +105,33 @@ const useMinting = ({ adatag }: UseMintingProps): UseMintingResult => {
       // Step 4. Validate the built transaction.
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Completing transaction...')
+      await delay(2000)
       const completedTx = await finalisedTx.complete()
 
       // Step 5. Signing and submitting the validated transaction
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Signing transaction...')
+      await delay(2000)
       const signedTx = await completedTx.sign().complete()
 
       setMintingProgress('Submitting transaction...')
+      await delay(2000)
       ///console.log(toHex(signedTx.txSigned.to_bytes()))
 
       const txHash = await signedTx.submit()
 
       console.log(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
+      await delay(1000)
 
       setMintingProgress('Transaction submitted successfully!')
+      await delay(2000)
       setMintResult(txHash)
     } catch (error) {
-      console.error('Error during minting:', error)
-      setMintError(error as Error)
-      setMintingProgress('Error during minting. Please check the console for details.',
-      )
+      console.warn(`@@@ ERROR: ${error} ... ${typeof error} ${(error as object).toString()} ${stringifyData(error)}`)
+      
+      const e = new Error('Error during minting:' + (error as any)?.toString())
+      setMintError(e)
+      setMintingProgress('Error during minting. Please check the console for details.')      
     } finally {
       setIsMinting(false)
     }

@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   yaci-cli:
     image: bloxbean/yaci-cli:0.0.20-beta1

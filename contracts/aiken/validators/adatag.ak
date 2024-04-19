@@ -113,8 +113,10 @@ fn has_valid_timedeposit_output(
 }
 
 // The user must supply a proper validity range as the  [-Infinity, +Infinity] would fail.
+// A valid range at tx creation time must contain an upper-bound (deadline > upper-bound + days-in-ms).
+// while at claiming time a lower-bound (deadline > lower-bound).
 // and valid deadline (~20 days in the future )
-// the calculation allows ~3 hours difference on the mainnet, assuming the upper bound is at max. 3 hours in the future.
+// the calculation should allows ~3 hours difference on the mainnet, assuming the upper bound is at max. 3 hours in the future.
 // range   :--- [lb ----- ct -- 3hrs -- ub] +---------- 20 days - 3 hrs in ms ----------]  dl --------------------
 // datum dl:              ct ----------------- ~ 20 days --------------------------------- ~deadline ----
 fn has_valid_deadline(

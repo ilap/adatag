@@ -164,3 +164,21 @@ Command failed: transaction submit  Error: Error while submitting tx: ShelleyTxV
 
 ```
 
+## Troubleshooting
+
+### Ogmios/Kupo does not work anymore with Yaci-Devkit in the latest Docker Deckstop on macOS (v4.29.0 (145265))
+
+ ``` bash
+cd /app
+mkdir tmp && cd tmp
+cp -pr ../yaci-cli.jar .
+ 
+jar xf ../yaci-cli.jar BOOT-INF/classes/localcluster.zip
+jar xf BOOT-INF/classes/localcluster.zip localcluster/templates/babbage/kupo.sh
+
+sed -i 's/localhost/0.0.0.0/g' localcluster/templates/babbage/kupo.sh
+ 
+jar uf BOOT-INF/classes/localcluster.zip localcluster/templates/babbage/kupo.sh
+jar uf ../yaci-cli.jar BOOT-INF/classes/localcluster.zip
+cd .. && rm -rf ./tmp
+ ```

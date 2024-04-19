@@ -1,5 +1,5 @@
 import { JSONParser } from '@streamparser/json'
-import { SAFETY_SLOTS, KUPO_URL } from '../configs/settings.ts'
+import { SAFETY_SLOTS, KUPO_URL, FETCH_TIMEOUT } from '../configs/settings.ts'
 import genesisConfig from '../configs/genesis-config.json'
 import {
   ChainData,
@@ -22,6 +22,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     this.dataStore = dataStore
     this.policyId = genesisConfig.adatagMinting.policyId
   }
+  
   setSyncStateCallback(callback: SyncStateCallback): void {
     throw new Error('Method not implemented.')
   }
@@ -41,9 +42,31 @@ export class KupmiosChainFetch implements ChainFetchService {
   }
 
   private async fetchData(url: string): Promise<any[] | any> {
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
     return await response.json()
   }
+
+  private async fetchFromUrl(
+    url: string,
+    onData: (chunk: any) => void,
+  ): Promise<void> {
+    
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        throw new Error(
+          `Network error: ${response.status} - ${response.statusText}`,
+        );
+      }
+
+      const parser = new JSONParser({ paths: ['$.*'] });
+      parser.onValue = onData;
+
+      await this.parseResponseStream(response, parser);
+  }
+
 
   // Function to parse response stream
   private async parseResponseStream(response: Response, parser: JSONParser) {
@@ -55,21 +78,6 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  private async fetchFromUrl(
-    url: string,
-    onData: (chunk: any) => void,
-  ): Promise<void> {
-    const parser = new JSONParser({ paths: ['$.*'] })
-    parser.onValue = onData
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(
-        `Network error: ${response.status} - ${response.statusText}`,
-      )
-    }
-
-    await this.parseResponseStream(response, parser)
-  }
 
   async fetchTip(): Promise<number> {
     const checkpoints = await this.fetchData(`${KUPO_URL}/checkpoints`)
@@ -210,12 +218,17 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  async fetchAsset(adatag: string): Promise<any> {
+  async fetchAsset(adatag: string): Promise<boolean> {
     const hexStr = fromText(adatag)
     const url = `${KUPO_URL}/matches/${this.policyId}.${hexStr}?unspent`
     // It must be an NFT.
-    const [asset] = await this.fetchData(url)
-    //debugMessage(`AAASSSEETT: ${asset} ... ${url}`)
-    return asset
+    try {
+      const [asset] = await this.fetchData(url)
+      debugMessage(`AAASSSEETT1: ${asset} ... ${url}`)
+      return asset 
+    } catch(e) {
+      debugMessage(`AAASSSEETT2: ${(e as Error).name} ...`)
+      throw e
+    }
   }
 }

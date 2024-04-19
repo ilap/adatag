@@ -67,3 +67,28 @@ export type MintRedeemer =
  * Operation for minting and burning adatag
  */
 export type Operation = 'AdatagAdded' | 'AdatagRemoved'
+
+
+export type TimeDepositDatum = {
+  datum: {
+    beneficiary: string
+    deadLine: bigint
+  }
+}
+
+export const TimeDepositDatum = Object.assign({
+  datum: {
+    title: 'TimeDepositDatum',
+    anyOf: [
+      {
+        title: 'TimeDepositDatum',
+        dataType: 'constructor',
+        index: 0,
+        fields: [
+          { dataType: 'bytes', title: 'beneficiary' },
+          { dataType: 'integer', title: 'deadLine' },
+        ],
+      },
+    ],
+  },
+}) as unknown as TimeDepositDatum

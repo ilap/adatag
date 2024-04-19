@@ -5,18 +5,21 @@ import {
   Translucent,
   fromText,
   toText,
+  AddressDetails
 } from 'translucent-cardano'
 import * as P from '../../src/plutus'
 import { GenesisConfig, genesisParams } from '../../src/config'
 import { Bootstrap } from '@adatag/shared/utils'
 import {
-  resolveMockData,
   setSloctConfig,
   generateRandomStrings,
   isValidUsername,
   isLowerCase,
-} from '../utils'
+  calculateDeposit
+} from '../utils/utils'
 import { IntegriTree } from '@adatag/integri-tree'
+import { resolveMockData } from '../utils/resolve-mock-data'
+//import { stringifyData } from '../utils/utils'
 
 /*
   https://github.com/input-output-hk/plutus-pioneer-program/blob/b55a7d2409cbf09a04ab471796f410083129acb6/code/Week03/lucid-ref-script/src/index.js
@@ -53,7 +56,6 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
   //Bun.env.ENVIRONMENT = "Integration" //"Development" // "Production";
   //Bun.env.NETWORK = "Custom";
   //Bun.env.PROVIDER = "KupmiosV5" //"Emulator" // "KupmiosV5";
-
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
 
@@ -91,20 +93,24 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
   }
 
   // Create a newParams object by spreading the values from the original params
+  // FIXME: implement timelock test too
+  const useTimelock = true // FIXME: false
   const testParams = {
     ...params,
     collectorAddress: collectorAddress,
-    collectionTime: 0,
-    deactivationTime: 0,
-    lockingDays: 0,
+    collectionTime: useTimelock ? params.collectionTime : 0,
+    deactivationTime: useTimelock ? params.deactivationTime : 0,
+    lockingDays: useTimelock ? params.lockingDays : 0,
   }
+
+  //console.log(`${stringifyData(testParams)}`)
 
   // Select spending wallet
   translucent.selectWalletFromSeed(deployerSeed)
   const [utxo] = await translucent.wallet.getUtxos()
 
   // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-  //console.log(`#########  saveTo ./configs/genesis-config-${network.toString().toLowerCase()}.json`)
+  console.log(`#########  saveTo ./configs/genesis-config-${network.toString().toLowerCase()}.json`)
   const result = Bun.env.ENVIRONMENT == 'Development' ?
     await Bootstrap.deploy(translucent, utxo, testParams)
     : await Bootstrap.deployAndSave(`./configs/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
@@ -112,20 +118,19 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
 
   const bd: GenesisConfig = result
 
-  // get the state holder reference
-  const shRefUtxo = await translucent.utxosByOutRef([
+  // Set the minting- and state-hodler policies' reference UTxOs
+  // TODO: Find some better method to fetch these static references from chain.
+  const refUtxos = await translucent!.utxosByOutRef([
+    // get the state holder reference
     {
       txHash: bd.genesisTransaction,
       outputIndex: bd.stateholderScript.refIndex,
     },
-  ])
-
-  // get the minting policy reference
-  const mpRefUtxo = await translucent.utxosByOutRef([
+    // get the minting policy reference
     {
       txHash: bd.genesisTransaction,
       outputIndex: bd.adatagMinting.refIndex,
-    },
+    }
   ])
 
   const action: P.Operation = 'AdatagAdded'
@@ -133,6 +138,7 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
   const mp = bd.adatagMinting.policyId
 
   let i = 0
+
   for (const adatag of adatags) {
     if (translucent.provider instanceof Emulator) {
       translucent.provider.awaitBlock(10)
@@ -201,20 +207,64 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
 
       const rdmr = IntegriTree.buildRedeemer(updateVal, appendVal, proof)
 
-      const time =
+      const timeStamp =
         translucent.provider instanceof Emulator
           ? translucent.provider.now()
           : Date.now()
 
-      const ttx = translucent
+      // zeros the millisecond parts of the validity range
+      const from = Math.floor(timeStamp / 1000) * 1000
+      const to = from + 60000
+
+      const tx1 = translucent
         .newTx()
-        .readFrom(mpRefUtxo.concat(shRefUtxo))
         .collectFrom([authUtxo], Data.void())
 
-        // Optional when deactivation time (16) is not reached
-        // .paytoContract(timelockdeposit, { deposit }, { benef, now+ deadline}, noscript) // (8, 15,18) Optional, not required after deactivation time.
-        // .collectFrom([adahandle_utxo]) // (17)
-        
+      let tx2 = {}
+      // FIXME: implement timelock test
+      const timelockActive = bd.adatagMinting.params.deactivationTime.epoch > from
+
+      if (useTimelock && timelockActive) {
+        // Times are in milliseconds in Plutus Core
+        const deadLine = BigInt(
+          to + bd.adatagMinting.params.lockingDays.ms + 10000
+        )
+        // IMPORTANT: to + bd.adatagMinting.params.lockingDays.ms < deadLine
+        // console.warn(`Valid deadline: ${to + bd.adatagMinting.params.lockingDays.ms < deadLine}`);
+
+        // Beneficiary is always the user!
+        const { paymentCredential } = translucent.utils.getAddressDetails(userAddress!) as AddressDetails
+
+        // Create the Timelock deposit datum
+        const datum: P.TimeDepositDatum['datum'] = {
+          beneficiary: paymentCredential!.hash as unknown as string,
+          deadLine: deadLine,
+        }
+
+        const datumCbor = Data.to(datum, P.TimeDepositDatum.datum)
+
+        // Retrieve the TielockDeposit's UTxO
+        const timelockRefUtxo = await translucent!.utxosByOutRef([
+          {
+            txHash: bd.genesisTransaction,
+            outputIndex: bd.timelockScript.refIndex,
+          },
+        ])
+        refUtxos.concat(timelockRefUtxo)
+
+        // TODO: Always check the contract's deposit calculation. It's in lovelace
+        const deposit = calculateDeposit(adatag, 1750, 15, 6) * 1_000_000n
+
+        tx2 = tx1.payToContract(
+          bd.timelockScript.scriptAddress,
+          { inline: datumCbor },
+          { lovelace: deposit },
+        )
+      }
+
+      // If useTimelock is false, simply assign tx1 to ttx
+      const ttx = useTimelock ? tx2 : tx1; 
+
       const tx = ttx.payToAddress(userAddress, mintValue)
         .payToContract(
           bd.stateholderScript.scriptAddress,
@@ -222,21 +272,22 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
           authToken,
         )
         .mintAssets(mintValue, rdmr)
-        // It is always required for deactivation's time checking.
-        .validFrom(time)
+        .readFrom(refUtxos)
+        // This is required for deactivation's time checking.
+        .validFrom(from)
+        // This is required deadline checking
+        .validTo(to)
 
       try {
         const completedTx = await tx.complete()
         const signedTx = await completedTx.sign().complete()
         const txHash = await signedTx.submit()
-
+        
         expect(translucent.awaitTx(txHash)).resolves.toBe(true)
-        //console.log(`####ERROR? ${txHash}`)
       } catch (e) {
 
         // If something throw an error then it must be triggered by an invalid adatag.
-
-        // console.error(`@@@@@@@@@@@ ERROR: ${e}`)
+        // console.warn(`@@@@@@@@@@@ 1. ERROR: ${e}`)
         expect(isValid).toBe(false)
       }
     })
