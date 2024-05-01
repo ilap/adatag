@@ -1,0 +1,19 @@
+{
+  "name": "integri-tree",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integri-tree/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/integri-tree",
+        "main": "libs/integri-tree/src/index.ts",
+        "tsConfig": "libs/integri-tree/tsconfig.lib.json",
+        "assets": ["libs/integri-tree/*.md"]
+      }
+    }
+  }
+}

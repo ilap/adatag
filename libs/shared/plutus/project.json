@@ -1,0 +1,20 @@
+{
+  "name": "shared-plutus",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/plutus/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/plutus",
+        "main": "libs/shared/plutus/src/index.ts",
+        "tsConfig": "libs/shared/plutus/tsconfig.lib.json",
+        "assets": ["libs/shared/plutus/*.md"],
+        "external": ["translucent-cardano"]
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "adatag.io",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/adatag.io/src",
+  "projectType": "application",
+  "outputPath": "../../dist/apps/adatag.io/",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project adatag1.io --web",
+  "// staticFilePath": "../../dist/apps/adatag.io",
+  "targets": {}
+}

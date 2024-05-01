@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@adatag/integri-tree": ["libs/integri-tree/src"],
+      "@adatag/shared/plutus": ["libs/shared/plutus/src"]
+    },
+    "types": ["node", "vite/client", "react"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
