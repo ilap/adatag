@@ -103,19 +103,11 @@ export const useClaiming = (): UseClaimingResult => {
       await delay(2000)
       setClaimResult(txHash)
     } catch (error) {
-      console.warn(
-        `@@@ ERROR: ${error} ... ${typeof error} ${(
-          error as object
-        ).toString()} ${stringifyData(error)}`
-      )
+      console.warn(`@@@ ERROR: ${error} ... ${typeof error} ${(error as object).toString()} ${stringifyData(error)}`)
 
-      const e = new Error(
-        'Error during claiming:' + (error as object)?.toString()
-      )
+      const e = new Error('Error during claiming:' + (error as object)?.toString())
       setClaimError(e)
-      setMintingProgress(
-        'Error during claiming. Please check the console for details.'
-      )
+      setMintingProgress('Error during claiming. Please check the console for details.')
     } finally {
       setIsClaiming(false)
     }

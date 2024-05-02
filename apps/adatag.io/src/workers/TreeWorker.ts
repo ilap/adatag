@@ -3,17 +3,10 @@ import { Data, fromText, toText } from 'translucent-cardano'
 
 import { KupmiosChainFetch } from '../services/KupmiosChainFetch'
 import { SQLiteDataStore } from '../services/SQLiteDataStore'
-import {
-  ChainFetchService,
-  DataStoreService,
-  TreeState,
-} from '../services/types'
+import { ChainFetchService, DataStoreService, TreeState } from '../services/types'
 import { debugMessage, hexToASCII, stringifyData } from '../utils'
 
 import { IntegriTree } from '@adatag/integri-tree'
-// ../../../../libs/integri-tree/src/lib/integri-tree' genesis-config.json
-// import * as T from '../configs/types'
-// import * as P from '../configs/plutus'
 
 import {
   TimeDepositDatum,
@@ -29,10 +22,7 @@ import { getConfig } from '../utils/config'
 const config = await getConfig()
 
 class TreeWorker implements TreeWorkerService {
-  constructor(
-    private dataStore: DataStoreService,
-    private chainFetch: ChainFetchService
-  ) {}
+  constructor(private dataStore: DataStoreService, private chainFetch: ChainFetchService) {}
 
   async initialise(): Promise<void> {
     // Initialise the database
@@ -68,20 +58,14 @@ class TreeWorker implements TreeWorkerService {
     }
 
     // 2. Retrieve the datum for the transaction output
-    const result = await this.chainFetch.fetchDatum(
-      asset.transaction_id,
-      config!.timelockScript.scriptAddress
-    )
+    const result = await this.chainFetch.fetchDatum(asset.transaction_id, config!.timelockScript.scriptAddress)
 
     if (!result) {
       return undefined
     }
 
     //const datum = Data.from(result.datum, P.TimeDepositTimedeposit.datum as  unknown as TreeState)
-    const datum: TimeDepositDatum['datum'] = Data.from(
-      result.datum,
-      TimeDepositDatum.datum
-    )
+    const datum: TimeDepositDatum['datum'] = Data.from(result.datum, TimeDepositDatum.datum)
     console.log(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
     // 3. Return the transaction ID, output index, and datum
     return {
@@ -113,9 +97,7 @@ class TreeWorker implements TreeWorkerService {
     return await this.createTxInputs(adatag, tree, state)
   }
 
-  private async buildTreeFromChain(
-    adatag: string
-  ): Promise<{ tree: IntegriTree; state: TreeState }> {
+  private async buildTreeFromChain(adatag: string): Promise<{ tree: IntegriTree; state: TreeState }> {
     // try {
     // Authtoken is always the 1st char of the @adatag
     const authToken = adatag[0]
@@ -133,9 +115,7 @@ class TreeWorker implements TreeWorkerService {
       const tip = await this.chainFetch.fetchTip()
       const elems = await this.chainFetch.fetchElements(fromSlot, tip)
 
-      const filteredElems = elems.filter(
-        (elem: string) => elem[0] === authToken
-      )
+      const filteredElems = elems.filter((elem: string) => elem[0] === authToken)
 
       filteredElems.forEach(elem => {
         debugMessage(`Append elem: ${elem}`)
@@ -151,9 +131,7 @@ class TreeWorker implements TreeWorkerService {
 
       const { datum } = fetchedDatum
 
-      state =
-        (Data.from(datum, StateHolderStateHolder.oldState) as TreeState) ||
-        undefined
+      state = (Data.from(datum, StateHolderStateHolder.oldState) as TreeState) || undefined
 
       if (!state) {
         throw Error(`Cannot convert datum to typescript's type`)
@@ -171,9 +149,9 @@ class TreeWorker implements TreeWorkerService {
         done = true
       } else {
         throw new Error(
-          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${
-            elems[elems.length - 1]
-          } .... ${state.adatag}`
+          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${elems[elems.length - 1]} .... ${
+            state.adatag
+          }`
         )
       }
       fromSlot = tip
@@ -198,9 +176,7 @@ class TreeWorker implements TreeWorkerService {
     const minTree = tree.generateMinimalSubtree(adatag, this.serialiseVal)
 
     if (!minTree) {
-      throw new Error(
-        `Cannot create minimal subtree for "${adatag}". Probably minted already.`
-      )
+      throw new Error(`Cannot create minimal subtree for "${adatag}". Probably minted already.`)
     }
 
     const { updateVal, appendVal, proof } = minTree

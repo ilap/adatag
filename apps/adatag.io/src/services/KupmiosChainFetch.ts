@@ -45,9 +45,7 @@ export class KupmiosChainFetch implements ChainFetchService {
   }
 
   private getAdatagFromAssets(assets: Asset[], policyId: string): string {
-    const keysStartingWithPrefix = Object.keys(assets).filter(key =>
-      key.startsWith(policyId)
-    )
+    const keysStartingWithPrefix = Object.keys(assets).filter(key => key.startsWith(policyId))
     const tokenHex = keysStartingWithPrefix.map(key => key.split('.')[1])[0]
     return hexToASCII(tokenHex)
   }
@@ -61,18 +59,13 @@ export class KupmiosChainFetch implements ChainFetchService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async fetchFromUrl(
-    url: string,
-    onData: (chunk: any) => void
-  ): Promise<void> {
+  private async fetchFromUrl(url: string, onData: (chunk: any) => void): Promise<void> {
     const controller = new AbortController()
     setTimeout(() => controller.abort(), 5000)
     const response = await fetch(url, { signal: controller.signal })
 
     if (!response.ok) {
-      throw new Error(
-        `Network error: ${response.status} - ${response.statusText}`
-      )
+      throw new Error(`Network error: ${response.status} - ${response.statusText}`)
     }
 
     const parser = new JSONParser({ paths: ['$.*'] })
@@ -137,11 +130,7 @@ export class KupmiosChainFetch implements ChainFetchService {
       const tip = await this.fetchTip()
       console.warn(`### FROM ${from} ... TIP ${tip}`)
       const to = tip - SAFETY_SLOTS
-      const queryParams = [
-        `order=oldest_first`,
-        `created_after=${from}`,
-        `created_before=${to}`,
-      ].join('&')
+      const queryParams = [`order=oldest_first`, `created_after=${from}`, `created_before=${to}`].join('&')
       // TODO: remove const policyId = config.adatagMinting.policyId
       const url = `${KUPO_URL}/matches/${this.policyId}.*?${queryParams}`
 
@@ -176,10 +165,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  async fetchElements(
-    fromSlot: number,
-    toSlot: number | null
-  ): Promise<string[]> {
+  async fetchElements(fromSlot: number, toSlot: number | null): Promise<string[]> {
     if (toSlot && toSlot <= fromSlot) {
       return []
     }
@@ -233,10 +219,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  async fetchDatum(
-    txHash: string,
-    address: string
-  ): Promise<{ output_index: number; datum: string } | undefined> {
+  async fetchDatum(txHash: string, address: string): Promise<{ output_index: number; datum: string } | undefined> {
     try {
       const utxos = await this.fetchTxUtxos(txHash)
 
@@ -271,9 +254,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     // It must be an NFT.
     try {
       const transactions = await this.fetchData(url)
-      debugMessage(
-        `fetchTxUtxos tx: ${JSON.stringify(transactions)} ... ${url}`
-      )
+      debugMessage(`fetchTxUtxos tx: ${JSON.stringify(transactions)} ... ${url}`)
       return transactions
     } catch (e) {
       debugMessage(`fetchTxUtxos Error: ${(e as Error).message} ...`)

@@ -14,8 +14,7 @@ import noWalletIcon from '../../../assets/imgs/inf_nowallet.png'
 import connecErrorIcon from '../../../assets/imgs/err_wallet.png'
 
 export const ConnectWalletDialog: React.FC = () => {
-  const { isDialogOpen, setIsDialogOpen, toggleDialog } =
-    useContext(DialogContext)
+  const { isDialogOpen, setIsDialogOpen, toggleDialog } = useContext(DialogContext)
   const { connected, error, connecting, connect } = useWallet()
   const wallets = useWalletList()
 
@@ -28,7 +27,6 @@ export const ConnectWalletDialog: React.FC = () => {
   }
 
   useEffect(() => {
-    //console.warn(`useeffect conn locell`)
     if (connecting) {
       setCheckError(true)
     }
@@ -42,10 +40,7 @@ export const ConnectWalletDialog: React.FC = () => {
     return (
       <div className="flex">
         {subTitle}
-        <Tooltip
-          showArrow
-          content={<div className="max-w-44 text-small">{tooltip}</div>}
-        >
+        <Tooltip showArrow content={<div className="max-w-44 text-small">{tooltip}</div>}>
           <InformationCircleIcon className="h-4 w-4 cursor-pointer" />
         </Tooltip>
       </div>
@@ -58,10 +53,7 @@ export const ConnectWalletDialog: React.FC = () => {
       <DialogContent
         icon={connecErrorIcon}
         title="Can't connect to wallet"
-        subtitle={renderTooltip(
-          'Check your installed wallets and try again.',
-          (error as Error)?.message
-        )}
+        subtitle={renderTooltip('Check your installed wallets and try again.', (error as Error)?.message)}
       />
     ) : //(error as Error)?.message
     wallets.length > 0 ? (
@@ -78,8 +70,7 @@ export const ConnectWalletDialog: React.FC = () => {
               size="sm"
               underline="always"
               href="https://cardano-community.github.io/support-faq/Wallets/list/"
-              isExternal
-            >
+              isExternal>
               Get started
             </Link>
           </>
@@ -90,13 +81,7 @@ export const ConnectWalletDialog: React.FC = () => {
 
   const renderFooter = () => {
     return connecting ? (
-      <Button
-        isLoading
-        color="primary"
-        fullWidth
-        onClick={handleClose}
-        size="lg"
-      >
+      <Button isLoading color="primary" fullWidth onClick={handleClose} size="lg">
         Connecting
       </Button>
     ) : checkError || wallets.length <= 0 ? (
@@ -107,13 +92,7 @@ export const ConnectWalletDialog: React.FC = () => {
       <>
         <div className="text-sm text-center">
           By connecting, you agree to our &nbsp;
-          <Link
-            className="font-bold text-gray-800"
-            onClick={handleClose}
-            size="sm"
-            href="/terms"
-            underline="always"
-          >
+          <Link className="font-bold text-gray-800" onClick={handleClose} size="sm" href="/terms" underline="always">
             Terms
           </Link>
           , &nbsp;
@@ -122,18 +101,11 @@ export const ConnectWalletDialog: React.FC = () => {
             onClick={handleClose}
             size="sm"
             href="/disclaimer"
-            underline="always"
-          >
+            underline="always">
             Disclaimer
           </Link>
           , and confirm that you have read our &nbsp;
-          <Link
-            className="font-bold text-gray-800"
-            onClick={handleClose}
-            size="sm"
-            href="/policy"
-            underline="always"
-          >
+          <Link className="font-bold text-gray-800" onClick={handleClose} size="sm" href="/policy" underline="always">
             Privacy Policy
           </Link>
           .
@@ -149,8 +121,7 @@ export const ConnectWalletDialog: React.FC = () => {
           isOpen={isDialogOpen && !connected}
           onClose={handleClose}
           title="Connect Wallet"
-          footer={renderFooter()}
-        >
+          footer={renderFooter()}>
           {renderContent()}
         </CustomModal>
       )}
@@ -164,13 +135,8 @@ interface WalletListProps {
   disabled: boolean
 }
 
-export const WalletList: React.FC<WalletListProps> = ({
-  wallets,
-  onConnect,
-  disabled = false,
-}) => {
-  const capitalise = (name: string) =>
-    name.charAt(0).toUpperCase() + name.slice(1)
+export const WalletList: React.FC<WalletListProps> = ({ wallets, onConnect, disabled = false }) => {
+  const capitalise = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
   return (
     <Listbox
@@ -183,16 +149,13 @@ export const WalletList: React.FC<WalletListProps> = ({
       variant="flat"
       onAction={key => onConnect(key as string)}
       aria-label="Wallet list"
-      disabledKeys={disabled ? wallets.map(item => item.name) : []}
-    >
+      disabledKeys={disabled ? wallets.map(item => item.name) : []}>
       {item => (
         <ListboxItem key={item.name} textValue={item.name} className="p-4">
           <div className="flex gap-4 items-center">
             <WalletIcon size="lg" walletName={item.name} icon={item.icon} />
             <div className="flex flex-col">
-              <span className="font-medium text-2xl">
-                {capitalise(item.name)}
-              </span>
+              <span className="font-medium text-2xl">{capitalise(item.name)}</span>
             </div>
           </div>
         </ListboxItem>

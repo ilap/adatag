@@ -5,7 +5,7 @@
     "esModuleInterop": false,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["bun", "node", "vite/client", "vitest"]
+    "types": ["node", "vite/client", "vitest"]
   },
   "files": [],
   "include": [],

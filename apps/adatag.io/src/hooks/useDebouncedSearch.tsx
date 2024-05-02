@@ -24,14 +24,10 @@ interface UseDebouncedSearchResult {
   handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-const useDebouncedSearch = ({
-  checkAdatag,
-}: UseDebouncedSearchProps): UseDebouncedSearchResult => {
+const useDebouncedSearch = ({ checkAdatag }: UseDebouncedSearchProps): UseDebouncedSearchResult => {
   const [inputValue, setInputValue] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [searchState, setSearchState] = useState<SearchState>(
-    SearchState.Initial
-  )
+  const [searchState, setSearchState] = useState<SearchState>(SearchState.Initial)
   const debounceTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -54,9 +50,7 @@ const useDebouncedSearch = ({
         // Simulate network
         await new Promise(resolve => setTimeout(resolve, delay))
         try {
-          const state = (await checkAdatag(inputValue))
-            ? SearchState.Minted
-            : SearchState.NotMinted
+          const state = (await checkAdatag(inputValue)) ? SearchState.Minted : SearchState.NotMinted
           setSearchState(state)
         } catch (e) {
           setSearchState(SearchState.Error)
@@ -78,10 +72,7 @@ const useDebouncedSearch = ({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target
-    const adatag =
-      value.length === 1
-        ? value.replace(/[^a-z]/g, '')
-        : value.replace(/[^a-z\d._-]/g, '')
+    const adatag = value.length === 1 ? value.replace(/[^a-z]/g, '') : value.replace(/[^a-z\d._-]/g, '')
     setInputValue(adatag)
   }
 

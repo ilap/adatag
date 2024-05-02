@@ -68,10 +68,7 @@ export class WalletInstanceWrapper implements WalletApi {
     return this.walletInstance.signTx(tx, partialSign)
   }
 
-  async signData(
-    address: string,
-    payload: string
-  ): Promise<{ signature: string; key: string }> {
+  async signData(address: string, payload: string): Promise<{ signature: string; key: string }> {
     const dataSignature = await this.walletInstance.signData(address, payload)
     // TODO: Check in translucent what is the key.
     return { signature: dataSignature.signature, key: address }

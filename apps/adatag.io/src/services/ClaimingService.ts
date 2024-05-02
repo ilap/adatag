@@ -65,11 +65,7 @@ export class AdatagClaimingService implements ClaimingService {
     // A valid TTL must exist.
     const validFrom = Math.floor(Date.now() / 1000) * 1000
 
-    return tx
-      .addSignerKey(beneficiary)
-      .readFrom(timelockRefUtxo)
-      .collectFrom(depositUtxos, rdmr)
-      .validFrom(validFrom)
+    return tx.addSignerKey(beneficiary).readFrom(timelockRefUtxo).collectFrom(depositUtxos, rdmr).validFrom(validFrom)
   }
 
   private createRedeemer(action: 'Collect' | 'Redeem'): string {

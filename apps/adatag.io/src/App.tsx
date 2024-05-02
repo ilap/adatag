@@ -9,7 +9,7 @@ import { Layout } from './components/organisms/Layout/Layout'
 import { LegalPage } from './components/organisms/Legal/LegalPage'
 import React, { useEffect } from 'react'
 
-// FIXME: Dirty hack for avoid Buffer undefined in 3rd party tools
+// FIXME: Dirty hack to avoid Buffer undefined in 3rd party tools
 import { Buffer } from 'buffer'
 window.Buffer = window.Buffer || Buffer
 

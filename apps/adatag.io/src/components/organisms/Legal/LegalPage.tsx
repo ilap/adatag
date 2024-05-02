@@ -1,14 +1,8 @@
 import React, { ReactNode } from 'react'
 
-import {
-  description as disclaimerDescr,
-  data as disclaimerData,
-} from './data/disclaimer_data'
+import { description as disclaimerDescr, data as disclaimerData } from './data/disclaimer_data'
 import { description as termsDescr, data as termsData } from './data/terms_data'
-import {
-  description as policyDescr,
-  data as policyData,
-} from './data/policy_data'
+import { description as policyDescr, data as policyData } from './data/policy_data'
 
 //import { GenericLegalPage } from './GenericLegalPage';
 
@@ -46,27 +40,15 @@ interface GenericLegalProps {
   }[]
 }
 
-export const GenericLegalPage: React.FC<GenericLegalProps> = ({
-  headerDescr,
-  data,
-}) => {
+export const GenericLegalPage: React.FC<GenericLegalProps> = ({ headerDescr, data }) => {
   return (
     <>
       <AnimatePresence>
         <motion.section className="flex flex-col items-center justify-center h-screen -m-16">
           <div className={`legal flex items-center justify-center mx-auto`}>
-            <motion.div
-              className={`text-center'}`}
-              variants={heroAnimation}
-              initial="initial"
-              animate="animate"
-            >
-              <h1 className="text-8xl font-black mb-16 tracking-tighter">
-                {headerDescr.title}
-              </h1>
-              <h2 className="text-2xl font-medium tracking-tighter">
-                {headerDescr.subtitle}
-              </h2>
+            <motion.div className={`text-center'}`} variants={heroAnimation} initial="initial" animate="animate">
+              <h1 className="text-8xl font-black mb-16 tracking-tighter">{headerDescr.title}</h1>
+              <h2 className="text-2xl font-medium tracking-tighter">{headerDescr.subtitle}</h2>
             </motion.div>
           </div>
         </motion.section>
@@ -94,9 +76,7 @@ const LegalCard: React.FC<Props> = ({ title, content }) => {
         <div className="text-4xl font-semibold tracking-tighter col-span-12 md:col-span-4">
           <h2>{title}</h2>
         </div>
-        <div className="text-2xl font-medium tracking-tighter col-span-12 md:col-span-8">
-          {content}
-        </div>
+        <div className="text-2xl font-medium tracking-tighter col-span-12 md:col-span-8">{content}</div>
       </div>
     </div>
   )

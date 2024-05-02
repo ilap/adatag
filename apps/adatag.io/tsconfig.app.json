@@ -6,15 +6,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "emitDeclarationOnly": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node",
     "outDir": "../../dist/out-tsc",
-    "types": [
-      "bun",
-      "node",
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts",
-      "vite/client"
-    ]
+    "types": ["bun", "node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts", "vite/client"]
   },
   "exclude": ["src/**/*.{spec,test}.{ts,tsx,js,jsx}"],
   "include": ["src/**/*.{js,jsx,ts,tsx}"]

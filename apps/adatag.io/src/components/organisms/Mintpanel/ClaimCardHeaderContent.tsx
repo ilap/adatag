@@ -18,12 +18,7 @@ interface Props {
   onDonationHandle: (donation: number) => void
 }
 
-const ClaimCardHeaderContent: React.FC<Props> = ({
-  inputValue,
-  rarity,
-  deposit,
-  onDonationHandle,
-}) => {
+const ClaimCardHeaderContent: React.FC<Props> = ({ inputValue, rarity, deposit, onDonationHandle }) => {
   const [selectedButton, setSelectedButton] = useState<number | null>(null)
   const [value, setValue] = useState('')
 
@@ -49,25 +44,14 @@ const ClaimCardHeaderContent: React.FC<Props> = ({
     : Math.max(0, Number(deposit) - (Number(value) || 0))
 
   return (
-    <Card
-      fullWidth
-      shadow="none"
-      radius="none"
-      className="flex justify-center items-center relative"
-    >
+    <Card fullWidth shadow="none" radius="none" className="flex justify-center items-center relative">
       <CardBody className="flex items-center justify-center min-w-[300px] min-h-[190px] p-0 rounded-xl ">
         <div className="p-4">
           <div className="p-4 min-w-[200px] whitespace-normal text-center">
             <ResponsiveText text={inputValue} />
           </div>
         </div>
-        <Chip
-          size="lg"
-          radius="full"
-          variant="flat"
-          color={rarity.color}
-          className="p-4"
-        >
+        <Chip size="lg" radius="full" variant="flat" color={rarity.color} className="p-4">
           {rarity.name}
         </Chip>
       </CardBody>
@@ -78,9 +62,7 @@ const ClaimCardHeaderContent: React.FC<Props> = ({
               <p className="text-xl m-0">Claimable value: </p>
             </div>
             <div>
-              <span className="font-bold text-xl m-0">
-                ₳&nbsp;{redeemableValue.toString()}
-              </span>
+              <span className="font-bold text-xl m-0">₳&nbsp;{redeemableValue.toString()}</span>
             </div>
           </div>
           <div className="flex items-center pt-2">
@@ -92,36 +74,30 @@ const ClaimCardHeaderContent: React.FC<Props> = ({
                 radius="full"
                 color={selectedButton === 2 ? 'primary' : 'connect'}
                 className={`min-w-12 max-w-12 font-medium ${
-                  selectedButton !== 2 &&
-                  'border-2 border-opacity-50% hover:border-foreground'
+                  selectedButton !== 2 && 'border-2 border-opacity-50% hover:border-foreground'
                 }`}
                 size="lg"
-                onClick={() => handleButtonClick(2)}
-              >
+                onClick={() => handleButtonClick(2)}>
                 ₳ 2
               </Button>
               <Button
                 radius="full"
                 color={selectedButton === 5 ? 'primary' : 'connect'}
                 className={`min-w-12 max-w-12 font-medium ${
-                  selectedButton !== 5 &&
-                  'border-2 border-opacity-50% hover:border-foreground'
+                  selectedButton !== 5 && 'border-2 border-opacity-50% hover:border-foreground'
                 }`}
                 size="lg"
-                onClick={() => handleButtonClick(5)}
-              >
+                onClick={() => handleButtonClick(5)}>
                 ₳ 5
               </Button>
               <Button
                 radius="full"
                 color={selectedButton === 15 ? 'primary' : 'connect'}
                 className={`min-w-12 max-w-12 font-medium ${
-                  selectedButton !== 15 &&
-                  'border-2 border-opacity-50% hover:border-foreground'
+                  selectedButton !== 15 && 'border-2 border-opacity-50% hover:border-foreground'
                 }`}
                 size="lg"
-                onClick={() => handleButtonClick(15)}
-              >
+                onClick={() => handleButtonClick(15)}>
                 ₳ 15
               </Button>
 

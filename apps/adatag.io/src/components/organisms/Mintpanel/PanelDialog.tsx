@@ -18,12 +18,7 @@ interface Props {
   mintError: Error | undefined
 }
 
-export const PanelDialog: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  mintResult,
-  mintError,
-}) => {
+export const PanelDialog: React.FC<Props> = ({ isOpen, onClose, mintResult, mintError }) => {
   const config = useConfig()
   const handleClose = () => {
     console.warn(`handleClose`)
@@ -36,10 +31,7 @@ export const PanelDialog: React.FC<Props> = ({
     return (
       <div className="flex">
         {subTitle}
-        <Tooltip
-          showArrow
-          content={<div className="max-w-44 text-small">{tooltip}</div>}
-        >
+        <Tooltip showArrow content={<div className="max-w-44 text-small">{tooltip}</div>}>
           <InformationCircleIcon className="h-4 w-4 cursor-pointer" />
         </Tooltip>
       </div>
@@ -51,10 +43,7 @@ export const PanelDialog: React.FC<Props> = ({
       <DialogContent
         icon={mintErrorIcon}
         title="Can't mint adatag"
-        subtitle={renderTooltip(
-          'Re-connect the wallet and try again.',
-          (mintError as Error)?.message
-        )}
+        subtitle={renderTooltip('Re-connect the wallet and try again.', (mintError as Error)?.message)}
       />
     ) : (
       mintResult && (
@@ -84,12 +73,7 @@ export const PanelDialog: React.FC<Props> = ({
   }
 
   return (
-    <CustomModal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Connect Wallet"
-      footer={renderFooter()}
-    >
+    <CustomModal isOpen={isOpen} onClose={handleClose} title="Connect Wallet" footer={renderFooter()}>
       {renderContent()}
     </CustomModal>
   )

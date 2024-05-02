@@ -21,12 +21,7 @@ export const FAQ: React.FC = () => {
       <AnimatePresence>
         <motion.section className="flex flex-col items-center justify-center h-screen ">
           <div className={`flex items-center justify-center mx-auto`}>
-            <motion.div
-              className={`text-center'}`}
-              variants={heroAnimation}
-              initial="initial"
-              animate="animate"
-            >
+            <motion.div className={`text-center'}`} variants={heroAnimation} initial="initial" animate="animate">
               <h1 className="text-8xl text-center font-black mb-16 tracking-tighter">
                 Frequently
                 <br />
@@ -39,17 +34,10 @@ export const FAQ: React.FC = () => {
           <ScrollButton onClick={scrollToAccordion} />
         </motion.section>
       </AnimatePresence>
-      <section
-        className="bg-background py-20  rounded-b-[72px] px-8-"
-        ref={accordionRef}
-      >
+      <section className="bg-background py-20  rounded-b-[72px] px-8-" ref={accordionRef}>
         <div className="ms-6 me-6">
           {faqData.map(item => (
-            <Accordion
-              key={item.question}
-              title={item.question}
-              content={<>{item.answer}</>}
-            />
+            <Accordion key={item.question} title={item.question} content={<>{item.answer}</>} />
           ))}
         </div>
       </section>

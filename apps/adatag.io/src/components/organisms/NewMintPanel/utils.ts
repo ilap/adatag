@@ -1,11 +1,5 @@
 import { SearchState } from '../../../hooks/useDebouncedSearch'
-import {
-  infoCaption,
-  errorCaption,
-  invalidAdatag,
-  notAvailableCaption,
-  availableCaption,
-} from './constants'
+import { infoCaption, errorCaption, invalidAdatag, notAvailableCaption, availableCaption } from './constants'
 import { Rarity } from './types'
 
 export const getCaption = (state: SearchState): string => {

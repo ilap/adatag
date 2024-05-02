@@ -2,11 +2,7 @@ import React from 'react'
 
 export const HowItWorks: React.FC = () => (
   <>
-    <section
-      key="how"
-      id="how"
-      className=" bg-[#f5f4ee] py-8 rounded-[72px] px-8-"
-    >
+    <section key="how" id="how" className=" bg-[#f5f4ee] py-8 rounded-[72px] px-8-">
       <div className="container xl:max-w-4xl 2xl:max-w-5xl mx-auto mt-40 mb-40">
         <div>
           <h2 className="text-6xl font-semibold mb-4 tracking-tighter">
@@ -27,24 +23,16 @@ export const HowItWorks: React.FC = () => (
                 Navigate to the <strong>Mint</strong> tab on the website.
               </p>
               <p className="text-xl mt-4">Enter the adatag you want to mint.</p>
+              <p className="text-xl mt-4">If available then click the "Mint adatag" button.</p>
               <p className="text-xl mt-4">
-                If available then click the "Mint adatag" button.
+                The website will construct a minting transaction for your adatag NFT based on your input.
               </p>
-              <p className="text-xl mt-4">
-                The website will construct a minting transaction for your adatag
-                NFT based on your input.
-              </p>
-              <p className="text-xl mt-4">
-                Sign and submit the transaction using your connected wallet.
-              </p>
-              <p className="text-xl mt-4">
-                Once the transaction is confirmed, your adatag NFT will be
-                minted.
-              </p>
+              <p className="text-xl mt-4">Sign and submit the transaction using your connected wallet.</p>
+              <p className="text-xl mt-4">Once the transaction is confirmed, your adatag NFT will be minted.</p>
             </ol>
             <p className="mb-4 tracking-tighter opacity-75">
-              Please note that during periods of high chain load, it can take
-              several hours for the minting process to complete.
+              Please note that during periods of high chain load, it can take several hours for the minting process to
+              complete.
             </p>
           </div>
           {/*<div className="p-0">
@@ -67,25 +55,19 @@ export const HowItWorks: React.FC = () => (
               <p className="text-xl mt-4">
                 Navigate to the <strong>Claim</strong> tab on the website.
               </p>
-              <p className="text-xl mt-4">
-                Enter the adatag for which you want to claim the deposit.
-              </p>
+              <p className="text-xl mt-4">Enter the adatag for which you want to claim the deposit.</p>
               <p className="text-xl mt-4">Click the "Claim deposit" button.</p>
               <p className="text-xl mt-4">
-                The website will construct a claim transaction for the deposit
-                based on your input.
+                The website will construct a claim transaction for the deposit based on your input.
               </p>
+              <p className="text-xl mt-4">Sign and submit the transaction using your connected wallet.</p>
               <p className="text-xl mt-4">
-                Sign and submit the transaction using your connected wallet.
-              </p>
-              <p className="text-xl mt-4">
-                Once the transaction is confirmed, the deposit will be released
-                to your wallet address.
+                Once the transaction is confirmed, the deposit will be released to your wallet address.
               </p>
             </ol>
             <p className="mb-4 tracking-tighter opacity-75">
-              Please note that you can only claim a deposit after the 20-day of
-              minting and if you are the original minter of the adatag.
+              Please note that you can only claim a deposit after the 20-day of minting and if you are the original
+              minter of the adatag.
             </p>
           </div>
         </div>

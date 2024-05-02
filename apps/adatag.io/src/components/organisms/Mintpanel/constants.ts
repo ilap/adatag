@@ -4,10 +4,8 @@ export const notAvailableCaption = 'Sorry, this adatag is already taken.'
 export const errorCaption = 'Error while fetching data from the chain.'
 export const invalidAdatag = 'Invalid adatag. Please follow the guideline.'
 
-export const redeemAvailableCaption =
-  'Deposit for this adatag available for redemption.' //'This adatag is available redemption.'
-export const redeemNotAvailableCaption =
-  'Sorry, deposit not redeemable for this Adatag.'
+export const redeemAvailableCaption = 'Deposit for this adatag available for redemption.' //'This adatag is available redemption.'
+export const redeemNotAvailableCaption = 'Sorry, deposit not redeemable for this Adatag.'
 // 'Sorry, adatag is not minted or already redeemed.'
 
 export const checkingCaption = 'Searching on the Cardano Blockchain.'

@@ -20,8 +20,7 @@ function generateRandomStrings(count: number): string[] {
     const randomStringArray: string[] = []
 
     for (let i = 0; i < stringLength; i++) {
-      const randomCharCode =
-        Math.floor(Math.random() * (charCodeZ - charCodeA + 1)) + charCodeA
+      const randomCharCode = Math.floor(Math.random() * (charCodeZ - charCodeA + 1)) + charCodeA
       const randomChar = String.fromCharCode(randomCharCode)
       randomStringArray.push(randomChar)
     }
@@ -46,9 +45,7 @@ function runBenchmark(numberOfStrings: number): string[] {
   const endTime = Date.now()
   const elapsedMilliseconds = endTime - startTime
 
-  console.log(
-    `Generated ${numberOfStrings} random strings in ${elapsedMilliseconds} milliseconds.`
-  )
+  console.log(`Generated ${numberOfStrings} random strings in ${elapsedMilliseconds} milliseconds.`)
   return randomStrings
 }
 

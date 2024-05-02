@@ -197,10 +197,7 @@ export const AlwaysMintMint = Object.assign(
 ) as unknown as AlwaysMintMint
 
 export interface OneshotAuthToken {
-  new (utxoRef: {
-    transactionId: { hash: string }
-    outputIndex: bigint
-  }): Validator
+  new (utxoRef: { transactionId: { hash: string }; outputIndex: bigint }): Validator
   _r: undefined
 }
 

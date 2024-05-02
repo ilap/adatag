@@ -1,12 +1,4 @@
-import {
-  UTxO,
-  Tx,
-  Translucent,
-  toUnit,
-  fromText,
-  Data,
-  AddressDetails,
-} from 'translucent-cardano'
+import { UTxO, Tx, Translucent, toUnit, fromText, Data, AddressDetails } from 'translucent-cardano'
 import { MintingService } from './types'
 import { calculateDeposit, stringifyData } from '../utils'
 import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
@@ -22,18 +14,10 @@ export class AdatagMintingService implements MintingService {
     if (!config) {
       throw Error(`Cannot read genesis config.`)
     }
-    return calculateDeposit(
-      adatag,
-      config.adatagMinting.params.depositBase,
-      MINDEPOSIT,
-      MAXDEPOSITLENGTH
-    )
+    return calculateDeposit(adatag, config.adatagMinting.params.depositBase, MINDEPOSIT, MAXDEPOSITLENGTH)
   }
 
-  async getAssetUTxo(
-    pid: string,
-    assetName: string
-  ): Promise<UTxO | undefined> {
+  async getAssetUTxo(pid: string, assetName: string): Promise<UTxO | undefined> {
     const unit = toUnit(pid, fromText(assetName))
     return await this.translucent!.utxoByUnit(unit)
   }
@@ -72,8 +56,7 @@ export class AdatagMintingService implements MintingService {
 
     // TODO:
     // IDEA: We should remove tje deactivation time, meaning it should always active.
-    const timelockActive =
-      config!.adatagMinting.params.deactivationTime.epoch > validFrom
+    const timelockActive = config!.adatagMinting.params.deactivationTime.epoch > validFrom
 
     console.warn(
       `$$$$$$$$$$$$$$$$$$$$ TL ACTIVE: ${validFrom} ${
@@ -97,16 +80,12 @@ export class AdatagMintingService implements MintingService {
         // console.warn(`Valid deadline: ${to + bd.adatagMinting.params.lockingDays.ms < deadLine}`);
 
         // TODO: use proper time buffer instead of 10secs
-        const deadLine = BigInt(
-          validTo + config!.adatagMinting.params.lockingDays.ms + 10000
-        )
+        const deadLine = BigInt(validTo + config!.adatagMinting.params.lockingDays.ms + 10000)
 
         console.log(`### DEADLINE ${deadLine}`)
 
         // Beneficiary is always the user!
-        const { paymentCredential } = this.translucent.utils.getAddressDetails(
-          userAddress!
-        ) as AddressDetails
+        const { paymentCredential } = this.translucent.utils.getAddressDetails(userAddress!) as AddressDetails
 
         // Create the Timelock deposit datum
         const datum: T.TimeDepositDatum['datum'] = {
@@ -161,11 +140,7 @@ export class AdatagMintingService implements MintingService {
 
     // 5. .payToContract( bd.stateholderScript.scriptAddress, { inline: state }, authToken,)
     const finalisedTx = tx
-      .payToContract(
-        config!.stateholderScript.scriptAddress,
-        { inline: datum },
-        authAsset
-      )
+      .payToContract(config!.stateholderScript.scriptAddress, { inline: datum }, authAsset)
       // 2. .collectFrom([authUtxo], Data.void())
       .collectFrom([authUtxo], Data.void())
       // 6. .mintAssets(mintValue, rdmr)

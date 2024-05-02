@@ -17,8 +17,7 @@
  *
  * All other elements are considered invalid for the tree.
  */
-export type Val =  { xi: string; xa: string; xb: string }
-
+export type Val = { xi: string; xa: string; xb: string }
 
 /**
  * The proof is the minimal subtree of the IntegriTree
@@ -57,17 +56,15 @@ export type MintRedeemer =
           updateVal: Val
           appendVal: Val
           proof: Proof
-        },
+        }
       ]
     }
   | 'Burning'
-
 
 /**
  * Operation for minting and burning adatag
  */
 export type Operation = 'AdatagAdded' | 'AdatagRemoved'
-
 
 export type TimeDepositDatum = {
   datum: {

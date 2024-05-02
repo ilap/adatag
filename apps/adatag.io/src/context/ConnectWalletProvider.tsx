@@ -20,10 +20,6 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <DialogContext.Provider
-      value={{ isDialogOpen, setIsDialogOpen, toggleDialog }}
-    >
-      {children}
-    </DialogContext.Provider>
+    <DialogContext.Provider value={{ isDialogOpen, setIsDialogOpen, toggleDialog }}>{children}</DialogContext.Provider>
   )
 }

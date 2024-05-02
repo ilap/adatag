@@ -157,14 +157,9 @@ INSERT OR IGNORE INTO z (xi, xa, xb) VALUES ( '0', 'y',  '{');
 export const nonmemberQuery = (tableName: string, element: string) =>
   `SELECT * FROM ${tableName} WHERE xa < ${element} AND ${element} < xb;`
 
-export const memberQuery = (element: string) =>
-  `SELECT * FROM {tableName}  WHERE xa = ${element} OR ${element} = xb;`
+export const memberQuery = (element: string) => `SELECT * FROM {tableName}  WHERE xa = ${element} OR ${element} = xb;`
 
-export const appendUpdateQuery = (
-  tableName: string,
-  element: string,
-  tip: number
-) => `
+export const appendUpdateQuery = (tableName: string, element: string, tip: number) => `
 BEGIN TRANSACTION;
 
   -- Insert a new row only if xa < 'x' AND 'x' < xb holds.

@@ -8,9 +8,7 @@ import { Input } from '../../atoms/Input'
 import { calculateDeposit, getCaption, getRarity } from './utils'
 import { checkingCaption, claimguideline } from './constants'
 import { WorkerContext } from '../../../context/WorkerContextProvider'
-import useDebouncedSearch, {
-  SearchState,
-} from '../../../hooks/useDebouncedSearch'
+import useDebouncedSearch, { SearchState } from '../../../hooks/useDebouncedSearch'
 
 import { PanelDialog } from './PanelDialog'
 
@@ -66,26 +64,19 @@ export const ClaimPanel: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { checkIfAdatagNotMinted } = useContext(WorkerContext)
 
-  const { inputValue, setInputValue, isLoading, searchState, handleChange } =
-    useDebouncedSearch({
-      checkAdatag: checkIfAdatagNotMinted,
-    })
-  const { isClaiming, claimError, claimResult, handleClaim, mintingProgress } =
-    useClaiming()
+  const { inputValue, setInputValue, isLoading, searchState, handleChange } = useDebouncedSearch({
+    checkAdatag: checkIfAdatagNotMinted,
+  })
+  const { isClaiming, claimError, claimResult, handleClaim, mintingProgress } = useClaiming()
 
   const rarity = useMemo(() => getRarity(inputValue.length), [inputValue])
   const buttonDisabled = useMemo(
     () => isClaiming || isLoading || searchState !== SearchState.NotMinted,
     [isClaiming, isLoading, searchState]
   )
-  const deposit = useMemo(
-    () => calculateDeposit(inputValue, 1750, 15, 6),
-    [inputValue]
-  )
+  const deposit = useMemo(() => calculateDeposit(inputValue, 1750, 15, 6), [inputValue])
 
-  const isInvalid =
-    searchState === SearchState.Error ||
-    searchState === SearchState.InvalidAdatag
+  const isInvalid = searchState === SearchState.Error || searchState === SearchState.InvalidAdatag
   const [donation, setDonation] = useState(0)
 
   useEffect(() => {
@@ -107,10 +98,7 @@ export const ClaimPanel: React.FC = () => {
       )}
       <Card className="rounded-xl p-4 max-w-[430px] max-h-[580px]">
         <CardHeader className="flex flex-col gap-3">
-          <LoadingSpinner
-            isProgressing={isClaiming}
-            content={<>{mintingProgress}</>}
-          />
+          <LoadingSpinner isProgressing={isClaiming} content={<>{mintingProgress}</>} />
           <ClaimCardHeaderContent
             inputValue={inputValue}
             rarity={rarity}
@@ -133,27 +121,20 @@ export const ClaimPanel: React.FC = () => {
             value={inputValue}
             maxLength={16}
             placeholder="Type to search..."
-            description={
-              isLoading ? checkingCaption : getCaption(searchState, false)
-            }
+            description={isLoading ? checkingCaption : getCaption(searchState, false)}
             errorMessage={isInvalid ? getCaption(searchState, false) : ''}
           />
           <Button
             size="lg"
             color="primary"
             onPress={() => handleClaim(inputValue, BigInt(donation))}
-            className={`${
-              buttonDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
-            }`}
-            isDisabled={buttonDisabled}
-          >
+            className={`${buttonDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            isDisabled={buttonDisabled}>
             Redeem deposit
           </Button>
         </CardBody>
         <CardFooter>
-          <p className="text-small text-center text-default-500 m-0">
-            {claimguideline}
-          </p>
+          <p className="text-small text-center text-default-500 m-0">{claimguideline}</p>
         </CardFooter>
       </Card>
     </>

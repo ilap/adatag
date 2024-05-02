@@ -1,10 +1,5 @@
 import { emptyHash, hashVal, combineThreeHashes } from './hash'
-import {
-  AdatagAdatagMinting,
-  MintRedeemer,
-  Proof,
-  Val,
-} from '@adatag/shared/plutus'
+import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
 import { Data, fromText } from 'translucent-cardano'
 
 /**
@@ -64,10 +59,7 @@ export class IntegriTree {
   /**
    * Creates an IntegriTree based on specified constraints.
    */
-  public static fromConstraints(
-    lowerBound: string,
-    upperBound: string
-  ): IntegriTree {
+  public static fromConstraints(lowerBound: string, upperBound: string): IntegriTree {
     const xs = [{ xi: '0', xa: lowerBound, xb: upperBound }]
     return new IntegriTree(xs)
   }
@@ -77,9 +69,7 @@ export class IntegriTree {
    */
   public static fromLetter(letter: string): IntegriTree {
     if (!/^[a-z]$/.test(letter)) {
-      throw Error(
-        'The initialization string must be a lower case letter and length 1'
-      )
+      throw Error('The initialization string must be a lower case letter and length 1')
     }
     const cc = letter.charCodeAt(0)
     const xs = [
@@ -254,9 +244,7 @@ export class IntegriTree {
    *
    * Note: It returns hex-encoded values.
    */
-  public generateMinimalSubtree(
-    element: string
-  ): { updateVal: Val; appendVal: Val; proof: Proof } | null {
+  public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } | null {
     const [updateNode, deleteNode] = this.search(element)
 
     // FIXME: Implement delete node proof
@@ -267,10 +255,7 @@ export class IntegriTree {
 
     const appendNode = Math.floor((this.size - 1) / 2)
     // The index of LCA is always smaller or equal to the nodes' index
-    const lca =
-      updateNode === appendNode
-        ? updateNode
-        : this.findLca(0, updateNode, appendNode)
+    const lca = updateNode === appendNode ? updateNode : this.findLca(0, updateNode, appendNode)
     const updateVal = IntegriTree.serialiseVal(this.elements[updateNode])
     const appendVal = IntegriTree.serialiseVal(this.elements[appendNode])
 
@@ -304,10 +289,8 @@ export class IntegriTree {
       if ('HashNode' in lcaUn && 'HashNode' in lcaAn) {
         const { hash, left, right } = lcaUn.HashNode
 
-        const lcaLeft =
-          'NodeHash' in left ? lcaAn.HashNode.left : lcaUn.HashNode.left
-        const lcaRight =
-          'NodeHash' in right ? lcaAn.HashNode.right : lcaUn.HashNode.right
+        const lcaLeft = 'NodeHash' in left ? lcaAn.HashNode.left : lcaUn.HashNode.left
+        const lcaRight = 'NodeHash' in right ? lcaAn.HashNode.right : lcaUn.HashNode.right
 
         const lcaNode: Proof = {
           HashNode: {
@@ -337,11 +320,7 @@ export class IntegriTree {
    *
    * > Note: It assumes that the val contains the hex encoded properties.
    */
-  public static buildRedeemer(
-    updateVal: Val,
-    appendVal: Val,
-    proof: Proof
-  ): string {
+  public static buildRedeemer(updateVal: Val, appendVal: Val, proof: Proof): string {
     const mintRedeemer: MintRedeemer = {
       Minting: [
         {
@@ -427,9 +406,5 @@ export class IntegriTree {
 }
 
 export function stringifyData(data: unknown) {
-  return JSON.stringify(
-    data,
-    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
-    '  '
-  )
+  return JSON.stringify(data, (key, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
 }

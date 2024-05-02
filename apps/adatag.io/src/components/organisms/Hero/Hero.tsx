@@ -56,15 +56,11 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
     },
     claim: {
       title: <>Claim what is yours</>, // Claim your time-locked deposit
-      subTitle: (
-        <>When it's time, redeem your time-locked deposit hassle-free.</>
-      ),
+      subTitle: <>When it's time, redeem your time-locked deposit hassle-free.</>,
       panel: <ClaimPanel />,
     },
   }
-  const { title, subTitle, panel } = connected
-    ? statesData[headerState]
-    : statesData['default']
+  const { title, subTitle, panel } = connected ? statesData[headerState] : statesData['default']
 
   return (
     <>
@@ -74,19 +70,12 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
           variants={heroAnimation}
           key={connected ? 'connected' : 'disconnected'}
           initial="initial"
-          animate="animate"
-        >
-          <div
-            className={`container lg:max-w-5xl xl:max-w-6xl flex items-center justify-center mx-auto`}
-          >
+          animate="animate">
+          <div className={`container lg:max-w-5xl xl:max-w-6xl flex items-center justify-center mx-auto`}>
             <div className={`${connected ? 'text-left' : 'text-center'}`}>
               {/* text-8xl lg:text-9xl xl:text-10xl font-semibold mb-7 tracking-tighter */}
-              <h1 className="text-8xl font-black mb-16 tracking-tighter">
-                {title}
-              </h1>
-              <h3 className="text-2xl font-normal mb-12 tracking-tighter">
-                {subTitle}
-              </h3>
+              <h1 className="text-8xl font-black mb-16 tracking-tighter">{title}</h1>
+              <h3 className="text-2xl font-normal mb-12 tracking-tighter">{subTitle}</h3>
               {connected ? null : (
                 <Button color="primary" size="xxxl" onClick={toggleDialog}>
                   Connect Wallet

@@ -10,10 +10,7 @@ import {
 } from './constants'
 import { Rarity } from './types'
 
-export const getCaption = (
-  state: SearchState,
-  minting: boolean = true
-): string => {
+export const getCaption = (state: SearchState, minting: boolean = true): string => {
   switch (state) {
     case SearchState.Error:
       return errorCaption

@@ -16,47 +16,22 @@ export const Footer: React.FC = () => (
       </div>
 
       <div className="flex flex-col w-full sm:w-1/4 md:w-1/4 lg:w-1/4 mt-4 sm:mt-0">
-        <Link
-          className="text-xl text-gray-50 py-2"
-          size="lg"
-          href="/"
-          underline="hover"
-        >
+        <Link className="text-xl text-gray-50 py-2" size="lg" href="/" underline="hover">
           Home
         </Link>
-        <Link
-          className="text-xl text-gray-50 py-2"
-          size="lg"
-          href="/faq"
-          underline="hover"
-        >
+        <Link className="text-xl text-gray-50 py-2" size="lg" href="/faq" underline="hover">
           FAQs
         </Link>
       </div>
 
       <div className="flex flex-col w-full sm:w-1/4 md:w-1/4 lg:w-1/4 mt-4 sm:mt-0">
-        <Link
-          className="text-xl text-gray-50 py-2"
-          size="lg"
-          href="/terms"
-          underline="hover"
-        >
+        <Link className="text-xl text-gray-50 py-2" size="lg" href="/terms" underline="hover">
           Terms & Conditions
         </Link>
-        <Link
-          className="text-xl text-gray-50 py-2"
-          size="lg"
-          href="/policy"
-          underline="hover"
-        >
+        <Link className="text-xl text-gray-50 py-2" size="lg" href="/policy" underline="hover">
           Privacy Policy
         </Link>
-        <Link
-          className="text-xl text-gray-50 py-2"
-          size="lg"
-          href="/disclaimer"
-          underline="hover"
-        >
+        <Link className="text-xl text-gray-50 py-2" size="lg" href="/disclaimer" underline="hover">
           Disclaimer
         </Link>
       </div>
@@ -67,8 +42,7 @@ export const Footer: React.FC = () => (
           size="sm"
           href="https://github.com/ilap/adatag"
           isExternal
-          underline="none"
-        >
+          underline="none">
           <GithubIcon width={24} height={24} />
         </Link>
         <Link
@@ -77,8 +51,7 @@ export const Footer: React.FC = () => (
           //** TODO: add proper discord channel.
           href="https://discord.com/ilap"
           isExternal
-          underline="none"
-        >
+          underline="none">
           <DiscordIcon width={24} height={24} />
         </Link>
         <Link
@@ -87,8 +60,7 @@ export const Footer: React.FC = () => (
           size="md"
           href="mailto:hello@adatag.io"
           isExternal
-          underline="always"
-        >
+          underline="always">
           hello@adatag.io
         </Link>
       </div>

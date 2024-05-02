@@ -14,9 +14,7 @@ type WorkerContextProviderProps = {
 export const useWorker = () => useContext(WorkerContext)
 export const useWorkerState = () => useContext(WorkerStateContext)
 
-export const WorkerContextProvider: React.FC<WorkerContextProviderProps> = ({
-  children,
-}) => {
+export const WorkerContextProvider: React.FC<WorkerContextProviderProps> = ({ children }) => {
   // TODO: implement proper syncstate
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment
   // @ts-ignore todo implement sync state
@@ -31,9 +29,7 @@ export const WorkerContextProvider: React.FC<WorkerContextProviderProps> = ({
 
   return (
     <WorkerContext.Provider value={worker}>
-      <WorkerStateContext.Provider value={syncState}>
-        {children}
-      </WorkerStateContext.Provider>
+      <WorkerStateContext.Provider value={syncState}>{children}</WorkerStateContext.Provider>
     </WorkerContext.Provider>
   )
 }

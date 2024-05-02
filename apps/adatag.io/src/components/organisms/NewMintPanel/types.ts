@@ -4,14 +4,7 @@ export type Rarity = {
   description: string
 }
 
-type ChipColor =
-  | 'default'
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | undefined
+type ChipColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | undefined
 
 export interface State {
   isModalOpen: boolean

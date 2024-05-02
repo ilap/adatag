@@ -12,8 +12,7 @@ export const GithubIcon = ({ width, height }: GithubIconProps) => (
     role="img"
     fill="bg-foreground"
     aria-label="Github icon"
-    className="bg-transparent"
-  >
+    className="bg-transparent">
     <path
       fillRule="evenodd"
       clipRule="evenodd"

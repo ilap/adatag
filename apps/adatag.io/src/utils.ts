@@ -10,11 +10,7 @@ export const hexToASCII = (hex: string) => {
 }
 
 export function stringifyData(data: unknown) {
-  return JSON.stringify(
-    data,
-    (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-    '  '
-  )
+  return JSON.stringify(data, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
 }
 
 export function debugMessage(message: string) {
@@ -60,13 +56,7 @@ function isDot(char: number): boolean {
 }
 
 function isValidChar(ch: number): boolean {
-  return (
-    isLowerCase(ch) ||
-    isDigit(ch) ||
-    isHyphen(ch) ||
-    isUnderscore(ch) ||
-    isDot(ch)
-  )
+  return isLowerCase(ch) || isDigit(ch) || isHyphen(ch) || isUnderscore(ch) || isDot(ch)
 }
 
 function hasOnlyAllowedChars(str: string): boolean {
@@ -95,9 +85,7 @@ export const calculateDeposit = (
 
   return len > maxLength
     ? BigInt(minDeposit)
-    : BigInt(
-        Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0)
-      )
+    : BigInt(Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0))
 }
 
 interface YaciInfo {
@@ -134,11 +122,7 @@ export async function setSlotConfig(network: Network, env: string) {
 
     if (response.ok) {
       const res = await response.json()
-      console.warn(
-        `############### $$$$$$$$$$$$  SETSLOTCONFIG RESULT: ${stringifyData(
-          res
-        )}`
-      )
+      console.warn(`############### $$$$$$$$$$$$  SETSLOTCONFIG RESULT: ${stringifyData(res)}`)
       const serverInfo: YaciInfo = res
       if (serverInfo.startTime !== 0) {
         SLOT_CONFIG_NETWORK[network] = {

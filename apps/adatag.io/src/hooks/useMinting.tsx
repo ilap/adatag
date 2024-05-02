@@ -39,11 +39,7 @@ const useMinting = (): UseMintingResult => {
 
   //const translucent = await Translucent.new(provider, network || 'Custom')
 
-  const handleMint = async (
-    adatag: string,
-    useAdaHandle: boolean,
-    deposit: bigint
-  ) => {
+  const handleMint = async (adatag: string, useAdaHandle: boolean, deposit: bigint) => {
     try {
       if (!connected) throw Error(`Wallet is not connected.`)
 
@@ -78,12 +74,7 @@ const useMinting = (): UseMintingResult => {
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress(`Building transaction`) // ${adatag}.... ${useAdaHandle} ..... ${ deposit }`)
       //await delay(2000)
-      const baseTx = await mintingService.buildBaseTx(
-        adatag,
-        useAdaHandle,
-        address,
-        deposit
-      )
+      const baseTx = await mintingService.buildBaseTx(adatag, useAdaHandle, address, deposit)
 
       // Step 2. Building the tree's proof from cached and on-chain data.
       /////////////////////////////////////////////////////////////////////////////
@@ -95,13 +86,7 @@ const useMinting = (): UseMintingResult => {
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Finalizing transaction')
       await delay(2000)
-      const finalisedTx = await mintingService.finaliseTx(
-        baseTx,
-        adatag,
-        address,
-        datum,
-        redeemer
-      )
+      const finalisedTx = await mintingService.finaliseTx(baseTx, adatag, address, datum, redeemer)
 
       // Step 4. Validate the built transaction.
       /////////////////////////////////////////////////////////////////////////////
@@ -128,18 +113,12 @@ const useMinting = (): UseMintingResult => {
       await delay(2000)
       setMintResult(txHash)
     } catch (error) {
-      console.warn(
-        `@@@ ERROR: ${error} ... ${typeof error} ${(
-          error as object
-        ).toString()} ${stringifyData(error)}`
-      )
+      console.warn(`@@@ ERROR: ${error} ... ${typeof error} ${(error as object).toString()} ${stringifyData(error)}`)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const e = new Error('Error during minting:' + (error as any)?.toString())
       setMintError(e)
-      setMintingProgress(
-        'Error during minting. Please check the console for details.'
-      )
+      setMintingProgress('Error during minting. Please check the console for details.')
     } finally {
       setIsMinting(false)
     }

@@ -45,16 +45,9 @@ export interface ChainFetchService extends Initialisable {
   fetchAndSaveElements(): Promise<void>
   fetchElements(fromSlot: number, toSlot: number): Promise<string[]>
   fetchStateDatum(authNft: string): Promise<TreeDetails | null>
-  fetchDatum(
-    txHash: string,
-    address: string
-  ): Promise<{ output_index: number; datum: string } | undefined>
+  fetchDatum(txHash: string, address: string): Promise<{ output_index: number; datum: string } | undefined>
   fetchTxUtxos(transaction_id: string): Promise<TransactionOutput[]>
-  fetchAsset(
-    adatag: string,
-    oldestFirst?: boolean,
-    unspent?: boolean
-  ): Promise<TransactionOutput | undefined>
+  fetchAsset(adatag: string, oldestFirst?: boolean, unspent?: boolean): Promise<TransactionOutput | undefined>
   setSyncStateCallback(callback: SyncStateCallback): void
   onSyncStatusChange?: SyncStateCallback
 }
@@ -62,19 +55,8 @@ export interface ChainFetchService extends Initialisable {
 export type TreeState = StateHolderStateHolder['oldState']
 
 export interface MintingService {
-  buildBaseTx(
-    adatag: string,
-    useAdaHandle: boolean,
-    userAddress: string | undefined,
-    deposit: bigint
-  ): Promise<Tx>
-  finaliseTx(
-    tx: Tx,
-    adatag: string,
-    userAddress: string | undefined,
-    datum: string,
-    redeemer: string
-  ): Promise<Tx>
+  buildBaseTx(adatag: string, useAdaHandle: boolean, userAddress: string | undefined, deposit: bigint): Promise<Tx>
+  finaliseTx(tx: Tx, adatag: string, userAddress: string | undefined, datum: string, redeemer: string): Promise<Tx>
 }
 
 export interface ClaimingService {

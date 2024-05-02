@@ -4,6 +4,15 @@ import react from '@vitejs/plugin-react'
 import wasm from 'vite-plugin-wasm'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
+import connect from 'connect'
+
+const app = connect()
+
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  next()
+})
 
 export default defineConfig({
   root: __dirname,
@@ -12,9 +21,6 @@ export default defineConfig({
   server: {
     port: 4200,
     host: 'localhost',
-    cors: {
-      origin: '*', //'http://localhost', // Allow requests from any origin
-    },
     proxy: {
       '/local-cluster': {
         target: 'http://localhost:10000',

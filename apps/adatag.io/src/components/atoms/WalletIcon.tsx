@@ -1,5 +1,6 @@
 import { walletColors } from './utils'
 import { iconSizes } from './constants'
+import React from 'react'
 
 interface Props {
   walletName: string
@@ -11,15 +12,7 @@ export const WalletIcon: React.FC<Props> = ({ walletName, icon, size }) => {
   const renderIcon = (icon: string | undefined, size: number) => {
     const filter = `grayscale(1) brightness(2.5)  contrast(3.5)`
 
-    return (
-      <img
-        src={icon}
-        width={size}
-        height={size}
-        alt=""
-        style={{ filter, mixBlendMode: 'exclusion' }}
-      />
-    )
+    return <img src={icon} width={size} height={size} alt="" style={{ filter, mixBlendMode: 'exclusion' }} />
   }
 
   return (
@@ -29,8 +22,7 @@ export const WalletIcon: React.FC<Props> = ({ walletName, icon, size }) => {
         width: iconSizes[size].width,
         height: iconSizes[size].width,
         backgroundColor: walletColors(walletName),
-      }}
-    >
+      }}>
       <div>{renderIcon(icon, iconSizes[size].iconSize)}</div>
     </div>
   )

@@ -3,14 +3,12 @@ import { sha256 } from 'js-sha256'
 import { Proof, Val } from '@adatag/shared/plutus'
 
 // export const emptyHash = '836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07' // Blake2b_224
-export const emptyHash =
-  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' // SHA2_256
+export const emptyHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' // SHA2_256
 
 /**
  * The hash of the node's Value is the hash of the concatenated `xi`, `xa` and `xb` of the Val.
  */
-export const hashVal = (val: Val): string =>
-  hash256(stringToHex(val.xi + val.xa + val.xb))
+export const hashVal = (val: Val): string => hash256(stringToHex(val.xi + val.xa + val.xb))
 
 // FIXME: Buffer is not compatible with browsers Buffer.from(val.xi + val.xa + val.xb, 'utf-8').toString('hex')
 function stringToHex(input: string) {
@@ -23,9 +21,7 @@ function stringToHex(input: string) {
 export const hash = (msg: string): string => hash256(msg)
 
 export function hash256(message: string): string {
-  const array = message
-    ? new Uint8Array(message.match(/../g)?.map(h => parseInt(h, 16)) || [])
-    : ''
+  const array = message ? new Uint8Array(message.match(/../g)?.map(h => parseInt(h, 16)) || []) : ''
   return sha256(array)
 }
 
