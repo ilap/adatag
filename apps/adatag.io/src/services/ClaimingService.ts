@@ -1,12 +1,10 @@
 import { Tx, Translucent, Data } from 'translucent-cardano'
 import { ClaimingService } from './types'
-import * as P from '@adatag/shared/plutus'
+import { TimeDepositTimedeposit } from '@adatag/shared/plutus'
 
 import { stringifyData } from '../utils'
+import { genesisConfig } from '../utils/config'
 
-import { getConfig } from '../utils/config'
-
-const config = await getConfig()
 
 export class AdatagClaimingService implements ClaimingService {
   constructor(private translucent: Translucent) {}
@@ -29,14 +27,11 @@ export class AdatagClaimingService implements ClaimingService {
   ): Promise<Tx> {
     let tx = this.translucent!.newTx().addSignerKey(beneficiary)
 
-    if (!config) {
-      throw Error(`Cannot read genesis config, check public`)
-    }
 
     const timelockRefUtxo = await this.translucent!.utxosByOutRef([
       {
-        txHash: config.genesisTransaction,
-        outputIndex: config.timelockScript.refIndex,
+        txHash: genesisConfig!.genesisTransaction,
+        outputIndex: genesisConfig!.timelockScript.refIndex,
       },
     ])
 
@@ -54,7 +49,7 @@ export class AdatagClaimingService implements ClaimingService {
     console.log(` TLO UTXOS: ${stringifyData(timelockRefUtxo)}`)
 
     if (action === 'Redeem' && donation > 0n) {
-      tx = tx.payToAddress(config.timelockScript.params.collectorAddr, {
+      tx = tx.payToAddress(genesisConfig!.timelockScript.params.collectorAddr, {
         lovelace: donation * 1_000_000n,
       })
     }
@@ -70,8 +65,8 @@ export class AdatagClaimingService implements ClaimingService {
 
   private createRedeemer(action: 'Collect' | 'Redeem'): string {
     // Redeem
-    const claimRedeemer: typeof P.TimeDepositTimedeposit.rdmr = action
-    const redeemer = Data.to(claimRedeemer, P.TimeDepositTimedeposit.rdmr)
+    const claimRedeemer: typeof TimeDepositTimedeposit.rdmr = action
+    const redeemer = Data.to(claimRedeemer, TimeDepositTimedeposit.rdmr)
     return redeemer
   }
 }

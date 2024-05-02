@@ -3,6 +3,9 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/plutus/src",
   "projectType": "library",
+  "implicitDependencies": [
+    "aiken"
+  ],
   "tags": [],
   "targets": {
     "build": {

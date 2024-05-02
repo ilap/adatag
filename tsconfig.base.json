@@ -1,16 +1,23 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "strict": true,
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
     "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@adatag/integri-tree": ["libs/integri-tree/src"],
-      "@adatag/shared/plutus": ["libs/shared/plutus/src"]
+      "@adatag/integri-tree": ["libs/integri-tree/src/index.ts"],
+      "@adatag/shared/plutus": ["libs/shared/plutus/src/index.ts"]
     },
-    "types": ["node", "vite/client", "react"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "tmp"]
 }

@@ -4,15 +4,6 @@ import react from '@vitejs/plugin-react'
 import wasm from 'vite-plugin-wasm'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
-import connect from 'connect'
-
-const app = connect()
-
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
-  next()
-})
 
 export default defineConfig({
   root: __dirname,
@@ -27,7 +18,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         headers: {
-          // FIXME: for sqlite and proxy 'Cross-Origin-Embedder-Policy': 'require-corp',
+          // FIXME: for sqlite and proxy 
+          'Cross-Origin-Opener-Policy': 'same-site',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',

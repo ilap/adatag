@@ -16,10 +16,8 @@ export interface AdatagAdatagMinting {
           {
             updateVal: { xi: string; xa: string; xb: string }
             appendVal: { xi: string; xa: string; xb: string }
-            proof:
-              | { HashNode: { hash: string; left: Data; right: Data } }
-              | { NodeHash: { hash: string } }
-          },
+            proof: { HashNode: { hash: string; left: Data; right: Data } } | { NodeHash: { hash: string } }
+          }
         ]
       }
     | 'Burning'
@@ -63,7 +61,7 @@ export const AdatagAdatagMinting = Object.assign(
               ],
             },
           ],
-        } as any,
+        } as any
       ),
     }
   },
@@ -123,14 +121,8 @@ export const AdatagAdatagMinting = Object.assign(
                           index: 0,
                           fields: [
                             { dataType: 'bytes', title: 'hash' },
-                            {
-                              title: 'left',
-                              $ref: '#/definitions/ilap~1integri_tree~1types~1Proof',
-                            },
-                            {
-                              title: 'right',
-                              $ref: '#/definitions/ilap~1integri_tree~1types~1Proof',
-                            },
+                            { title: 'left', $ref: '#/definitions/ilap~1integri_tree~1types~1Proof' },
+                            { title: 'right', $ref: '#/definitions/ilap~1integri_tree~1types~1Proof' },
                           ],
                         },
                         {
@@ -150,7 +142,7 @@ export const AdatagAdatagMinting = Object.assign(
         { title: 'Burning', dataType: 'constructor', index: 1, fields: [] },
       ],
     },
-  },
+  }
 ) as unknown as AdatagAdatagMinting
 
 export interface AlwaysFailAlwaysFail {
@@ -180,7 +172,7 @@ export const AlwaysFailAlwaysFail = Object.assign(
       description: 'The nullary constructor.',
       anyOf: [{ dataType: 'constructor', index: 0, fields: [] }],
     },
-  },
+  }
 ) as unknown as AlwaysFailAlwaysFail
 
 export interface AlwaysMintMint {
@@ -203,14 +195,11 @@ export const AlwaysMintMint = Object.assign(
       description: 'The nullary constructor.',
       anyOf: [{ dataType: 'constructor', index: 0, fields: [] }],
     },
-  },
+  }
 ) as unknown as AlwaysMintMint
 
 export interface OneshotAuthToken {
-  new (utxoRef: {
-    transactionId: { hash: string }
-    outputIndex: bigint
-  }): Validator
+  new (utxoRef: { transactionId: { hash: string }; outputIndex: bigint }): Validator
   _r: undefined
 }
 
@@ -253,7 +242,7 @@ export const OneshotAuthToken = Object.assign(
               ],
             },
           ],
-        } as any,
+        } as any
       ),
     }
   },
@@ -264,7 +253,7 @@ export const OneshotAuthToken = Object.assign(
       description: 'The nullary constructor.',
       anyOf: [{ dataType: 'constructor', index: 0, fields: [] }],
     },
-  },
+  }
 ) as unknown as OneshotAuthToken
 
 export interface StateHolderStateHolder {
@@ -287,7 +276,7 @@ export const StateHolderStateHolder = Object.assign(
       script: applyParamsToScript(
         '590964010000323232323232323232323232322322323232323222533300f32323253330123008301437540022646464646464a666030601e60346ea80044c8c8c94ccc07c00454cc07005c584c94ccc080c08c0084c8c94ccc078cdc3a400860406ea80044c8c8c8c8c8c94ccc090cccc004c8cc004004040894ccc0a800452f5bded8c0264646464a66605466e3d220100002100313302f337606ea4008dd3000998030030019bab302c003375c6054004605c00460580026eb8c008c09cdd50029bae30083027375400aa666048006290010a4002264a66604a666600400203e666e31200048008dd7180498141baa0064800854cc8cc098cdc399918008009129998160008a40002600666004004605e002646600200200644a666058002297ae013302d302a302e00133002002302f001480104c8c8c8c94ccc0a8cdc39bad3014302d3754016600a6eb4c050c0b4dd50110a99981519b894800000454ccc0a8cdc380099b80002533302a0091480085200113371e6eb8c020c0b4dd50111bae3008302d375401629405280a503002375c600660586ea8028c004dd7180118159baa02023253330293370e66e3800920004818054ccc0a4c07c004520001613232333001001480012000222533302d3370e0020082004266600600664a66605ca66605c66e25206000113371200290390a5013370066e0800d201433700002902f8a99817a4811f6578706563742062797465203e3d2034382026262062797465203c3d20353700163371c00c00260100026e34008dc6800918169817181718170009b804800854cc09924135657870656374206c6973742e6c656e6774682876616c75652e706f6c6963696573286f75747075745f76616c75652929203d3d203200161533026491866578706563740a2020202020206861735f6f6e6c795f746f6b656e280a20202020202020206f75747075745f76616c75652c0a2020202020202020617574685f746f6b656e2c0a20202020202020206279746561727261792e74616b65286e65775f73746174652e6164617461672c2031292c0a2020202020202020312c0a20202020202029001637566018604e6ea802454cc0952401a66578706563740a202020202020636f72726563745f6e66745f616d6f756e74280a20202020202020206d696e74696e673a206d696e74696e672c0a20202020202020206d696e743a206d696e742c0a202020202020202073796d626f6c3a206e65775f73746174652e6d696e74696e675f706f6c6963792c0a2020202020202020746f6b656e5f6e616d653a206e65775f73746174652e6164617461672c0a202020202020290016222232533302c001153302902716132533302d3030002132533302a3371e6eb8c0b00080144cdc38008020a50375a60580022a660540502c605c00264a666050603c60546ea800452f5bded8c026eacc0b8c0acdd500099198008008029129998168008a6103d87a80001323232533302c3371e0106eb8c0b800c4cdd2a4000660626e980052f5c026600a00a0046eacc0b8008c0c4008c0bc0048c0a4c0a8c0a8c0a8c0a8c0a8004cdd7980498121baa0024c0103d87980003301500101d53333330270011001153302001c16153302001c16153302001c16153302001c163024302137540022a6603e92013065787065637420496e6c696e65446174756d286e65775f737461746529203d206f776e5f6f75747075742e646174756d001630013020375400446046604860480022a6603a0302c6042002646600200200e44a666040002297ae013232533301e3375e601060426ea80080144cc08c008cc0100100044cc010010004c090008c088004c07cc070dd51800980e1baa301f301c37540044603e60400022a660329213465787065637420536f6d65286f776e5f696e70757429203d2066696e645f696e70757428696e707574732c206f776e5f7265662900163322323300100100322533301f00114c0103d87a800013232533301d3375e600e60406ea80080144cdd2a40006604400497ae0133004004001302300230210013758603a00a603a60346ea80188c074004dd5980d980e180e0011bac301a001301a301a001301537540042a6602692011f657870656374205370656e64286f776e5f72656629203d20707572706f73650016301730180023016001301237540022930a998082491856616c696461746f722072657475726e65642066616c736500136563300100400a22533300d3004300f3754004264a6660240022a6601e0042c26464a6660280022a660220082c26464a66602c0022a6602600c2c26464a6660300022a6602a0102c26464a6660340022a6602e0142c26464a6660380022a660320182c264a66603a60400042649319299980d18088008a99980f180e9baa00a149854cc06c0385854ccc068c04000454ccc078c074dd50050a4c2a6603601c2c2a6603601c2c60366ea802454cc06803458c94cccccc08400454cc0680345854cc0680345854cc0680345854cc068034584dd7000980f000980f00119299999980f8008a9980c0058b0a9980c0058b0a9980c0058b0a9980c0058b09bae001301c001301c00232533333301d0011533016009161533016009161533016009161533016009161375c0026034002603400464a6666660360022a6602800e2c2a6602800e2c2a6602800e2c2a6602800e2c26eb8004c060004c060008c94cccccc064004400454cc0480145854cc0480145854cc0480145854cc04801458c058004c058008c94cccccc05c00454cc04000c5854cc04000c5854cc04000c584dd68008a998080018b180a00098081baa002153300e00116370e90011b87480014cccccc040004400454cc0240185854cc0240185854cc0240185854cc02401858dd7000a4981657870656374205b6f776e5f6f75747075745d203d0a2020202020206c6973742e66696c746572280a20202020202020206f7574707574732c0a2020202020202020666e286f75747075743a204f757470757429207b206f75747075742e61646472657373203d3d20696e7075745f61646472657373207d2c0a2020202020202900490127657870656374206e65775f73746174653a20547265655374617465203d206e65775f7374617465004901146f6c645f73746174653a2054726565537461746500490154657870656374205b28746e2c207175616e74697479295d203d0a2020202076616c0a2020202020207c3e20746f6b656e7328706f6c6963795f6964290a2020202020207c3e20646963742e746f5f6c6973742829005734ae7155ceaab9e5573eae815d0aba257481',
         [authToken],
-        { dataType: 'list', items: [{ dataType: 'bytes' }] } as any,
+        { dataType: 'list', items: [{ dataType: 'bytes' }] } as any
       ),
     }
   },
@@ -304,18 +293,8 @@ export const StateHolderStateHolder = Object.assign(
             {
               title: 'operation',
               anyOf: [
-                {
-                  title: 'AdatagAdded',
-                  dataType: 'constructor',
-                  index: 0,
-                  fields: [],
-                },
-                {
-                  title: 'AdatagRemoved',
-                  dataType: 'constructor',
-                  index: 1,
-                  fields: [],
-                },
+                { title: 'AdatagAdded', dataType: 'constructor', index: 0, fields: [] },
+                { title: 'AdatagRemoved', dataType: 'constructor', index: 1, fields: [] },
               ],
             },
             { dataType: 'bytes', title: 'adatag' },
@@ -327,7 +306,7 @@ export const StateHolderStateHolder = Object.assign(
       ],
     },
   },
-  { _r: { title: 'Data', description: 'Any Plutus data.' } },
+  { _r: { title: 'Data', description: 'Any Plutus data.' } }
 ) as unknown as StateHolderStateHolder
 
 export interface TimeDepositTimedeposit {
@@ -361,7 +340,7 @@ export const TimeDepositTimedeposit = Object.assign(
               ],
             },
           ],
-        } as any,
+        } as any
       ),
     }
   },
@@ -374,5 +353,5 @@ export const TimeDepositTimedeposit = Object.assign(
         { title: 'Redeem', dataType: 'constructor', index: 1, fields: [] },
       ],
     },
-  },
+  }
 ) as unknown as TimeDepositTimedeposit

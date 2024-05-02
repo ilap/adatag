@@ -6,6 +6,5 @@
   "outputPath": "../../dist/apps/adatag.io/",
   "tags": [],
   "// targets": "to see all targets run: nx show project adatag1.io --web",
-  "// staticFilePath": "../../dist/apps/adatag.io",
   "targets": {}
 }

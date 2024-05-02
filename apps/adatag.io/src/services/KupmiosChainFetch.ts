@@ -13,9 +13,7 @@ import { debugMessage, hexToASCII } from '../utils'
 import { fromText } from 'translucent-cardano'
 import { Asset } from '@meshsdk/core'
 
-import { getConfig } from '../utils/config'
-
-const config = await getConfig()
+import { genesisConfig } from '../utils/config'
 
 export class KupmiosChainFetch implements ChainFetchService {
   private dataStore: DataStoreService
@@ -24,11 +22,8 @@ export class KupmiosChainFetch implements ChainFetchService {
   private policyId: string
 
   constructor(dataStore: DataStoreService) {
-    if (!config) {
-      throw Error(`Cannot read genesis config json`)
-    }
     this.dataStore = dataStore
-    this.policyId = config.adatagMinting.policyId
+    this.policyId = genesisConfig!.adatagMinting.policyId
   }
 
   // TODO: implement it
@@ -61,7 +56,7 @@ export class KupmiosChainFetch implements ChainFetchService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchFromUrl(url: string, onData: (chunk: any) => void): Promise<void> {
     const controller = new AbortController()
-    setTimeout(() => controller.abort(), 5000)
+    setTimeout(() => controller.abort(), FETCH_TIMEOUT)
     const response = await fetch(url, { signal: controller.signal })
 
     if (!response.ok) {
@@ -176,7 +171,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
 
     const queryParams = params.join('&')
-    const policyId = config!.adatagMinting.policyId
+    const policyId = genesisConfig!.adatagMinting.policyId
     const url = `${KUPO_URL}/matches/${policyId}.*?${queryParams}`
 
     const adatags: string[] = []
@@ -196,7 +191,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     try {
       const authHex = fromText(authNft) //authNft.charCodeAt(0).toString(16)
       // Construct URL for fetching matches
-      const authPolicyId = config!.authTokenScript.policyId
+      const authPolicyId = genesisConfig!.authTokenScript.policyId
       const url = `${KUPO_URL}/matches/${authPolicyId}.${authHex}?unspent`
 
       const [eutxo] = await this.fetchData(url)

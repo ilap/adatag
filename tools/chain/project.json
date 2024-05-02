@@ -1,0 +1,49 @@
+{
+  "name": "chain",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/chain/",
+  "projectType": "library",
+  "implicitDependencies": [
+    "aiken"
+  ],
+  "targets": {
+    "spin-up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "color": true,
+        "cwd": "tools/chain",
+        "env": {
+          "YACI_CLI_CMD": "java -jar yaci-cli.jar 'create-node -o 1 --start'"
+        }
+      },
+      "configurations": {
+        "int": {
+          "commands": [
+            "docker-compose --env-file env kill ",
+            "docker compose --env-file env up -d --wait-timeout 120",
+            "bun run scripts/waitfor_ogmios.ts http://localhost:1442/health 120"
+          ]
+        },
+        "dev": { "command": "echo 'Dev: No spin-up is required'"},
+        "prd": {"command": "echo 'Prd: No spin-up is required'"}
+      },
+      "defaultConfiguration": "int"
+    },
+    "tear-down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "tools/chain",
+        "color": true
+      },
+      "configurations": {
+        "int": {
+          "command": "docker-compose --env-file env kill"
+        },
+        "dev": { "command": "echo 'Dev: No tear-down is required'"},
+        "prd": {"command": "echo 'Prd: No tear-down is required'"}
+      },
+      "defaultConfiguration": "dev"
+    }
+  }
+}

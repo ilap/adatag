@@ -2,19 +2,16 @@ import { UTxO, Tx, Translucent, toUnit, fromText, Data, AddressDetails } from 't
 import { MintingService } from './types'
 import { calculateDeposit, stringifyData } from '../utils'
 import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
-import * as T from '../configs/types'
-import { getConfig } from '../utils/config'
+import { genesisConfig } from '../utils/config'
+import { TimeDepositDatum } from '@adatag/shared/plutus'
 
-const config = await getConfig()
 
 export class AdatagMintingService implements MintingService {
   constructor(private translucent: Translucent) {}
 
   static getMinDeposit(adatag: string): bigint {
-    if (!config) {
-      throw Error(`Cannot read genesis config.`)
-    }
-    return calculateDeposit(adatag, config.adatagMinting.params.depositBase, MINDEPOSIT, MAXDEPOSITLENGTH)
+
+    return calculateDeposit(adatag, genesisConfig!.adatagMinting.params.depositBase, MINDEPOSIT, MAXDEPOSITLENGTH)
   }
 
   async getAssetUTxo(pid: string, assetName: string): Promise<UTxO | undefined> {
@@ -38,12 +35,12 @@ export class AdatagMintingService implements MintingService {
     // TODO: Find some better method to fetch these static references from chain.
     const refUtxos = await this.translucent!.utxosByOutRef([
       {
-        txHash: config!.genesisTransaction,
-        outputIndex: config!.stateholderScript.refIndex,
+        txHash: genesisConfig!.genesisTransaction,
+        outputIndex: genesisConfig!.stateholderScript.refIndex,
       },
       {
-        txHash: config!.genesisTransaction,
-        outputIndex: config!.adatagMinting.refIndex,
+        txHash: genesisConfig!.genesisTransaction,
+        outputIndex: genesisConfig!.adatagMinting.refIndex,
       },
     ])
 
@@ -56,11 +53,11 @@ export class AdatagMintingService implements MintingService {
 
     // TODO:
     // IDEA: We should remove tje deactivation time, meaning it should always active.
-    const timelockActive = config!.adatagMinting.params.deactivationTime.epoch > validFrom
+    const timelockActive = genesisConfig!.adatagMinting.params.deactivationTime.epoch > validFrom
 
     console.warn(
       `$$$$$$$$$$$$$$$$$$$$ TL ACTIVE: ${validFrom} ${
-        config!.adatagMinting.params.deactivationTime.epoch
+        genesisConfig!.adatagMinting.params.deactivationTime.epoch
       } ${timelockActive} .... Using handle ${useAdaHandle}`
     )
 
@@ -71,7 +68,7 @@ export class AdatagMintingService implements MintingService {
       if (useAdaHandle) {
         console.warn(`##### USING ADAHANDLE`)
         const handleAsset = {
-          [config!.adatagMinting.params.adahandle + adatagHex]: 1n,
+          [genesisConfig!.adatagMinting.params.adahandle + adatagHex]: 1n,
         }
         tx = tx.payToAddress(userAddress!, handleAsset)
       } else {
@@ -80,7 +77,7 @@ export class AdatagMintingService implements MintingService {
         // console.warn(`Valid deadline: ${to + bd.adatagMinting.params.lockingDays.ms < deadLine}`);
 
         // TODO: use proper time buffer instead of 10secs
-        const deadLine = BigInt(validTo + config!.adatagMinting.params.lockingDays.ms + 10000)
+        const deadLine = BigInt(validTo + genesisConfig!.adatagMinting.params.lockingDays.ms + 10000)
 
         console.log(`### DEADLINE ${deadLine}`)
 
@@ -88,19 +85,19 @@ export class AdatagMintingService implements MintingService {
         const { paymentCredential } = this.translucent.utils.getAddressDetails(userAddress!) as AddressDetails
 
         // Create the Timelock deposit datum
-        const datum: T.TimeDepositDatum['datum'] = {
+        const datum: TimeDepositDatum['datum'] = {
           beneficiary: paymentCredential!.hash as unknown as string,
           deadLine: deadLine,
         }
 
         console.warn(`# TL: DATUM: ${stringifyData(datum)}`)
-        const datumCbor = Data.to(datum, T.TimeDepositDatum.datum)
+        const datumCbor = Data.to(datum, TimeDepositDatum.datum)
 
         // Retrieve the TielockDeposit's UTxO
         const timelockRefUtxo = await this.translucent!.utxosByOutRef([
           {
-            txHash: config!.genesisTransaction,
-            outputIndex: config!.timelockScript.refIndex,
+            txHash: genesisConfig!.genesisTransaction,
+            outputIndex: genesisConfig!.timelockScript.refIndex,
           },
         ])
         refUtxos.concat(timelockRefUtxo)
@@ -108,7 +105,7 @@ export class AdatagMintingService implements MintingService {
         console.log(`#### DEPOSIT PAID TO CONTRACT ${deposit * 1_000_000n}`)
         tx = tx
           .payToContract(
-            config!.timelockScript.scriptAddress,
+            genesisConfig!.timelockScript.scriptAddress,
             { inline: datumCbor },
             { lovelace: deposit * 1_000_000n }
           )
@@ -129,18 +126,18 @@ export class AdatagMintingService implements MintingService {
   ): Promise<Tx> {
     const mintAmount = 1n
 
-    const authUnit = config!.authTokenScript.policyId + fromText(adatag[0])
+    const authUnit = genesisConfig!.authTokenScript.policyId + fromText(adatag[0])
     const authAsset = { [authUnit]: mintAmount }
     const authUtxo = await this.translucent!.utxoByUnit(authUnit)
     console.log(`##### AUTHUTXO: ${stringifyData(authUtxo)}`)
 
     const mintValue = {
-      [config!.adatagMinting.policyId + fromText(adatag)]: mintAmount,
+      [genesisConfig!.adatagMinting.policyId + fromText(adatag)]: mintAmount,
     }
 
     // 5. .payToContract( bd.stateholderScript.scriptAddress, { inline: state }, authToken,)
     const finalisedTx = tx
-      .payToContract(config!.stateholderScript.scriptAddress, { inline: datum }, authAsset)
+      .payToContract(genesisConfig!.stateholderScript.scriptAddress, { inline: datum }, authAsset)
       // 2. .collectFrom([authUtxo], Data.void())
       .collectFrom([authUtxo], Data.void())
       // 6. .mintAssets(mintValue, rdmr)

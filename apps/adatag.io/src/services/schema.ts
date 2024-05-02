@@ -1,9 +1,9 @@
+// TODO: Add bootstrap slot into the genesis-config.json
 import { BOOTSTRAP_SLOT } from '../configs/settings'
-import { getConfig } from '../utils/config'
+import { genesisConfig } from '../utils/config'
 
 // TODO: find a better way...
-const config = await getConfig()
-const polid = config?.adatagMinting.policyId || ''
+const polid = genesisConfig?.adatagMinting.policyId || ''
 
 // DB Worker constants
 // TODO: Find a better way to use consistend DB files.

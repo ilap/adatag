@@ -113,14 +113,8 @@ export const AdatagAdatagMinting = Object.assign(
                           index: 0,
                           fields: [
                             { dataType: 'bytes', title: 'hash' },
-                            {
-                              title: 'left',
-                              $ref: '#/definitions/ilap~1integri_tree~1types~1Proof',
-                            },
-                            {
-                              title: 'right',
-                              $ref: '#/definitions/ilap~1integri_tree~1types~1Proof',
-                            },
+                            { title: 'left', $ref: '#/definitions/ilap~1integri_tree~1types~1Proof' },
+                            { title: 'right', $ref: '#/definitions/ilap~1integri_tree~1types~1Proof' },
                           ],
                         },
                         {
@@ -291,18 +285,8 @@ export const StateHolderStateHolder = Object.assign(
             {
               title: 'operation',
               anyOf: [
-                {
-                  title: 'AdatagAdded',
-                  dataType: 'constructor',
-                  index: 0,
-                  fields: [],
-                },
-                {
-                  title: 'AdatagRemoved',
-                  dataType: 'constructor',
-                  index: 1,
-                  fields: [],
-                },
+                { title: 'AdatagAdded', dataType: 'constructor', index: 0, fields: [] },
+                { title: 'AdatagRemoved', dataType: 'constructor', index: 1, fields: [] },
               ],
             },
             { dataType: 'bytes', title: 'adatag' },

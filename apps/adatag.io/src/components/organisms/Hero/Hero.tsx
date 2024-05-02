@@ -10,6 +10,7 @@ import { DialogContext } from '../../../context/ConnectWalletProvider'
 import { HowItWorks } from '../HowItWorks/HowItWorks'
 import { ScrollButton } from '../../molecules/ScrollButton'
 import { useConfig } from '../../../hooks/useConfig'
+import React from 'react'
 
 interface Props {
   headerState: 'mint' | 'claim'
@@ -21,7 +22,7 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
 
   const config = useConfig()
 
-  console.log(`### CONFIG ##### ${JSON.stringify(config)}`)
+  // DEBUG: console.log(`### CONFIG ##### ${JSON.stringify(config)}`)
   const scrollToHow = () => {
     if (howtoRef.current) {
       const navbarHeight = 92

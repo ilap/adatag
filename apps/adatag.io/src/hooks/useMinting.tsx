@@ -46,7 +46,7 @@ const useMinting = (): UseMintingResult => {
       setIsMinting(true)
       setMintResult(undefined)
       setMintError(undefined)
-      setMintingProgress(`Started buildint transaction`)
+      setMintingProgress(`Started building transaction`)
 
       const provider = new Kupmios(KUPO_URL, OGMIOS_URL)
       await setSlotConfig(network, ENV)

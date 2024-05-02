@@ -2,7 +2,6 @@
   "bracketSameLine": true,
   "semi": false,
   "printWidth": 120,
-  "jsxBracketSameLine": true,
   "trailingComma":"es5",
   "tabWidth": 2,
   "singleQuote": true,

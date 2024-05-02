@@ -17,9 +17,7 @@ import {
   Val,
 } from '@adatag/shared/plutus'
 import { TreeWorkerService } from './types'
-import { getConfig } from '../utils/config'
-
-const config = await getConfig()
+import { genesisConfig } from '../utils/config'
 
 class TreeWorker implements TreeWorkerService {
   constructor(private dataStore: DataStoreService, private chainFetch: ChainFetchService) {}
