@@ -1,23 +1,10 @@
 {
-  "name": "shared-plutus",
+  "name": "plutus",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/plutus/src",
   "projectType": "library",
-  "implicitDependencies": [
-    "aiken"
-  ],
+  "implicitDependencies": ["aiken"],
   "tags": [],
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/shared/plutus",
-        "main": "libs/shared/plutus/src/index.ts",
-        "tsConfig": "libs/shared/plutus/tsconfig.lib.json",
-        "assets": ["libs/shared/plutus/*.md"],
-        "external": ["translucent-cardano"]
-      }
-    }
-  }
+  "// targets": "to see all targets run: nx show project plutus --web",
+  "targets": {}
 }
