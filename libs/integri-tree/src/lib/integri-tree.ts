@@ -1,5 +1,5 @@
 import { emptyHash, hashVal, combineThreeHashes } from './hash'
-import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
+import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/common/plutus'
 import { Data, fromText } from 'translucent-cardano'
 
 /**

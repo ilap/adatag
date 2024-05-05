@@ -264,7 +264,9 @@ export class KupmiosChainFetch implements ChainFetchService {
   ): Promise<TransactionOutput | undefined> {
     const hexStr = fromText(adatag)
     // FIXME: Add HEADER-HASH into the config and use created_after
-    const url = `${KUPO_URL}/matches/${this.policyId}.${hexStr}?order=${oldestFirst ? 'oldest_first' : 'most_recent_first'}${unspent ? '&unspent' : ''}`
+    const url = `${KUPO_URL}/matches/${this.policyId}.${hexStr}?order=${
+      oldestFirst ? 'oldest_first' : 'most_recent_first'
+    }${unspent ? '&unspent' : ''}`
     // It must be an NFT.
     try {
       const [asset] = await this.fetchData(url)

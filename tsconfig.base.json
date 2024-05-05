@@ -16,7 +16,9 @@
     "baseUrl": ".",
     "paths": {
       "@adatag/integri-tree": ["libs/integri-tree/src/index.ts"],
-      "@adatag/shared/plutus": ["libs/shared/plutus/src/index.ts"]
+      "@adatag/common/plutus": ["libs/common/src/plutus/index.ts"],
+      "@adatag/common/config": ["libs/common/src/config/index.ts"],
+      "@adatag/common/utils": ["libs/common/src/utils/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

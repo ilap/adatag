@@ -4,7 +4,6 @@ import { DiscordIcon } from '../../../assets/DiscordIcon'
 import { GithubIcon } from '../../../assets/GithubIcon'
 import { Logo } from '../../../assets/Logo'
 
-
 export const Footer: React.FC = () => (
   <footer className="bg-foreground text-white py-12 rounded-t-[72px] pt-32 pb-32 relative">
     <div className="absolute -top-20 left-0 right-0 bottom-0 z-[-1] bg-foreground" />

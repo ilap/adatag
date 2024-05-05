@@ -1,7 +1,7 @@
 {
-  "name": "plutus",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/shared/plutus/src",
+  "name": "@adatag/common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/common/src",
   "projectType": "library",
   "implicitDependencies": ["aiken"],
   "tags": [],

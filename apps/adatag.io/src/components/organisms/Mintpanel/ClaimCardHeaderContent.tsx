@@ -73,7 +73,9 @@ const ClaimCardHeaderContent: React.FC<Props> = ({ inputValue, rarity, deposit, 
 
                 radius="full"
                 color={selectedButton === 2 ? 'primary' : 'connect'}
-                className={`min-w-12 max-w-12 font-medium ${selectedButton !== 2 && 'border-2 border-opacity-50% hover:border-foreground'}`}
+                className={`min-w-12 max-w-12 font-medium ${
+                  selectedButton !== 2 && 'border-2 border-opacity-50% hover:border-foreground'
+                }`}
                 size="lg"
                 onClick={() => handleButtonClick(2)}>
                 ₳ 2
@@ -81,7 +83,9 @@ const ClaimCardHeaderContent: React.FC<Props> = ({ inputValue, rarity, deposit, 
               <Button
                 radius="full"
                 color={selectedButton === 5 ? 'primary' : 'connect'}
-                className={`min-w-12 max-w-12 font-medium ${selectedButton !== 5 && 'border-2 border-opacity-50% hover:border-foreground'}`}
+                className={`min-w-12 max-w-12 font-medium ${
+                  selectedButton !== 5 && 'border-2 border-opacity-50% hover:border-foreground'
+                }`}
                 size="lg"
                 onClick={() => handleButtonClick(5)}>
                 ₳ 5
@@ -89,7 +93,9 @@ const ClaimCardHeaderContent: React.FC<Props> = ({ inputValue, rarity, deposit, 
               <Button
                 radius="full"
                 color={selectedButton === 15 ? 'primary' : 'connect'}
-                className={`min-w-12 max-w-12 font-medium ${selectedButton !== 15 && 'border-2 border-opacity-50% hover:border-foreground'}`}
+                className={`min-w-12 max-w-12 font-medium ${
+                  selectedButton !== 15 && 'border-2 border-opacity-50% hover:border-foreground'
+                }`}
                 size="lg"
                 onClick={() => handleButtonClick(15)}>
                 ₳ 15

@@ -56,7 +56,7 @@ export type MintRedeemer =
           updateVal: Val
           appendVal: Val
           proof: Proof
-        },
+        }
       ]
     }
   | 'Burning'

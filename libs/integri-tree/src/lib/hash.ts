@@ -1,6 +1,6 @@
 //import * as P from 'plutus'
 import { sha256 } from 'js-sha256'
-import { Proof, Val } from '@adatag/shared/plutus'
+import { Proof, Val } from '@adatag/common/plutus'
 
 // export const emptyHash = '836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07' // Blake2b_224
 export const emptyHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' // SHA2_256

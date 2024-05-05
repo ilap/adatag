@@ -94,6 +94,6 @@ export const calculateDeposit = (
   return len == 0
     ? BigInt(0)
     : len > maxLength
-      ? BigInt(minDeposit)
-      : BigInt(Math.max(5, (depositBase / 2 ** (adatag.length - 1)) >> 0))
+    ? BigInt(minDeposit)
+    : BigInt(Math.max(5, (depositBase / 2 ** (adatag.length - 1)) >> 0))
 }
