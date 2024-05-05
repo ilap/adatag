@@ -1,6 +1,6 @@
 import { Tx, Translucent, Data } from 'translucent-cardano'
 import { ClaimingService } from './types'
-import { TimeDepositTimedeposit } from '@adatag/shared/plutus'
+import { TimeDepositTimedeposit } from '@adatag/common/plutus'
 
 import { stringifyData } from '../utils'
 import { genesisConfig } from '../utils/config'

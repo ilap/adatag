@@ -1,6 +1,6 @@
 import { Tx } from 'translucent-cardano'
 //import { StateHolderStateHolder } from '../configs/plutus'
-import { StateHolderStateHolder, Val } from '@adatag/shared/plutus'
+import { StateHolderStateHolder, Val } from '@adatag/common/plutus'
 export type { Val }
 
 export type State = 'idle' | 'syncing' | 'synced' | 'error'

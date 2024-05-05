@@ -3,7 +3,7 @@ import { MintingService } from './types'
 import { calculateDeposit, stringifyData } from '../utils'
 import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
 import { genesisConfig } from '../utils/config'
-import { TimeDepositDatum } from '@adatag/shared/plutus'
+import { TimeDepositDatum } from '@adatag/common/plutus'
 
 export class AdatagMintingService implements MintingService {
   constructor(private translucent: Translucent) {}

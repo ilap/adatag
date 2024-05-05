@@ -2,7 +2,9 @@
   "name": "@adatag/source",
   "version": "0.1.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start:proxy": "bun run ./tools/corsProxy.ts"
+  },
   "private": true,
   "resolutions": {
     "@react-aria/utils": "3.23.2"
@@ -48,6 +50,7 @@
     "@vitest/coverage-v8": "^1.0.4",
     "@vitest/ui": "^1.3.1",
     "autoprefixer": "10.4.13",
+    "cors-anywhere": "^0.4.4",
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "2.27.5",

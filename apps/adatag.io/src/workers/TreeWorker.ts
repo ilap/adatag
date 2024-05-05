@@ -15,7 +15,7 @@ import {
   Operation,
   AdatagAdatagMinting,
   Val,
-} from '@adatag/shared/plutus'
+} from '@adatag/common/plutus'
 import { TreeWorkerService } from './types'
 import { genesisConfig } from '../utils/config'
 
@@ -56,7 +56,7 @@ class TreeWorker implements TreeWorkerService {
     }
 
     // 2. Retrieve the datum for the transaction output
-    const result = await this.chainFetch.fetchDatum(asset.transaction_id, config!.timelockScript.scriptAddress)
+    const result = await this.chainFetch.fetchDatum(asset.transaction_id, genesisConfig!.timelockScript.scriptAddress)
 
     if (!result) {
       return undefined
@@ -200,7 +200,7 @@ class TreeWorker implements TreeWorkerService {
       operation: action as Operation,
       size: fromText(size),
       rootHash: rootHash,
-      mintingPolicy: config!.adatagMinting.policyId,
+      mintingPolicy: genesisConfig!.adatagMinting.policyId,
     }
 
     console.log(`Old State: ${stringifyData(oldState)}`)
