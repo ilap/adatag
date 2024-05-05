@@ -1,8 +1,8 @@
 {
-"// See ": "details here:",
-"// 1": "https://nx.dev/nx-api/nx/executors/run-commands",
-"// 2" : "https://nx.dev/reference/project-configuration#targets",
-"// 3" :" https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json",
+  "// See ": "details here:",
+  "// 1": "https://nx.dev/nx-api/nx/executors/run-commands",
+  "// 2": "https://nx.dev/reference/project-configuration#targets",
+  "// 3": " https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json",
 
   "name": "aiken",
   "version": "0.1.0",

@@ -23,7 +23,9 @@ export const App: React.FC = () => {
   }, [location])
 
   return (
-    <NextUIProvider navigate={navigate}>
+    <NextUIProvider navigate={(path: string) => {
+      console.log(`NAVIGATE: PATH: ${path}`)
+      navigate(path, { replace: true })}}>
       <Routes>
         <Route
           path="/"

@@ -17,7 +17,7 @@ export interface AdatagAdatagMinting {
             updateVal: { xi: string; xa: string; xb: string }
             appendVal: { xi: string; xa: string; xb: string }
             proof: { HashNode: { hash: string; left: Data; right: Data } } | { NodeHash: { hash: string } }
-          }
+          },
         ]
       }
     | 'Burning'

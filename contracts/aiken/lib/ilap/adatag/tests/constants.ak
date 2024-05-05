@@ -6,7 +6,7 @@
 // pub const day = 86400000
 // pub const locking_days = 1717200000 // 20 * 86400000 - 3 * 3600000 -> 1728000000 - 10800000
 
-// These below is for collecting or 
+// These below is for collecting or
 // Replace it with some valid date after bootstrap.
 // Preferably half year for feature active and 1yr for collecting
 // unclaimed deposits donations.

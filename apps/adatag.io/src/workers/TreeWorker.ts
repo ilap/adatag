@@ -20,7 +20,10 @@ import { TreeWorkerService } from './types'
 import { genesisConfig } from '../utils/config'
 
 class TreeWorker implements TreeWorkerService {
-  constructor(private dataStore: DataStoreService, private chainFetch: ChainFetchService) {}
+  constructor(
+    private dataStore: DataStoreService,
+    private chainFetch: ChainFetchService
+  ) {}
 
   async initialise(): Promise<void> {
     // Initialise the database
@@ -147,9 +150,7 @@ class TreeWorker implements TreeWorkerService {
         done = true
       } else {
         throw new Error(
-          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${elems[elems.length - 1]} .... ${
-            state.adatag
-          }`
+          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${elems[elems.length - 1]} .... ${state.adatag}`
         )
       }
       fromSlot = tip

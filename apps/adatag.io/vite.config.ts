@@ -18,7 +18,7 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         headers: {
-          // FIXME: for sqlite and proxy 
+          // FIXME: for sqlite and proxy
           'Cross-Origin-Opener-Policy': 'same-site',
           'Cross-Origin-Embedder-Policy': 'require-corp',
           'Access-Control-Allow-Origin': '*',

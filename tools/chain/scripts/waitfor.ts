@@ -17,18 +17,13 @@ interface ServerInfo {
   blockProducer: boolean
 }
 
-async function waitForServer(
-  port: number,
-  timeoutMs: number,
-): Promise<ServerInfo | null> {
+async function waitForServer(port: number, timeoutMs: number): Promise<ServerInfo | null> {
   const startTime = Date.now()
   const endTime = startTime + timeoutMs
 
   while (Date.now() < endTime) {
     try {
-      const response = await fetch(
-        `http://localhost:${port}/local-cluster/api/admin/clusters/default`,
-      )
+      const response = await fetch(`http://localhost:${port}/local-cluster/api/admin/clusters/default`)
 
       if (response.ok) {
         const serverInfo: ServerInfo = await response.json()
@@ -54,9 +49,7 @@ waitForServer(portToCheck, timeoutMilliseconds)
     if (serverInfo) {
       console.log(`Server is up! Start Time: ${serverInfo.startTime}`)
     } else {
-      console.error(
-        `Timeout: Server did not become available within ${timeoutMilliseconds} ms.`,
-      )
+      console.error(`Timeout: Server did not become available within ${timeoutMilliseconds} ms.`)
       process.exit(1)
     }
   })

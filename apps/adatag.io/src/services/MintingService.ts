@@ -5,12 +5,10 @@ import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
 import { genesisConfig } from '../utils/config'
 import { TimeDepositDatum } from '@adatag/shared/plutus'
 
-
 export class AdatagMintingService implements MintingService {
   constructor(private translucent: Translucent) {}
 
   static getMinDeposit(adatag: string): bigint {
-
     return calculateDeposit(adatag, genesisConfig!.adatagMinting.params.depositBase, MINDEPOSIT, MAXDEPOSITLENGTH)
   }
 

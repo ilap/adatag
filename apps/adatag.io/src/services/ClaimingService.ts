@@ -5,7 +5,6 @@ import { TimeDepositTimedeposit } from '@adatag/shared/plutus'
 import { stringifyData } from '../utils'
 import { genesisConfig } from '../utils/config'
 
-
 export class AdatagClaimingService implements ClaimingService {
   constructor(private translucent: Translucent) {}
 
@@ -26,7 +25,6 @@ export class AdatagClaimingService implements ClaimingService {
     depositOutIdx: number
   ): Promise<Tx> {
     let tx = this.translucent!.newTx().addSignerKey(beneficiary)
-
 
     const timelockRefUtxo = await this.translucent!.utxosByOutRef([
       {

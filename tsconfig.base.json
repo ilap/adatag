@@ -17,7 +17,7 @@
     "paths": {
       "@adatag/integri-tree": ["libs/integri-tree/src/index.ts"],
       "@adatag/shared/plutus": ["libs/shared/plutus/src/index.ts"]
-    },
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

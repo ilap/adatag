@@ -3,9 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/chain/",
   "projectType": "library",
-  "implicitDependencies": [
-    "aiken"
-  ],
+  "implicitDependencies": ["aiken"],
   "targets": {
     "spin-up": {
       "executor": "nx:run-commands",
@@ -25,8 +23,8 @@
             "bun run scripts/waitfor_ogmios.ts http://localhost:1442/health 120"
           ]
         },
-        "dev": { "command": "echo 'Dev: No spin-up is required'"},
-        "prd": {"command": "echo 'Prd: No spin-up is required'"}
+        "dev": { "command": "echo 'Dev: No spin-up is required'" },
+        "prd": { "command": "echo 'Prd: No spin-up is required'" }
       },
       "defaultConfiguration": "int"
     },
@@ -40,8 +38,8 @@
         "int": {
           "command": "docker-compose --env-file env kill"
         },
-        "dev": { "command": "echo 'Dev: No tear-down is required'"},
-        "prd": {"command": "echo 'Prd: No tear-down is required'"}
+        "dev": { "command": "echo 'Dev: No tear-down is required'" },
+        "prd": { "command": "echo 'Prd: No tear-down is required'" }
       },
       "defaultConfiguration": "dev"
     }

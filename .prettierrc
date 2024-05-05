@@ -2,12 +2,11 @@
   "bracketSameLine": true,
   "semi": false,
   "printWidth": 120,
-  "trailingComma":"es5",
+  "trailingComma": "es5",
   "tabWidth": 2,
   "singleQuote": true,
   "bracketSpacing": true,
   "arrowParens": "avoid",
-  "parser": "typescript",
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],

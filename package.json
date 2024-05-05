@@ -4,15 +4,19 @@
   "license": "MIT",
   "scripts": {},
   "private": true,
+  "resolutions": {
+    "@react-aria/utils": "3.23.2"
+  },
   "dependencies": {
+    "@react-aria/utils": "3.23.2",
     "@meshsdk/core": "^1.5.11-beta.7",
     "@meshsdk/react": "^1.1.10-beta.4",
     "@nextui-org/react": "^2.3.6",
     "comlink": "^4.4.1",
     "framer-motion": "^11.1.7",
     "js-sha256": "^0.11.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-router-dom": "^6.23.0",
     "@sqlite.org/sqlite-wasm": "^3.45.3-build1",
     "@streamparser/json": "^0.0.20",
