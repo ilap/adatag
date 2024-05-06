@@ -115,9 +115,7 @@ export async function setSlotConfig(network: Network, env: string) {
   try {
     console.warn(`SETTINGS: ${network} ... ${env}`)
     // FIXME: it's using cors-anywhere atm.
-    const response = await fetch(
-      `http://localhost:3000/http://localhost:10000/local-cluster/api/admin/clusters/default`
-    )
+    const response = await fetch(`http://localhost:3000/local-cluster/api/admin/clusters/default`)
     //const response = await fetch(`http://localhost:4200/local-cluster/api/admin/clusters/default`)
 
     if (response.ok) {

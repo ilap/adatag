@@ -1,3 +1,5 @@
+import React from "react"
+
 export const description = {
   title: 'Terms & Conditions',
   subtitle: 'Last updated: April 20, 2024',

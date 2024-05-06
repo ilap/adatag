@@ -42,7 +42,14 @@ export const CardHeaderContent: React.FC<Props> = ({
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center">
             <p className="text-xl m-0">Time lock deposit</p>
-            <Tooltip size="lg" color="foreground" content={<div className="text-medium text-wrap overflow-hidden max-w-sm whitespace-pre-wrap break-all">{timelockTooltip}</div>}>
+            <Tooltip
+              size="lg"
+              color="foreground"
+              content={
+                <div className="text-medium text-wrap overflow-hidden max-w-sm whitespace-pre-wrap break-all">
+                  {timelockTooltip}
+                </div>
+              }>
               <InformationCircleIcon className="h-5 w-5 cursor-pointer" />
             </Tooltip>
           </div>

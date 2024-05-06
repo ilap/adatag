@@ -1,4 +1,4 @@
-import { Val } from "@adatag/common/plutus"
+import { Val } from '@adatag/common/plutus'
 
 /**
  * member, nonmember

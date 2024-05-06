@@ -12,12 +12,7 @@ export const faqData = [
   {
     question: 'How does adatag work in simple terms?',
     answer:
-      "Users can mint their usernames as adatags on the Cardano blockchain for free, with only a transaction fee and a user's claimable time lock deposit, usually claimable after 20 days of minting.",
-  },
-  {
-    question: 'Can you provide an example of an adatag address compared to a standard wallet address?',
-    answer:
-      "An example adatag address might look like 'my_adatag', while a standard wallet address follows the usual format.",
+      "Users can mint their usernames as adatags on the Cardano blockchain for free, with only a transaction fee and a user's claimable time lock deposit, tipicaly claimable after 20 days of minting.",
   },
   {
     question: 'Is there a reservation process for adatags?',
@@ -35,10 +30,6 @@ export const faqData = [
   {
     question: 'What is the maximum length of a minted username (adatag)?',
     answer: 'The maximum length of a minted username (adatag) is 16 characters.',
-  },
-  {
-    question: 'Are there any fees associated with owning a minted username (adatag)?',
-    answer: 'No, there are no fees associated with owning a minted username (adatag).',
   },
   {
     question: 'Can minted usernames (adatags) be sold on any Cardano NFT marketplace?',
@@ -63,5 +54,10 @@ export const faqData = [
     question: 'What are the future plans for the adatag project?',
     answer:
       'The future plans for the adatag project include maintaining its open-source nature, expanding its features, and enhancing its integration with the Cardano ecosystem.',
+  },
+  {
+    question: 'Why are some characters not allowed in minted usernames (adatags)?',
+    answer:
+      'Some characters are not allowed in adatags to ensure compatibility with client side apps and to align with popular social media platforms.',
   },
 ]

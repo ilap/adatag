@@ -33,7 +33,11 @@ export const PanelDialog: React.FC<Props> = ({ title, subtitle, isOpen, onClose,
     return (
       <div className="flex">
         {subTitle}
-        <Tooltip size="lg" color="foreground" showArrow  content={<div className="text-medium text-wrap max-w-sm whitespace-pre-wrap break-all">{tooltip}</div>}>
+        <Tooltip
+          size="lg"
+          color="foreground"
+          showArrow
+          content={<div className="text-medium text-wrap max-w-sm whitespace-pre-wrap break-all">{tooltip}</div>}>
           <InformationCircleIcon className="h-5 w-5 cursor-pointer" />
         </Tooltip>
       </div>

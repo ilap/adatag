@@ -59,7 +59,7 @@ export const MintPanel: React.FC = () => {
     <>
       {isModalOpen && (
         <PanelDialog
-          title={progressResult ? 'Your @adatag is minted!' : "Can't mint @adatag"}
+          title={progressResult ? 'Your adatag is minted!' : "Can't mint adatag"}
           subtitle={
             progressResult
               ? "It should arrive in a minute. Check your wallet's transaction"

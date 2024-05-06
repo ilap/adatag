@@ -77,7 +77,9 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`
     const script = validator.compiledCode
 
     return `export interface ${name} {
-    new (${paramsArgs.map(param => param.join(':')).join(',')}): Validator;${datum ? `\n${datumTitle}: ${schemaToType(datumSchema)};` : ''}
+    new (${paramsArgs.map(param => param.join(':')).join(',')}): Validator;${
+      datum ? `\n${datumTitle}: ${schemaToType(datumSchema)};` : ''
+    }
     ${redeemerTitle}: ${schemaToType(redeemerSchema)};
   };
 
@@ -162,7 +164,9 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`
         if (isVoid(schema)) {
           return 'undefined'
         } else {
-          return `{${schema.fields.map((field: any) => `${field.title || 'wrapper'}:${schemaToType(field)}`).join(';')}}`
+          return `{${schema.fields
+            .map((field: any) => `${field.title || 'wrapper'}:${schemaToType(field)}`)
+            .join(';')}}`
         }
       }
       case 'enum': {

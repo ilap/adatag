@@ -11,7 +11,7 @@ All unit tests assume a valid bootstrap, including:
    - Adatag: `""`
    - Tree state: `Initial`
    - Tree size: `0`
-   - Proof: The hash of the relevant empty tree, using `(cnft token name -1, cnft token name +)` as constraints. For example, if "cnftpid"."a," then ``H( H("`","b") || H("") | H(""))``
+   - Proof: The hash of the relevant empty tree, using `(cnft token name -1, cnft token name +)` as constraints. For example, if "cnftpid"."a," then `` H( H("`","b") || H("") | H("")) ``
    - Minting policy: The relevant minting policy id.
 4. Proper setup of the TimeLockDeposit validator using correct parameters, including:
    - Collector's (developer's) public key hash.
