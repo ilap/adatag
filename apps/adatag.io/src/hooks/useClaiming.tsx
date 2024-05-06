@@ -62,7 +62,7 @@ export const useClaiming = (): UseClaimingResult => {
       const details = await getDepositDetails(adatag)
 
       if (!details) {
-        throw Error(`No deposit was found for the specified adatag '${adatag}'.`)
+        throw Error(`No deposit was found for the specified adatag: '${adatag}'.`)
       }
 
       console.log(`## DEPOSIT DETAILS: ${stringifyData(details)}`)

@@ -24,7 +24,7 @@ export const ConnectButton = ({ label, onClick }: { label: string; onClick: () =
       <div className="flex gap-4 items-center">
         <WalletIcon size="lg" walletName={wallet!.name} icon={wallet!.icon} />
         <p className="max-w-36 min-w-36 text-ellipsis text-center whitespace-nowrap overflow-hidden">
-          {isEntered ? 'Disconnect' : `${network === 0 && 't'}₳ ${formattedBalance}`}
+          {isEntered ? 'Disconnect' : `${network === 0 ? 't' : ''}₳ ${formattedBalance}`}
         </p>
       </div>
     ) : connecting ? (

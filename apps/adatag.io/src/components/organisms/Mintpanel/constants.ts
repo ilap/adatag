@@ -6,7 +6,8 @@ export const invalidAdatag = 'Invalid adatag. Please follow the guideline.'
 
 export const redeemAvailableCaption = 'Adatag found. Click to check and redeem.'
 
-export const redeemNotAvailableCaption = 'Adatag not minted or no deposit locked.'
+export const redeemNotAvailableCaption = 'Adatag not minted or no deposit available.'
+//'Adatag not minted or no deposit locked.'
 // 'Sorry, there is no deposit available for this adatag.'
 // 'Sorry, no deposit available for this adatag.'
 // 'Sorry, adatag is not minted or already redeemed.'

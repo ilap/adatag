@@ -42,10 +42,10 @@ export const ConnectWalletDialog: React.FC = () => {
         {subTitle}
         <Tooltip
           size="lg"
-          className="overflow-hidden text-ellipsis text-wrap w-full"
+          color="foreground"
           showArrow
-          content={<div className="max-w-44 text-small text-wrap text-ellipsis overflow-hidden w-full">{tooltip}</div>}>
-          <InformationCircleIcon className="h-6 w-6 cursor-pointer" />
+          content={<div className="text-medium text-wrap overflow-hidden max-w-sm whitespace-pre-wrap break-all">{tooltip}</div>}>
+          <InformationCircleIcon className="h-5 w-5 cursor-pointer" />
         </Tooltip>
       </div>
     )

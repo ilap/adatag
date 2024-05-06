@@ -33,8 +33,8 @@ export const PanelDialog: React.FC<Props> = ({ title, subtitle, isOpen, onClose,
     return (
       <div className="flex">
         {subTitle}
-        <Tooltip showArrow content={<div className="max-w-44 text-small">{tooltip}</div>}>
-          <InformationCircleIcon className="h-4 w-4 cursor-pointer" />
+        <Tooltip size="lg" color="foreground" showArrow  content={<div className="text-medium text-wrap max-w-sm whitespace-pre-wrap break-all">{tooltip}</div>}>
+          <InformationCircleIcon className="h-5 w-5 cursor-pointer" />
         </Tooltip>
       </div>
     )
@@ -61,7 +61,7 @@ export const PanelDialog: React.FC<Props> = ({ title, subtitle, isOpen, onClose,
       progressResult && (
         <Link className="w-full" href={`${url}/${progressResult}`} isExternal>
           <Button fullWidth color="primary" onClick={handleClose} size="lg">
-            Track minting transaction
+            Track transaction
           </Button>
         </Link>
       )
