@@ -40,8 +40,12 @@ export const ConnectWalletDialog: React.FC = () => {
     return (
       <div className="flex">
         {subTitle}
-        <Tooltip showArrow content={<div className="max-w-44 text-small">{tooltip}</div>}>
-          <InformationCircleIcon className="h-4 w-4 cursor-pointer" />
+        <Tooltip
+          size="lg"
+          className="overflow-hidden text-ellipsis text-wrap w-full"
+          showArrow
+          content={<div className="max-w-44 text-small text-wrap text-ellipsis overflow-hidden w-full">{tooltip}</div>}>
+          <InformationCircleIcon className="h-6 w-6 cursor-pointer" />
         </Tooltip>
       </div>
     )

@@ -6,7 +6,7 @@ export function useConfig() {
   const [config, setConfig] = useState<GenesisConfig | undefined>(undefined)
 
   useEffect(() => {
-    (async function fetchConfig() {
+    ;(async function fetchConfig() {
       try {
         setConfig(genesisConfig)
       } catch (e) {

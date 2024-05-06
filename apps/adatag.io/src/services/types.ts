@@ -1,4 +1,4 @@
-import { Tx } from 'translucent-cardano'
+import { Tx, UTxO } from 'translucent-cardano'
 //import { StateHolderStateHolder } from '../configs/plutus'
 import { StateHolderStateHolder, Val } from '@adatag/common/plutus'
 export type { Val }
@@ -60,13 +60,7 @@ export interface MintingService {
 }
 
 export interface ClaimingService {
-  buildClaimTx(
-    action: 'Collect' | 'Redeem',
-    beneficiary: string,
-    donation: bigint,
-    depositTxHash: string,
-    depositOutIdx: number
-  ): Promise<Tx>
+  buildClaimTx(action: 'Collect' | 'Redeem', beneficiary: string, donation: bigint, depositUtxos: UTxO[]): Promise<Tx>
 }
 
 export type TransactionDetails = {

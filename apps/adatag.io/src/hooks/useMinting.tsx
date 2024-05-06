@@ -11,8 +11,8 @@ import { useConfig } from './useConfig'
 
 interface UseMintingResult {
   isMinting: boolean
-  mintError: Error | undefined
-  mintResult: string | undefined
+  progressError: Error | undefined
+  progressResult: string | undefined
   mintingProgress: string
   handleMint: (adatag: string, useAdaHandle: boolean, deposit: bigint) => void
   networkId: number
@@ -24,8 +24,8 @@ const useMinting = (): UseMintingResult => {
   const address = useAddress()
 
   const [isMinting, setIsMinting] = useState(false)
-  const [mintError, setMintError] = useState<Error | undefined>(undefined)
-  const [mintResult, setMintResult] = useState<string | undefined>(undefined)
+  const [progressError, setMintError] = useState<Error | undefined>(undefined)
+  const [progressResult, setMintResult] = useState<string | undefined>(undefined)
   const [mintingProgress, setMintingProgress] = useState<string>('')
 
   const { createMintingDetails } = useContext(WorkerContext)
@@ -126,8 +126,8 @@ const useMinting = (): UseMintingResult => {
 
   return {
     isMinting,
-    mintError,
-    mintResult,
+    progressError,
+    progressResult,
     mintingProgress,
     handleMint,
     networkId,

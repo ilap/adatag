@@ -12,9 +12,9 @@ import { useConfig } from './useConfig'
 
 interface UseClaimingResult {
   isClaiming: boolean
-  claimError?: Error
-  claimResult?: string
-  mintingProgress: string
+  progressError?: Error
+  progressResult?: string
+  progress: string
   handleClaim: (adatag: string, donation: bigint) => void
 }
 
@@ -25,9 +25,9 @@ export const useClaiming = (): UseClaimingResult => {
   const { wallet, connected } = useWallet()
 
   const [isClaiming, setIsClaiming] = useState(false)
-  const [claimError, setClaimError] = useState<Error | undefined>(undefined)
-  const [claimResult, setClaimResult] = useState<string | undefined>(undefined)
-  const [mintingProgress, setMintingProgress] = useState<string>('')
+  const [progressError, setClaimError] = useState<Error | undefined>(undefined)
+  const [progressResult, setClaimResult] = useState<string | undefined>(undefined)
+  const [progress, setProgress] = useState<string>('')
 
   // This is just for redeem by the user
   const handleClaim = async (adatag: string, donation: bigint) => {
@@ -37,7 +37,7 @@ export const useClaiming = (): UseClaimingResult => {
       setIsClaiming(true)
       setClaimResult(undefined)
       setClaimError(undefined)
-      setMintingProgress(`Started building transaction`)
+      setProgress(`Started building transaction`)
 
       const provider = new Kupmios(KUPO_URL, OGMIOS_URL)
       const network = config && (config.network as Network)
@@ -55,42 +55,62 @@ export const useClaiming = (): UseClaimingResult => {
       translucent.selectWallet(walletWrapper)
       //translucent.selectWalletFromSeed(userSeed.seed)
 
-      setMintingProgress(`Getting deposit details`)
+      setProgress(`Getting deposit details`)
 
       const claimingService = new AdatagClaimingService(translucent)
 
       const details = await getDepositDetails(adatag)
 
+      if (!details) {
+        throw Error(`No deposit was found for the specified adatag '${adatag}'.`)
+      }
+
+      console.log(`## DEPOSIT DETAILS: ${stringifyData(details)}`)
+
       const now = Math.floor(Date.now() / 1000) * 1000
 
       console.log(`###### DEADLINE: ${now} ${details?.deadline}`)
       if (details && now < details?.deadline) {
-        throw Error(`Deadline has not passed. ${now.toLocaleString()}`)
+        throw Error(`Deadline has not passed.
+        ${new Date(details?.deadline).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          timeZoneName: 'shortGeneric',
+        })}`)
+      }
+
+      const depositUtxos = await translucent!.utxosByOutRef([
+        {
+          // Deposit UTxOs
+          txHash: details!.txId,
+          outputIndex: details!.outputIndex,
+        },
+      ])
+
+      if (depositUtxos.length === 0) {
+        throw Error(`Deposit is already claimed: ${details!.txId}#${details!.outputIndex}.`)
       }
 
       // Step 1. Creating the base transaction based on the handleUtxo and deposit
       /////////////////////////////////////////////////////////////////////////////
       await delay(2000)
-      const baseTx = await claimingService.buildClaimTx(
-        'Redeem',
-        details!.beneficiary,
-        donation,
-        details!.txId,
-        details!.outputIndex
-      )
+      const baseTx = await claimingService.buildClaimTx('Redeem', details!.beneficiary, donation, depositUtxos)
 
       /////////////////////////////////////////////////////////////////////////////
-      setMintingProgress('Completing transaction')
+      setProgress('Completing transaction')
       await delay(2000)
       const completedTx = await baseTx.complete()
 
       // Step 5. Signing and submitting the validated transaction
       /////////////////////////////////////////////////////////////////////////////
-      setMintingProgress('Signing transaction')
+      setProgress('Signing transaction')
       await delay(2000)
       const signedTx = await completedTx.sign().complete()
 
-      setMintingProgress('Submitting transaction')
+      setProgress('Submitting transaction')
       await delay(2000)
       ///console.log(toHex(signedTx.txSigned.to_bytes()))
 
@@ -99,19 +119,23 @@ export const useClaiming = (): UseClaimingResult => {
       console.log(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
       await delay(1000)
 
-      setMintingProgress('Transaction submitted successfully!')
+      setProgress('Transaction submitted successfully!')
       await delay(2000)
       setClaimResult(txHash)
     } catch (error) {
-      console.warn(`@@@ ERROR: ${error} ... ${typeof error} ${(error as object).toString()} ${stringifyData(error)}`)
+      console.warn(
+        `@@@ ERROR: ${(error as Error)?.name} ... ${typeof error} ${(error as object).toString()} ${stringifyData(
+          error
+        )}`
+      )
 
-      const e = new Error('Error during claiming:' + (error as object)?.toString())
+      const e = new Error((error as Error)?.message || (error as object).toString())
       setClaimError(e)
-      setMintingProgress('Error during claiming. Please check the console for details.')
+      setProgress('Error during claiming. Please check the console for details.')
     } finally {
       setIsClaiming(false)
     }
   }
 
-  return { isClaiming, claimError, claimResult, mintingProgress, handleClaim }
+  return { isClaiming, progressError, progressResult, progress, handleClaim }
 }

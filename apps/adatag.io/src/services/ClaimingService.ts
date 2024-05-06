@@ -1,4 +1,4 @@
-import { Tx, Translucent, Data } from 'translucent-cardano'
+import { Tx, Translucent, Data, UTxO } from 'translucent-cardano'
 import { ClaimingService } from './types'
 import { TimeDepositTimedeposit } from '@adatag/common/plutus'
 
@@ -21,8 +21,7 @@ export class AdatagClaimingService implements ClaimingService {
     action: 'Collect' | 'Redeem',
     beneficiary: string,
     donation: bigint,
-    depositTxHash: string,
-    depositOutIdx: number
+    depositUtxos: UTxO[]
   ): Promise<Tx> {
     let tx = this.translucent!.newTx().addSignerKey(beneficiary)
 
@@ -30,15 +29,6 @@ export class AdatagClaimingService implements ClaimingService {
       {
         txHash: genesisConfig!.genesisTransaction,
         outputIndex: genesisConfig!.timelockScript.refIndex,
-      },
-    ])
-
-    //const details = getDepositDetails
-    const depositUtxos = await this.translucent!.utxosByOutRef([
-      {
-        // Deposit UTxOs
-        txHash: depositTxHash,
-        outputIndex: depositOutIdx,
       },
     ])
 

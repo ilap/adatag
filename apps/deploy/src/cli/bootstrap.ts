@@ -269,7 +269,6 @@ export class Bootstrap {
       // FIXME: The hash alg should be defined only in integri-tree module
       const hash_alg = details.hashAlg
 
-
       const val: P.Val = {
         xi: String.fromCharCode(48),
         xa: String.fromCharCode(i - 1),

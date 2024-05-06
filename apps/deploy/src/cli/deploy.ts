@@ -17,9 +17,6 @@ const translucent = await Translucent.new(provider, network)
 // Select the collector's address for redeem/claim
 const collectorAddress = await translucent.selectWalletFromSeed(collectorSeed).wallet.address()
 
-// Access the params object for the specified network
-const params = genesisParams[network]
-
 interface Dictionary {
   [key: string]: IntegriTree
 }
@@ -34,15 +31,20 @@ for (let i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); i++) {
 }
 
 // Create a newParams object by spreading the values from the original params
-const useTimelock = Bun.env.DO_NOT_USE_TIMELOCK || false
-console.log(`Use timelock: ${useTimelock}   .... ${Bun.env.DO_NOT_USE_TIMELOCK}`)
-const testParams = {
+const useTimelock = Bun.env.USE_TIMELOCK == undefined || Bun.env.USE_TIMELOCK === 'true'
+
+// Access the params object for the specified network
+const params = genesisParams[network]
+
+const finalParams = {
   ...params,
   collectorAddress: collectorAddress,
-  collectionTime: useTimelock ? params.collectionTime : 0,
-  deactivationTime: useTimelock ? params.deactivationTime : 0,
-  lockingDays: useTimelock ? params.lockingDays : 0,
+  collectionTime: useTimelock ? params.collectionTime : 0.0,
+  deactivationTime: useTimelock ? params.deactivationTime : 0.0,
+  lockingDays: useTimelock ? params.lockingDays : 0.0,
 }
+
+console.log(`PARAMS: ${stringifyData(finalParams)}`)
 
 // Select deployer's wallet
 translucent.selectWalletFromSeed(deployerSeed)
@@ -52,12 +54,12 @@ const [utxo] = await translucent.wallet.getUtxos()
 console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
 const result =
   Bun.env.ENVIRONMENT == 'Development'
-    ? await Bootstrap.deploy(translucent, utxo, testParams)
+    ? await Bootstrap.deploy(translucent, utxo, finalParams)
     : await Bootstrap.deployAndSave(
         `./config/genesis-config-${network.toString().toLowerCase()}.json`,
         translucent,
         utxo,
-        testParams
+        finalParams
       )
 
 const bd: GenesisConfig = result

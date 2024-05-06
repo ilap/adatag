@@ -12,13 +12,15 @@ import * as Urls from '../../../configs/expolers-url.json'
 import { useConfig } from '../../../hooks/useConfig'
 
 interface Props {
+  title: string
+  subtitle: string
   isOpen: boolean
   onClose: () => void
-  mintResult: string | undefined
-  mintError: Error | undefined
+  progressResult: string | undefined
+  progressError: Error | undefined
 }
 
-export const PanelDialog: React.FC<Props> = ({ isOpen, onClose, mintResult, mintError }) => {
+export const PanelDialog: React.FC<Props> = ({ title, subtitle, isOpen, onClose, progressResult, progressError }) => {
   const config = useConfig()
   const handleClose = () => {
     console.warn(`handleClose`)
@@ -39,31 +41,25 @@ export const PanelDialog: React.FC<Props> = ({ isOpen, onClose, mintResult, mint
   }
 
   const renderContent = () => {
-    return mintError ? (
+    return progressError ? (
       <DialogContent
         icon={mintErrorIcon}
-        title="Can't mint adatag"
-        subtitle={renderTooltip('Re-connect the wallet and try again.', (mintError as Error)?.message)}
+        title={title}
+        subtitle={renderTooltip(subtitle, (progressError as Error)?.message)}
       />
     ) : (
-      mintResult && (
-        <DialogContent
-          icon={successMintIcon}
-          title="Your adatag is minted"
-          subtitle="It should arrive in a minute. Check your wallet's transaction"
-        />
-      )
+      progressResult && <DialogContent icon={successMintIcon} title={title} subtitle={subtitle} />
     )
   }
 
   const renderFooter = () => {
-    return mintError ? (
+    return progressError ? (
       <Button fullWidth color="primary" onClick={handleClose} size="lg">
         Ok
       </Button>
     ) : (
-      mintResult && (
-        <Link className="w-full" href={`${url}/${mintResult}`} isExternal>
+      progressResult && (
+        <Link className="w-full" href={`${url}/${progressResult}`} isExternal>
           <Button fullWidth color="primary" onClick={handleClose} size="lg">
             Track minting transaction
           </Button>

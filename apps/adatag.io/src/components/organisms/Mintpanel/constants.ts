@@ -1,12 +1,16 @@
 export const infoCaption = 'Start typing.'
-export const availableCaption = 'Hurray! This adatag is available.'
+export const availableCaption = 'Hurray! This adatag is available for minting.'
 export const notAvailableCaption = 'Sorry, this adatag is already taken.'
 export const errorCaption = 'Error while fetching data from the chain.'
 export const invalidAdatag = 'Invalid adatag. Please follow the guideline.'
 
-export const redeemAvailableCaption = 'Deposit for this adatag available for redemption.' //'This adatag is available redemption.'
-export const redeemNotAvailableCaption = 'Sorry, deposit not redeemable for this Adatag.'
+export const redeemAvailableCaption = 'Adatag found. Click to check and redeem.'
+
+export const redeemNotAvailableCaption = 'Adatag not minted or no deposit locked.'
+// 'Sorry, there is no deposit available for this adatag.'
+// 'Sorry, no deposit available for this adatag.'
 // 'Sorry, adatag is not minted or already redeemed.'
+// 'Sorry, adatag is not minted or no deposit locked.'
 
 export const checkingCaption = 'Searching on the Cardano Blockchain.'
 

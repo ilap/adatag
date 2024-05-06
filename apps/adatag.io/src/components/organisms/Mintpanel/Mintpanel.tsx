@@ -1,22 +1,19 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Card, CardHeader, CardBody, CardFooter } from '@nextui-org/react'
 import { useAssets } from '@meshsdk/react'
-
 import { Button } from '../../atoms/Button'
 import { Input } from '../../atoms/Input'
-
 import useMinting from '../../../hooks/useMinting'
 import { calculateDeposit, getCaption, getRarity } from './utils'
 import { checkingCaption, mintguideline } from './constants'
 import { WorkerContext } from '../../../context/WorkerContextProvider'
 import useDebouncedSearch, { SearchState } from '../../../hooks/useDebouncedSearch'
-
 import { PanelDialog } from './PanelDialog'
 import { AssetExtended } from '@meshsdk/core'
-
 import { LoadingSpinner } from './LoadingSpinner'
 import { CardHeaderContent } from './CardHeaderContent'
 import { useConfig } from '../../../hooks/useConfig'
+import React from 'react'
 
 export const MintPanel: React.FC = () => {
   const config = useConfig()
@@ -27,60 +24,61 @@ export const MintPanel: React.FC = () => {
   const { inputValue, setInputValue, isLoading, searchState, handleChange } = useDebouncedSearch({
     checkAdatag: checkIfAdatagMinted,
   })
-  const { isMinting, mintError, mintResult, handleMint, mintingProgress } = useMinting()
+  const { isMinting, progressError, progressResult, handleMint, mintingProgress } = useMinting()
 
-  const rarity = useMemo(() => getRarity(inputValue.length), [inputValue])
-  const buttonDisabled = useMemo(
-    () => isMinting || isLoading || searchState !== SearchState.NotMinted,
-    [isMinting, isLoading, searchState]
-  )
-  const deposit = useMemo(() => calculateDeposit(inputValue, 1750, 15, 6), [inputValue])
-  const formattedDate = useMemo(
-    () =>
-      new Date(Date.now() + 20 * 86400 * 1000).toLocaleDateString('en-US', {
+  const rarity = getRarity(inputValue.length)
+  const buttonDisabled = isMinting || isLoading || searchState !== SearchState.NotMinted
+  const now = Date.now()
+
+  const deactivated = config && config.adatagMinting.params.deactivationTime.epoch < now
+
+  const deposit = deactivated ? 0n : calculateDeposit(inputValue, 1750, 15, 6)
+  const formattedDate = deactivated
+    ? 'Deactivated'
+    : new Date(now + 20 * 86400 * 1000).toLocaleDateString('en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-      }),
-    []
-  )
+      })
 
   const adahandle = config && config.adatagMinting.params.adahandle
-  const hasAdahandle = useMemo(
-    () => assets?.some(asset => asset.assetName === inputValue && asset.policyId === adahandle),
-    [assets, inputValue]
-  )
+  const hasAdahandle = assets?.some(asset => asset.assetName === inputValue && asset.policyId === adahandle)
   const adahandleChecked = useHandle && hasAdahandle
   const isInvalid = searchState === SearchState.Error || searchState === SearchState.InvalidAdatag
 
   useEffect(() => {
-    if (mintResult) {
-      //openModal()
+    if (progressResult) {
       setIsModalOpen(true)
       setInputValue('')
-    } else if (mintError) {
+    } else if (progressError) {
       setIsModalOpen(true)
     }
-  }, [mintResult, mintError])
+  }, [progressResult, progressError])
 
   return (
     <>
       {isModalOpen && (
         <PanelDialog
+          title={progressResult ? 'Your @adatag is minted!' : "Can't mint @adatag"}
+          subtitle={
+            progressResult
+              ? "It should arrive in a minute. Check your wallet's transaction"
+              : 'Re-connect the wallet and try again.'
+          }
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          mintError={mintError}
-          mintResult={mintResult}
+          progressError={progressError}
+          progressResult={progressResult}
         />
       )}
       <Card className="rounded-xl p-4 max-w-[430px] max-h-[580px]">
         <CardHeader className="flex flex-col gap-3">
-          <LoadingSpinner isProgressing={isMinting} content={<>{mintingProgress}</>} />
+          <LoadingSpinner isProgressing={isMinting} content={<p className="text-center">{mintingProgress}</p>} />
           <CardHeaderContent
             inputValue={inputValue}
             rarity={rarity}
-            useAdahandle={useHandle}
-            hasAdahandle={hasAdahandle}
+            useAdahandle={deactivated ? false : useHandle}
+            hasAdahandle={deactivated ? false : hasAdahandle}
             adahandleChecked={adahandleChecked}
             deposit={deposit}
             formattedDate={formattedDate}

@@ -67,7 +67,7 @@ export const ClaimPanel: React.FC = () => {
   const { inputValue, setInputValue, isLoading, searchState, handleChange } = useDebouncedSearch({
     checkAdatag: checkIfAdatagNotMinted,
   })
-  const { isClaiming, claimError, claimResult, handleClaim, mintingProgress } = useClaiming()
+  const { isClaiming, progressError, progressResult, handleClaim, progress } = useClaiming()
 
   const rarity = useMemo(() => getRarity(inputValue.length), [inputValue])
   const buttonDisabled = useMemo(
@@ -80,25 +80,31 @@ export const ClaimPanel: React.FC = () => {
   const [donation, setDonation] = useState(0)
 
   useEffect(() => {
-    if (claimResult || claimError) {
+    if (progressResult || progressError) {
       setIsModalOpen(true)
       setInputValue('')
     }
-  }, [claimResult, claimError])
+  }, [progressResult, progressError])
 
   return (
     <>
       {isModalOpen && (
         <PanelDialog
+          title={progressError ? 'Deposit Redemption Failed' : 'Deposit Redeemed Successfully'}
+          subtitle={
+            progressError
+              ? `Sorry, an error occurred while redeeming the deposit: `
+              : "Your deposit should arrive in your wallet shortly. Please check your wallet's transactions for confirmation."
+          }
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          mintError={claimError}
-          mintResult={claimResult}
+          progressError={progressError}
+          progressResult={progressResult}
         />
       )}
       <Card className="rounded-xl p-4 max-w-[430px] max-h-[580px]">
         <CardHeader className="flex flex-col gap-3">
-          <LoadingSpinner isProgressing={isClaiming} content={<>{mintingProgress}</>} />
+          <LoadingSpinner isProgressing={isClaiming} content={<p className="text-center">{progress}</p>} />
           <ClaimCardHeaderContent
             inputValue={inputValue}
             rarity={rarity}
