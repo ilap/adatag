@@ -12,14 +12,12 @@
   ],
   "// targets": "to see all targets run: nx show project adatag1.io --web",
   "targets": {
+    "build": {
+      "inputs": ["production"]
+    },
     "serve-static": {
       "dependsOn": [
-        "cors-proxy",
-        {
-          "projects": "@adatag/deploy",
-          "target": "build",
-          "params": "forward"
-        }
+        "cors-proxy"
       ],
       "configurations": {
         "custom": {}
@@ -36,6 +34,7 @@
         "readyWhen": "CORS Proxy server",
         "parallel": true
       },
+      "inputs": [],
       "configurations": {
         "custom": {
           "commands": [

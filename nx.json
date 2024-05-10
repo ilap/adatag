@@ -1,9 +1,10 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "useInferencePlugins": false,
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": ["sharedGlobals"],
     "production": [
-      "default",
+      "{projectRoot}/**/*",
       "!{projectRoot}/**/genesis-*.json",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
@@ -60,7 +61,7 @@
     "@nx/vite:build": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "inputs": ["default"]
     }
   }
 }

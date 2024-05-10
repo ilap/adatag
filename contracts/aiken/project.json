@@ -9,7 +9,7 @@
   "root": "contracts/aiken",
   "projectType": "library",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*.ak"]
+    "contractsDefault": ["{projectRoot}/**/*.ak"]
   },
   "targets": {
     "build": {
@@ -18,7 +18,7 @@
       "options": {
         "cwd": "contracts/aiken" 
       },
-      "inputs": ["{projectRoot}/**/*.ak"],
+      "inputs": ["contractsDefault"],
       "outputs": ["{projectRoot}/plutus.json"],
       "cache": true,
       "configurations": {
@@ -48,6 +48,7 @@
     "test": {
       "dependsOn": ["lint"],
       "executor": "nx:run-commands",
+      "inputs": ["contractsDefault"],
       "cache": true,
       "options": {
         "cwd": "contracts/aiken"
@@ -66,6 +67,7 @@
       "options": {
         "cwd": "contracts/aiken"
       },
+      "inputs": ["contractsDefault"],
       "cache": true,
       "command": "aiken fmt --check"
     }

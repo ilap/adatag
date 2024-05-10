@@ -48,6 +48,7 @@
       "options": {
         "cwd": "apps/deploy/config/"
       },
+      "inputs": [],
       "configurations": {
         "custom":  { "command": "cp -f genesis-config-custom.json  ../../adatag.io/public/genesis-config.json" },
         "preview": { "command": "cp -f genesis-config-preview.json ../../adatag.io/public/genesis-config.json" },

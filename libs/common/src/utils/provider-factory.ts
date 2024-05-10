@@ -41,6 +41,7 @@ export class ProviderFactory {
         Preprod: {
           Blockfrost: {},
           Maestro: {},
+          Kupmios: {},
           KupmiosV5: {},
         },
         Mainnet: {
