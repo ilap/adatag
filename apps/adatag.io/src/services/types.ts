@@ -1,5 +1,4 @@
 import { Tx, UTxO } from 'translucent-cardano'
-//import { StateHolderStateHolder } from '../configs/plutus'
 import { StateHolderStateHolder, Val } from '@adatag/common/plutus'
 export type { Val }
 

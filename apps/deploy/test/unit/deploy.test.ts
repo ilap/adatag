@@ -18,7 +18,7 @@ import {
   Deployer address  : addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp
   Test User address : addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m
 */
-describe('Adatag minting', async () => {
+describe('Deployment test', async () => {
   // The envs can be overwritten for dynamic testings, see an example below.
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { deployerSeed, collectorSeed, network, provider } =

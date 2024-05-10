@@ -5,7 +5,7 @@ import * as P from '@adatag/common/plutus'
 
 import { Assets, Data, Emulator, Translucent } from 'translucent-cardano'
 
-import { Bootstrap } from '../../src/cli/bootstrap'
+import { Bootstrap } from '../../src/lib/bootstrap'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
 import { resolveMockData, setSloctConfig } from '@adatag/common/utils'
 

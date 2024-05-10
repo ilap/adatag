@@ -9,7 +9,7 @@ import {
 } from 'translucent-cardano'
 import * as P from  '@adatag/common/plutus'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
-import { Bootstrap } from '../../src/cli/bootstrap'
+import { Bootstrap } from '../../src/lib/bootstrap'
 import {
   setSloctConfig,
   generateRandomStrings,
@@ -113,10 +113,10 @@ console.log(`PARAMS: ${stringifyData(testParams)}`)
   const [utxo] = await translucent.wallet.getUtxos()
 
   // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-  console.log(`#########  saveTo ./configs/genesis-config-${network.toString().toLowerCase()}.json`)
+  console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
   const result = Bun.env.ENVIRONMENT == 'Development' ?
     await Bootstrap.deploy(translucent, utxo, testParams)
-    : await Bootstrap.deployAndSave(`./configs/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
+    : await Bootstrap.deployAndSave(`./config/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
 
 
   const bd: GenesisConfig = result

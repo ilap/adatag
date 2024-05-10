@@ -1,7 +1,7 @@
 {
   "name": "@adatag/deploy",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/deploy/src/",
+  "sourceRoot": "apps/deploy/",
   "projectType": "application",
   "implicitDependencies": ["@adatag/common", "chain"],
   "tags": [],
@@ -30,7 +30,8 @@
       "options": {
         "smol": false,
         "bun": true,
-        "timeout": 60000
+        "timeout": 60000,
+        "cwd": "apps/deploy"
       },
       "configurations": {
         "dev": {},
