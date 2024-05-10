@@ -34,7 +34,7 @@
       },
       "configurations": {
         "custom": {
-          "command": "docker-compose --env-file env kill"
+          "command": "docker compose --env-file env kill"
         },
         "dev": { "command": "echo 'No tear-down is required'" }
       },

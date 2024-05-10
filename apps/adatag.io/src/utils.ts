@@ -114,8 +114,7 @@ export async function setSlotConfig(network: Network, env: string) {
   }
   try {
     console.warn(`SETTINGS: ${network} ... ${env}`)
-    // FIXME: it's using some custom cors .ts
-    //const response = await fetch(`http://localhost:3000/local-cluster/api/admin/clusters/default`)
+    // FIXME: it's using cors proxy atm for custom (Yaci) build
     const response = await fetch(`http://localhost:3000/local-cluster/api/admin/clusters/default`)
 
     if (response.ok) {

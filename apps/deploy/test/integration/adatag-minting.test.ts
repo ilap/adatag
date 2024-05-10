@@ -113,10 +113,10 @@ console.log(`PARAMS: ${stringifyData(testParams)}`)
   const [utxo] = await translucent.wallet.getUtxos()
 
   // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-  console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
-  const result = Bun.env.ENVIRONMENT == 'Development' ?
-    await Bootstrap.deploy(translucent, utxo, testParams)
-    : await Bootstrap.deployAndSave(`./config/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
+  //console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
+  //const result = Bun.env.ENVIRONMENT == 'Development' ?
+  const result = await Bootstrap.deploy(translucent, utxo, testParams)
+    //: await Bootstrap.deployAndSave(`./config/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
 
 
   const bd: GenesisConfig = result

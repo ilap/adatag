@@ -9,8 +9,8 @@
     "deploy": {
       "command": "bun run src/cli/deploy.ts",
       "dependsOn": [
-        "spin-up",
-        "test",
+        "cors-proxy",
+        "^spin-up",
         "^build"
       ],
       "options": {
@@ -26,6 +26,7 @@
       "defaultConfiguration": "dev"
     },
     "test": {
+      "dependsOn": ["deploy"],
       "executor": "@nx-bun/nx:test",
       "options": {
         "smol": false,
@@ -47,15 +48,37 @@
         "deploy"
       ],
       "options": {
-        "cwd": "apps/deploy/config/"
+        "cwd": "apps/deploy/"
+      },
+      "inputs": ["{projectRoot}/**/genesis-*"],
+      "configurations": {
+        "custom":  { "command": "cp -f ./config/genesis-config-custom.json  ../../adatag.io/public/genesis-config.json" },
+        "preview": { "command": "cp -f ./config/genesis-config-preview.json ../../adatag.io/public/genesis-config.json" },
+        "preprod": { "command": "cp -f ./config/genesis-config-preprod.json ../../adatag.io/public/genesis-config.json" },
+        "mainnet": { "command": "cp -f ./config/genesis-config-mainnet.json ../../adatag.io/public/genesis-config.json" },
+        "dev": { "command": "echo 'No config is saved'" }
+      },
+      "defaultConfiguration": "dev"
+    }, 
+    "cors-proxy": {
+      "executor": "nx:run-commands",
+      "tty": true,
+      "options": {
+        "color": true,
+        "cwd": "tools",
+        "readyWhen": "CORS Proxy server",
+        "parallel": true
       },
       "inputs": [],
       "configurations": {
-        "custom":  { "command": "cp -f genesis-config-custom.json  ../../adatag.io/public/genesis-config.json" },
-        "preview": { "command": "cp -f genesis-config-preview.json ../../adatag.io/public/genesis-config.json" },
-        "preprod": { "command": "cp -f genesis-config-preprod.json ../../adatag.io/public/genesis-config.json" },
-        "mainnet": { "command": "cp -f genesis-config-mainnet.json ../../adatag.io/public/genesis-config.json" },
-        "dev": { "command": "echo 'No config is saved'" }
+        "custom": {
+          "commands": [
+            "pkill -f 'corsProxy'; bun run corsProxy.ts"
+          ]
+        },
+        "dev": {
+          "command": "echo 'No CORS Proxy server is required'"
+        }
       },
       "defaultConfiguration": "dev"
     }
