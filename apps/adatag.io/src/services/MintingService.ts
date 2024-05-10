@@ -1,6 +1,7 @@
 import {
   UTxO,
   Tx,
+  TxComplete,
   Translucent,
   toUnit,
   fromText,
@@ -9,19 +10,13 @@ import {
 } from 'translucent-cardano'
 import { MintingService } from './types.ts'
 import { calculateDeposit, stringifyData } from '../utils.ts'
-import {
-  MAXDEPOSITLENGTH,
-  MINDEPOSIT,
-  MS,
-  NETWORK,
-  TIMELOCK_BUFFER,
-} from '../configs/settings.ts'
+import { MAXDEPOSITLENGTH, MINDEPOSIT, MS } from '../configs/settings.ts'
 import Config from '../configs/genesis-config.json'
 
 import * as T from '../configs/types.ts'
 
 export class AdatagMintingService implements MintingService {
-  constructor(private translucent: Translucent) {}
+  constructor(private translucent: Translucent) { }
 
   static getMinDeposit(adatag: string): bigint {
     return calculateDeposit(
@@ -32,6 +27,7 @@ export class AdatagMintingService implements MintingService {
     )
   }
 
+
   async getAssetUTxo(
     pid: string,
     assetName: string,
@@ -40,19 +36,23 @@ export class AdatagMintingService implements MintingService {
     return await this.translucent!.utxoByUnit(unit)
   }
 
+
   async buildBaseTx(
     adatag: string,
     useAdaHandle: boolean,
     userAddress: string | undefined,
     deposit: bigint,
   ): Promise<Tx> {
+
     // Set the default values for the transaction
     const adatagHex = fromText(adatag)
 
-    // 1. Create a new transaction
+
+    // Create a new transaction
+    // 1. .newTx()
     let tx = this.translucent!.newTx()
 
-    // Set the minting- and state-holder policies' reference UTxOs
+    // Set the minting- and state-hodler policies' reference UTxOs
     // TODO: Find some better method to fetch these static references from chain.
     const refUtxos = await this.translucent!.utxosByOutRef([
       {
@@ -65,47 +65,31 @@ export class AdatagMintingService implements MintingService {
       },
     ])
 
+    // Check whether the time lock deposit is still active or not.
+    const now = Date.now()
+    // It's in milliseconds due to the PLC.
+    const timelockActive = Config.adatagMinting.params.deactivationTime.epoch > now * MS
 
-    // required for deactivation checking
-    const validFrom = Math.floor(Date.now() / 1000) * 1000
-
-    // required for deadline check
-    // TODO: use proper time buffer than the static 60secs 
-    const validTo = validFrom + 60000
-
-    // TODO: 
-    // IDEA: We should remove tje deactivation time, meaning it should always active.
-    const timelockActive =
-      Config.adatagMinting.params.deactivationTime.epoch > validFrom
-
-    console.warn(
-      `$$$$$$$$$$$$$$$$$$$$ TL ACTIVE: ${validFrom} ${Config.adatagMinting.params.deactivationTime.epoch} ${timelockActive} .... Using handle ${useAdaHandle}`,
-    )
+    console.warn(`$$$$$$$$$$$$$$$$$$$$ TL ACTIVE: ${timelockActive} .... Using handle ${useAdaHandle}`)
 
     // When time lock deposits is active
     if (timelockActive || true) {
+     
       // If user has the same ada handle as the minting adatag and decided to use it for avoiding
       // time lock teposits.
       if (useAdaHandle) {
         console.warn(`##### USING ADAHANDLE`)
-        const handleAsset = {
-          [Config.adatagMinting.params.adahandle + adatagHex]: 1n,
-        }
+        const handleAsset = { [Config.adatagMinting.params.adahandle + adatagHex]: 1n }
         tx = tx.payToAddress(userAddress!, handleAsset)
       } else {
         // Times are in milliseconds in Plutus Core
-        // IMPORTANT: to + bd.adatagMinting.params.lockingDays.ms < deadLine
-        // console.warn(`Valid deadline: ${to + bd.adatagMinting.params.lockingDays.ms < deadLine}`);
-
-        // TODO: use proper time buffer instead of 10secs
-        const deadLine = BigInt(validTo + Config.adatagMinting.params.lockingDays.ms + 10000)
-
-        console.log(`### DEADLINE ${deadLine}`)
+        const deadLine = BigInt(
+          (now + Config.adatagMinting.params.lockingDays.days * 86400 + 3600) * MS,
+        )
 
         // Beneficiary is always the user!
-        const { paymentCredential } = this.translucent.utils.getAddressDetails(
-          userAddress!,
-        ) as AddressDetails
+        const { paymentCredential } = this.translucent.utils.getAddressDetails(userAddress!) as AddressDetails
+
 
         // Create the Timelock deposit datum
         const datum: T.TimeDepositDatum['datum'] = {
@@ -113,7 +97,6 @@ export class AdatagMintingService implements MintingService {
           deadLine: deadLine,
         }
 
-        console.warn(`# TL: DATUM: ${stringifyData(datum)}`)
         const datumCbor = Data.to(datum, T.TimeDepositDatum.datum)
 
         // Retrieve the TielockDeposit's UTxO
@@ -125,19 +108,16 @@ export class AdatagMintingService implements MintingService {
         ])
         refUtxos.concat(timelockRefUtxo)
 
-        console.log(`#### DEPOSIT PAID TO CONTRACT ${deposit * 1_000_000n}`)
         tx = tx.payToContract(
           Config.timelockScript.scriptAddress,
           { inline: datumCbor },
-          { lovelace: deposit * 1_000_000n },
+          { lovelace: deposit },
         )
-        .validTo(validTo)
       }
     }
 
     // 3. .readFrom(mpRefUtxo.concat(shRefUtxo))
     return tx.readFrom(refUtxos)
-      .validFrom(validFrom)
   }
 
   async finaliseTx(
@@ -157,6 +137,7 @@ export class AdatagMintingService implements MintingService {
     const mintValue = {
       [Config.adatagMinting.policyId + fromText(adatag)]: mintAmount,
     }
+    const now: number = Date.now()
 
     // 5. .payToContract( bd.stateholderScript.scriptAddress, { inline: state }, authToken,)
     const finalisedTx = tx
@@ -171,6 +152,10 @@ export class AdatagMintingService implements MintingService {
       .mintAssets(mintValue, redeemer)
       // FIXME: user address...
       .payToAddress(userAddress!, mintValue)
+      // It is always required for deactivation's time checking.
+      // 7. .validFrom(time)
+      .validFrom(now)
+
 
     return finalisedTx
   }

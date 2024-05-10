@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { applyParamsToScript, Data, Validator } from 'translucent-cardano'
 import { MintRedeemer } from './types.ts'
 

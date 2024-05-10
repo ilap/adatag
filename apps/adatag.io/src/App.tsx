@@ -1,21 +1,17 @@
-import { Route, Routes, useNavigate } from 'react-router-dom'
-import { NextUIProvider } from '@nextui-org/react'
-import Hero from    './components/organisms/Hero/Hero'
-import { FAQ } from './components/organisms/FAQ/Faq'
-import Layout from  './components/Layout/Layout'
-import { useWallet } from '@meshsdk/react'
+import React from 'react'
+import { Header } from './components/header/Header'
+import { Hero } from './components/hero/Hero'
+import { MeshProvider } from '@meshsdk/react'
 
-
-export const App: React.FC = () => {
-  const navigate = useNavigate()
-  const { connected } = useWallet()
-  
+const App: React.FC = () => {
   return (
-    <NextUIProvider navigate={navigate}>
-      <Routes>
-        <Route path="/" element={<Layout><Hero connected={connected}/></Layout>} />
-        <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-      </Routes>
-    </NextUIProvider>
+    <main>
+      <MeshProvider>
+        <Header />
+        <Hero />
+      </MeshProvider>
+    </main>
   )
 }
+
+export default App

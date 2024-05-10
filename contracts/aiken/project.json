@@ -39,7 +39,7 @@
             "aiken build -t verbose",
             "bun run ../../tools/chain/scripts/blueprint.ts",
             "bun prettier -w ../../libs/deployment-ts/src/plutus/plutus.ts",
-            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types.ts'\\n#\" -e \"s/^  rdmr:$/  rdmr: MintRedeemer/\" -e \"14,25d\" ../../libs/deployment-ts/src/plutus/plutus.ts"
+            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types.ts'\\n#\" -e \"s/^  rdmr:$/  rdmr: MintRedeemer/\" -e \"14,25d\" -e \"1s#^#/* eslint-disable @typescript-eslint/no-explicit-any */\\n#\" ../../libs/deployment-ts/src/plutus/plutus.ts"
           ],
           "parallel": false
         },

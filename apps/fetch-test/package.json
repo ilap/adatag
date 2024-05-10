@@ -5,15 +5,15 @@
   "private": false,
   "type": "module",
   "dependencies": {
-    "@streamparser/json": "^0.0.20",
-    "@sqlite.org/sqlite-wasm": "github:sqlite/sqlite-wasm#node"
+    "@sqlite.org/sqlite-wasm": "github:sqlite/sqlite-wasm#node",
+    "@streamparser/json": "^0.0.20"
   },
   "scripts": {
     "dev": "cp -fpr ../../libs/deployment-ts/configs/genesis-config-custom.json src/configs/genesis-config.json; cp -fpr ../../libs/deployment-ts/src/plutus/plutus.ts src/configs/; bun run ./src/index.ts"
   },
   "devDependencies": {
     "@types/node": "^14.14.29",
-    "ts-node": "^10.9.1",
-    "comlink": "^4.4.1"
+    "comlink": "^4.4.1",
+    "ts-node": "^10.9.2"
   }
 }
