@@ -12,9 +12,43 @@
     "default": ["{projectRoot}/**/*.ak"]
   },
   "targets": {
-    "test": {
+    "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": ["test"],
+      "options": {
+        "cwd": "contracts/aiken" 
+      },
+      "inputs": ["{projectRoot}/**/*.ak"],
+      "outputs": ["{projectRoot}/plutus.json"],
+      "cache": true,
+      "configurations": {
+        "dev": {
+          "commands": [
+            "aiken build -t verbose",
+            "bun run ../../tools/chain/scripts/blueprint.ts",
+            "bun prettier -w ../../libs/common/src/plutus/plutus.ts",
+            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^[ ]*rdmr:$/  rdmr: MintRedeemer/\" -e \"14,23d\" -e \"1s#^#/* eslint-disable @typescript-eslint/no-explicit-any */\\n#\" ../../libs/common/src/plutus/plutus.ts",
+            "bun prettier -w ../../libs/common/src/plutus/plutus.ts"
+          ],
+          "parallel": false
+        },
+        "mainnet": {
+          "commands": [
+            "aiken build -D",
+            "bun run ../../tools/chain/scripts/blueprint.ts",
+            "bun prettier -w ../../libs/common/src/plutus/plutus.ts",
+            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^[ ]*rdmr:$/  rdmr: MintRedeemer/\" -e \"14,23d\" -e \"1s#^#/* eslint-disable @typescript-eslint/no-explicit-any */\\n#\" ../../libs/common/src/plutus/plutus.ts",
+            "bun prettier -w ../../libs/common/src/plutus/plutus.ts"
+          ],
+          "parallel": false
+        }
+      },
+      "defaultConfiguration": "dev"
+    },
+    "test": {
+      "dependsOn": ["lint"],
+      "executor": "nx:run-commands",
+      "cache": true,
       "options": {
         "cwd": "contracts/aiken"
       },
@@ -22,39 +56,17 @@
         "dev": {
           "command": "aiken check"
         },
-        "prod": {
+        "mainnet": {
           "command": "aiken check -D -t silent"
         }
       },
       "defaultConfiguration": "dev"
     },
-    "build": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["lint"],
-      "options": {
-        "cwd": "contracts/aiken"
-      },
-      "configurations": {
-        "dev": {
-          "commands": [
-            "aiken build -t verbose",
-            "bun run ../../tools/chain/scripts/blueprint.ts",
-            "bun prettier -w ../../libs/shared/plutus/src/lib/plutus.ts",
-            "sed -i.bak -e \"2s#^#import { MintRedeemer } from './types'\\n#\" -e \"s/^[ ]*rdmr:$/  rdmr: MintRedeemer/\" -e \"14,23d\" -e \"1s#^#/* eslint-disable @typescript-eslint/no-explicit-any */\\n#\" ../../libs/shared/plutus/src/lib/plutus.ts"
-          ],
-          "parallel": false
-        },
-        "prod": {
-          "command": "aiken build -D"
-        }
-      },
-      "defaultConfiguration": "dev"
-    },
     "lint": {
-      "// dependsOn": ["^build"],
       "options": {
         "cwd": "contracts/aiken"
       },
+      "cache": true,
       "command": "aiken fmt --check"
     }
   }

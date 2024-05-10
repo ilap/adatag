@@ -100,7 +100,7 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`
 
   await Bun.write(plutusTs, plutus)
 
-  console.log('%cGenerated %cplutus.ts', 'color: green; font-weight: bold', 'font-weight: bold')
+  console.log(`%cGenerated %c${plutusTs}`, 'color: green; font-weight: bold', 'font-weight: bold')
 
   function resolveSchema(schema: any, definitions: any, refName?: string): any {
     if (schema.items) {
@@ -237,4 +237,4 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`
   }
 }
 
-parseBlueprint('./plutus.json', '../../libs/shared/plutus/src/lib/plutus.ts')
+parseBlueprint('./plutus.json', '../../libs/common/src/plutus/plutus.ts')

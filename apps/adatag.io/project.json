@@ -1,10 +1,52 @@
 {
-  "name": "adatag.io",
+  "name": "@adatag/adatag.io",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/adatag.io/src",
   "projectType": "application",
   "outputPath": "../../dist/apps/adatag.io/",
   "tags": [],
+  "implicitDependencies": [
+    "@adatag/deploy",
+    "!@adatag/common",
+    "!@adatag/integri-tree"
+  ],
   "// targets": "to see all targets run: nx show project adatag1.io --web",
-  "targets": {}
+  "targets": {
+    "serve-static": {
+      "dependsOn": [
+        "cors-proxy",
+        {
+          "projects": "@adatag/deploy",
+          "target": "build",
+          "params": "forward"
+        }
+      ],
+      "configurations": {
+        "custom": {}
+      },
+      "inputs": [
+        "!{projectRoot}/public/genesis-config.json"
+      ]
+    },
+    "cors-proxy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "color": true,
+        "cwd": "tools",
+        "readyWhen": "CORS Proxy server",
+        "parallel": true
+      },
+      "configurations": {
+        "custom": {
+          "commands": [
+            "pkill -f 'corsProxy'; bun run corsProxy.ts"
+          ]
+        },
+        "dev": {
+          "command": "echo 'No CORS Proxy server is required'"
+        }
+      },
+      "defaultConfiguration": "dev"
+    }
+  }
 }

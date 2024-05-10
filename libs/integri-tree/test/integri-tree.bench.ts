@@ -1,12 +1,13 @@
-import { IntegriTree } from './integri-tree'
+import { IntegriTree } from '../src/index'
 import { sampleVals2 } from './integri-tree.test'
 
-function benchIt(fn: Function) {
+/*function benchIt(fn: Function) {
   const st = Date.now()
   fn()
   const et = Date.now()
   console.log(`Bench runf ro${fn.name}  in ${et - st} milliseconds.`)
 }
+
 
 function generateRandomStrings(count: number): string[] {
   const maxLength = 15
@@ -47,7 +48,7 @@ function runBenchmark(numberOfStrings: number): string[] {
 
   console.log(`Generated ${numberOfStrings} random strings in ${elapsedMilliseconds} milliseconds.`)
   return randomStrings
-}
+}*/
 
 /*
 const numberOfStrings = 13;
@@ -74,12 +75,12 @@ const rh = tree.rootHash()
 console.log(`Roothash: ${rh}`)
 //console.log(`Tree: ${tree}`)
 
-const adatag = 'ubul' // lca === appenNode === updateNode
+//const adatag = 'ubul' // lca === appenNode === updateNode
 
 // const adatag = "adam"\
 //console.log(tree.generateMinimalSubtreeOf("ilap"))
 //tree.append(adatag)
-const st = Date.now()
+//const st = Date.now()
 /*const mintRedeemer: MintRedeemer = tree.generateMinimalSubtree(adatag)
 const et = Date.now()
 const em = et - st

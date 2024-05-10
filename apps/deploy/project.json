@@ -1,9 +1,62 @@
 {
   "name": "@adatag/deploy",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/deploy/src",
+  "sourceRoot": "apps/deploy/src/",
   "projectType": "application",
+  "implicitDependencies": ["@adatag/common", "chain"],
   "tags": [],
-  "// targets": "to see all targets run: nx show project integri-tree --web",
-  "targets": {}
+  "targets": {
+    "deploy": {
+      "command": "bun run src/cli/deploy.ts",
+      "dependsOn": [
+        "spin-up",
+        "test",
+        "^build"
+      ],
+      "options": {
+        "cwd": "apps/deploy"
+      },
+      "configurations": {
+        "dev": {},
+        "custom": {},
+        "preview": {},
+        "preprod": {},
+        "mainnet": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+    "test": {
+      "executor": "@nx-bun/nx:test",
+      "options": {
+        "smol": false,
+        "bun": true,
+        "timeout": 60000
+      },
+      "configurations": {
+        "dev": {},
+        "custom": {},
+        "preview": {},
+        "preprod": {},
+        "mainnet": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+     "build": {
+      "dependsOn": [
+        "deploy"
+      ],
+      "options": {
+        "cwd": "apps/deploy/config/"
+      },
+      "configurations": {
+        "custom":  { "command": "cp -f genesis-config-custom.json  ../../adatag.io/public/genesis-config.json" },
+        "preview": { "command": "cp -f genesis-config-preview.json ../../adatag.io/public/genesis-config.json" },
+        "preprod": { "command": "cp -f genesis-config-preprod.json ../../adatag.io/public/genesis-config.json" },
+        "mainnet": { "command": "cp -f genesis-config-mainnet.json ../../adatag.io/public/genesis-config.json" },
+        "dev": { "command": "echo 'No config is saved'" }
+      },
+      "defaultConfiguration": "dev"
+    }
+
+  }
 }

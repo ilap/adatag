@@ -1,9 +1,24 @@
 {
-  "name": "integri-tree",
+  "name": "@adatag/integri-tree",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/integri-tree/src",
+  "sourceRoot": "libs/integri-tree/",
   "projectType": "library",
   "tags": [],
   "// targets": "to see all targets run: nx show project integri-tree --web",
-  "targets": {}
+  "targets": {
+    "build": {
+      "executor": "nx:noop", 
+      "options": {},
+      "dependsOn": ["^build", "test"]
+    },
+    "test": {
+      "executor": "@nx-bun/nx:test",
+      "options": {
+        "smol": false,
+        "bun": true,
+        "timeout": 15000
+      }
+    }
+  }
 }
+

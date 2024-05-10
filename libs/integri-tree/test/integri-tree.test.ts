@@ -1,4 +1,4 @@
-import { Val } from './types'
+import { Val } from '@adatag/common/plutus'
 
 /*const tree = IntegriTree.fromLetter('a')
 console.log(`Hash initial: ${tree.rootHash()}`)

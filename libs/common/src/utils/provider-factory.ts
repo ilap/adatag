@@ -46,6 +46,7 @@ export class ProviderFactory {
         Mainnet: {
           Blockfrost: {},
           Maestro: {},
+          Kupmios: {},
           KupmiosV5: {},
         },
       },
@@ -81,6 +82,7 @@ export class ProviderFactory {
 
     switch (provider) {
       case 'Emulator':
+        // eslint-disable-next-line
         return new Emulator(genesisAssets!)
 
       case 'Blockfrost':

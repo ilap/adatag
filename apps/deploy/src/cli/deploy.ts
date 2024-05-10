@@ -1,6 +1,6 @@
 import { Translucent } from 'translucent-cardano'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
-import { Bootstrap } from './bootstrap'
+import { Bootstrap } from '../lib/bootstrap'
 import { setSloctConfig, resolveMockData, stringifyData } from '@adatag/common/utils'
 import { IntegriTree } from '@adatag/integri-tree'
 
@@ -51,7 +51,7 @@ translucent.selectWalletFromSeed(deployerSeed)
 const [utxo] = await translucent.wallet.getUtxos()
 
 // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
+console.log(`Genesis config (${network.toString()}) is saved to: ./config/genesis-config-${network.toString().toLowerCase()}.json`)
 const result =
   Bun.env.ENVIRONMENT == 'Development'
     ? await Bootstrap.deploy(translucent, utxo, finalParams)

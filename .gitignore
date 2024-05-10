@@ -3,7 +3,7 @@
 **/*.bak
 
 # See http://help.github.com/ignore-files/ for more about ignoring files.
-bun.lock
+bun.lockb
 
 **/.vscode/settings.json
 
@@ -57,7 +57,9 @@ Thumbs.db
 
 .nx/cache
 
-
 # Package lock
 # BUG:  DO NOT UNCOMMENT! As NX reads .gitignore and skips their entries
 # **/package-lock.json
+**/bun.lockb
+
+**/public/genesis-config.json

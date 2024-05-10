@@ -1,10 +1,14 @@
-name = 'ilap/adatag'
-version = '0.1.0'
-license = 'Apache-2.0'
-description = "Aiken contracts for project 'ilap/adatag'"[repository]
-user = 'ilap'
-project = 'adatag'
-platform = 'github'[[dependencies]]
-name = 'aiken-lang/stdlib'
-version = '1.7.0'
-source = 'github'
+name = "adatag/aiken"
+version = "0.1.0"
+license = "Apache-2.0"
+description = "Aiken contracts for @adatag project"
+
+[repository]
+user = "ilap"
+project = "adatag"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "1.8.0"
+source = "github"
