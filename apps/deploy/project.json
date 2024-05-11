@@ -43,23 +43,6 @@
       },
       "defaultConfiguration": "dev"
     },
-     "build": {
-      "dependsOn": [
-        "deploy"
-      ],
-      "options": {
-        "cwd": "apps/deploy/"
-      },
-      "inputs": ["{projectRoot}/**/genesis-*"],
-      "configurations": {
-        "custom":  { "command": "cp -f ./config/genesis-config-custom.json  ../adatag.io/public/genesis-config.json" },
-        "preview": { "command": "cp -f ./config/genesis-config-preview.json ../adatag.io/public/genesis-config.json" },
-        "preprod": { "command": "cp -f ./config/genesis-config-preprod.json ../adatag.io/public/genesis-config.json" },
-        "mainnet": { "command": "cp -f ./config/genesis-config-mainnet.json ../adatag.io/public/genesis-config.json" },
-        "dev": { "command": "echo 'No config is saved'" }
-      },
-      "defaultConfiguration": "dev"
-    }, 
     "cors-proxy": {
       "executor": "nx:run-commands",
       "tty": true,

@@ -1,54 +1,54 @@
 {
   "network": "Custom",
   "hashAlg": "SHA2_256",
-  "genesisTransaction": "62103b9f7773319752d2f7ed856b014140ef2bb2f84572e6f8d2382b20e15e29",
+  "genesisTransaction": "979625ac64f03855661c183e1afd10c3f4b56c6f378e2b3e874a8b30d4d311aa",
   "bootstrapTime": {
-    "epoch": 1715427363095,
-    "date": "Sat May 11 2024 13:36:03 GMT+0200 (Central European Summer Time)"
+    "epoch": 1715449210935,
+    "date": "Sat May 11 2024 19:40:10 GMT+0200 (Central European Summer Time)"
   },
   "referenceScript": {
     "scriptAddress": "addr_test1wqh89j4q7e8ud7wd2wh8sy25lwa3xhrkyhcsln0kqdtxhjgr08ngw",
     "scriptHash": "2e72caa0f64fc6f9cd53ae781154fbbb135c7625f10fcdf603566bc9"
   },
   "authTokenScript": {
-    "policyId": "d2cadfe4cdb4b192c34a23c64e157afdd0bea502a92651a9147d43b0",
+    "policyId": "a26be09b812450eaf1fe60d03ca62c9d960fcfd39e61df33b52c8a21",
     "params": {
       "genesis_utxo": {
-        "txHash": "8d84c74c6faa6e66f9fbcd1652b72ae6c6df8918eeb75e7db3f63a93e0d2ecbd",
+        "txHash": "f986b720ff8bb125a40a722e9bbcad4e34ef33ba46cdf29ef684ad2756e5639e",
         "outputIndex": 29
       }
     }
   },
   "timelockScript": {
-    "scriptHash": "f1956f4e0841ff91254f1621d3f7cbb87bb43d969b4ec2dead793c58",
-    "scriptAddress": "addr_test1wrce2m6wppqllyf9futzr5lhewu8hdpaj6d5ask744unckqxu7l8k",
+    "scriptHash": "6702d81b7d259828d6b1adfc42b1286d5404c8058bb14761408b0c4e",
+    "scriptAddress": "addr_test1wpns9kqm05jes2xkkxklcs439pk4gpxgqk9mz3mpgz9scnscmtgfq",
     "params": {
       "collectorAddr": "addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg",
       "collectionTime": {
-        "epoch": 1715428054295,
-        "date": "Sat May 11 2024 13:47:34 GMT+0200 (Central European Summer Time)"
+        "epoch": 1715449902135,
+        "date": "Sat May 11 2024 19:51:42 GMT+0200 (Central European Summer Time)"
       }
     },
     "refIndex": 2
   },
   "stateholderScript": {
-    "scriptHash": "c70f182d657bff60181102529f30adc1c4f876f346510aa7e20e9ffd",
-    "scriptAddress": "addr_test1wrrs7xpdv4al7cqczyp998es4hquf7rk7dr9zz48ug8fllgtq8sz5",
+    "scriptHash": "699009ffd15a65191eaf0c2c179857bb40e5bd74217974b4f895ed3b",
+    "scriptAddress": "addr_test1wp5eqz0l69dx2xg74uxzc9uc27a5pedawsshja95lz276wcm3lkh9",
     "params": {
-      "authToken": "d2cadfe4cdb4b192c34a23c64e157afdd0bea502a92651a9147d43b0"
+      "authToken": "a26be09b812450eaf1fe60d03ca62c9d960fcfd39e61df33b52c8a21"
     },
     "refIndex": 0
   },
   "adatagMinting": {
-    "policyId": "acaa6325cad213dfe1671eb154b81e606f9a69c9b57f84e567b0d657",
+    "policyId": "620eca3b9b9314b96a352b310c9afa168df833a28e08c2a1f0a0c17b",
     "params": {
       "lockingDays": {
         "days": 0.002,
         "ms": 172800
       },
       "deactivationTime": {
-        "epoch": 1715427708695,
-        "date": "Sat May 11 2024 13:41:48 GMT+0200 (Central European Summer Time)"
+        "epoch": 1715449556535,
+        "date": "Sat May 11 2024 19:45:56 GMT+0200 (Central European Summer Time)"
       },
       "depositBase": 1750,
       "adahandle": "12b96851f48bac3b2758f3e221208d584d043ec4e6715a9955d5209d"
