@@ -52,10 +52,10 @@
       },
       "inputs": ["{projectRoot}/**/genesis-*"],
       "configurations": {
-        "custom":  { "command": "cp -f ./config/genesis-config-custom.json  ../../adatag.io/public/genesis-config.json" },
-        "preview": { "command": "cp -f ./config/genesis-config-preview.json ../../adatag.io/public/genesis-config.json" },
-        "preprod": { "command": "cp -f ./config/genesis-config-preprod.json ../../adatag.io/public/genesis-config.json" },
-        "mainnet": { "command": "cp -f ./config/genesis-config-mainnet.json ../../adatag.io/public/genesis-config.json" },
+        "custom":  { "command": "cp -f ./config/genesis-config-custom.json  ../adatag.io/public/genesis-config.json" },
+        "preview": { "command": "cp -f ./config/genesis-config-preview.json ../adatag.io/public/genesis-config.json" },
+        "preprod": { "command": "cp -f ./config/genesis-config-preprod.json ../adatag.io/public/genesis-config.json" },
+        "mainnet": { "command": "cp -f ./config/genesis-config-mainnet.json ../adatag.io/public/genesis-config.json" },
         "dev": { "command": "echo 'No config is saved'" }
       },
       "defaultConfiguration": "dev"
@@ -73,7 +73,7 @@
       "configurations": {
         "custom": {
           "commands": [
-            "pkill -f 'corsProxy'; bun run corsProxy.ts"
+            "pkill -oxf 'bun run corsProxy.ts' ; bun run corsProxy.ts || echo 'CORS Proxy server'"
           ]
         },
         "dev": {

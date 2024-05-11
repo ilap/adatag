@@ -5,7 +5,6 @@
   "projectType": "library",
   "targets": {
     "spin-up": {
-      "dependsOn": ["tear-down"],
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
@@ -18,7 +17,7 @@
       "configurations": {
         "custom": {
           "commands": [
-            "docker compose --env-file env up -d --wait-timeout 120",
+            "docker compose --env-file env --env-file version up -d --wait-timeout 120",
             "bun run scripts/waitfor_ogmios.ts http://localhost:1442/health 120"
           ]
         },
@@ -34,7 +33,7 @@
       },
       "configurations": {
         "custom": {
-          "command": "docker compose --env-file env kill"
+          "command": "docker compose --env-file env --env-file version kill"
         },
         "dev": { "command": "echo 'No tear-down is required'" }
       },
