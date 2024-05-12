@@ -16,6 +16,14 @@
         }
       ]
     },
+    "serve": {
+      "dependsOn": [
+        {
+          "target": "copy-config",
+          "params": "forward"
+        }
+      ]
+    },
     "serve-static": {
       "configurations": {
         "custom": {
