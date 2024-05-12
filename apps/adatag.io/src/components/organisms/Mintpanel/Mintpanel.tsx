@@ -32,9 +32,9 @@ export const MintPanel: React.FC = () => {
 
   const deactivated = config && config.adatagMinting.params.deactivationTime.epoch < now
 
-  const lockingDays = deactivated ? 0n : calculateDeposit(inputValue, 1750, 15, 6)
+  const deposit = deactivated ? 0n : calculateDeposit(inputValue, 1750, 15, 6)
 
-  const deadline = config?.adatagMinting.params.lockingDays.days || 0
+  const lockingDays = config?.adatagMinting.params.lockingDays.days || 0
   const formattedDate = deactivated
     ? 'Deactivated'
     : new Date(now + lockingDays * 86400 * 1000).toLocaleDateString('en-US', {
