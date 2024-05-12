@@ -5,62 +5,42 @@
   "projectType": "application",
   "outputPath": "../../dist/apps/adatag.io/",
   "tags": [],
-  "implicitDependencies": [
-    "@adatag/deploy",
-    "!@adatag/common",
-    "!@adatag/integri-tree"
-  ],
-  "// targets": "to see all targets run: nx show project adatag1.io --web",
+  "implicitDependencies": ["@adatag/deploy", "!@adatag/common", "!@adatag/integri-tree"],
+  "// targets": "to see all targets run: nx show project @adatag/adatag.io --web",
   "targets": {
     "build": {
       "dependsOn": [
-        "copy-config"
-      ],
-      "inputs": [
-        "production"
+        {
+          "target": "copy-config",
+          "params": "forward"
+        }
       ]
     },
     "serve-static": {
-      "dependsOn": [
-        "build"
-      ],
       "configurations": {
-        "custom": {}
+        "custom": {
+          "buildTarget": "build:custom"
+        },
+        "preview": {
+          "buildTarget": "build:preview"
+        },
+        "preprod": {
+          "buildTarget": "build:preprod"
+        },
+        "mainnet": {
+          "buildTarget": "build:mainnet"
+        }
       },
-      "inputs": [
-        "!{projectRoot}/public/genesis-config.json"
-      ]
-    },
-    "serve": {
-      "dependsOn": [
-        "build"
-      ],
-      "configurations": {
-        "custom": {}
-      }
-    },
-    "preview": {
-      "dependsOn": [
-        "copy-config"
-      ],
-      "configurations": {
-        "custom": {}
-      }
+      "defaultConfiguration": "custom"
     },
     "copy-config": {
+      "dependsOn": ["^deploy"],
       "executor": "nx:run-commands",
-      "tty": true,
       "options": {
         "color": true,
-        "cwd": "apps/adatag.io"
+        "cwd": "apps/adatag.io",
+        "parallel": false
       },
-      "dependsOn": [
-        "^deploy"
-      ],
-      "cache": true,
-      "inputs": [
-        "{workspaceRoot}/apps/deploy/**/genesis-config*.json"
-      ],
       "configurations": {
         "custom": {
           "command": "echo y | cp -f  ../deploy/config/genesis-config-custom.json  ./public/genesis-config.json"
