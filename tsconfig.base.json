@@ -1,47 +1,25 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "incremental": true,
     "rootDir": ".",
-    "outDir": "./dist",
     "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "esnext",
+    "target": "es2015",
     "module": "esnext",
-    "allowImportingTsExtensions": true,
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "resolveJsonModule": true,
-    "types": [
-      "bun-types",
-      "bun"
-    ],
+    "baseUrl": ".",
     "paths": {
-      "@adatag/integri-tree": [
-        "./libs/integri-tree/src/index"
-      ],
-      "@adatag/shared/config": [
-        "./libs/deployment-ts/src/config/index"
-      ],
-      "@adatag/shared/plutus": [
-        "./libs/deployment-ts/src/plutus/index"
-      ],
-      "@adatag/shared/test-utils": [
-        "./libs/deployment-ts/test/utils/index"
-      ],
-      "@adatag/shared/utils": [
-        "./libs/deployment-ts/src/utils/index"
-      ]
+      "@adatag/common/config": ["libs/common/src/config/index.ts"],
+      "@adatag/common/plutus": ["libs/common/src/plutus/index.ts"],
+      "@adatag/common/utils": ["libs/common/src/utils/index.ts"],
+      "@adatag/integri-tree": ["libs/integri-tree/src/index.ts"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tools",
-    "contracts"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

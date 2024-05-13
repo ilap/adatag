@@ -11,7 +11,7 @@
             "name": "Int Test Debug File",
             "program": "${file}",
             "args": ["--env-file", ".env.test.int", "--timeout", "45000"],
-            "cwd": "${workspaceFolder}/libs/deployment-ts",
+            "cwd": "${workspaceFolder}/libs/deploy",
             "stopOnEntry": true,
             "watchMode": false
         },
@@ -22,7 +22,7 @@
             "name": "Dev Test Debug File",
             "program": "${file}",
             "args": ["--env-file", "${workspaceFolder}/.env.test.dev", "--timeout", "45000"],
-            "cwd": "${workspaceFolder}/apps/adatag-cli",
+            "cwd": "${workspaceFolder}/apps/deploy",
             "stopOnEntry": true,
             "watchMode": false
         },

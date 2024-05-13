@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Network, SLOT_CONFIG_NETWORK } from 'translucent-cardano'
-import { DEBUG } from './configs/settings.ts'
+import { DEBUG } from './configs/settings'
 
 export const hexToASCII = (hex: string) => {
   return hex
@@ -9,11 +10,7 @@ export const hexToASCII = (hex: string) => {
 }
 
 export function stringifyData(data: unknown) {
-  return JSON.stringify(
-    data,
-    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
-    '  ',
-  )
+  return JSON.stringify(data, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
 }
 
 export function debugMessage(message: string) {
@@ -59,13 +56,7 @@ function isDot(char: number): boolean {
 }
 
 function isValidChar(ch: number): boolean {
-  return (
-    isLowerCase(ch) ||
-    isDigit(ch) ||
-    isHyphen(ch) ||
-    isUnderscore(ch) ||
-    isDot(ch)
-  )
+  return isLowerCase(ch) || isDigit(ch) || isHyphen(ch) || isUnderscore(ch) || isDot(ch)
 }
 
 function hasOnlyAllowedChars(str: string): boolean {
@@ -88,13 +79,13 @@ export const calculateDeposit = (
   adatag: string,
   depositBase: number,
   minDeposit: number,
-  maxLength: number,
+  maxLength: number
 ): bigint => {
   const len = adatag.length
 
   return len > maxLength
     ? BigInt(minDeposit)
-    : BigInt(Math.max(5, (depositBase / 2 ** (adatag.length - 1)) >> 0))
+    : BigInt(Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0))
 }
 
 interface YaciInfo {
@@ -116,21 +107,19 @@ interface YaciInfo {
   blockProducer: boolean
 }
 
-export async function setSloctConfig(network: Network, env: string) {
+export async function setSlotConfig(network: Network, env: string) {
   // Only for
   if (!(network == 'Custom' && env == 'Integration')) {
     return
   }
-  // XXXX: try {
-    // FIXME: it's using cors-anywhere atm.
-    const response = await fetch(
-      `http://localhost:4000/local-cluster/api/admin/clusters/default`
-      //`http://localhost:4000/local-cluster/api/admin/clusters/default`,
-    )
+  try {
+    console.warn(`SETTINGS: ${network} ... ${env}`)
+    // FIXME: it's using cors proxy atm for custom (Yaci) build
+    const response = await fetch(`http://localhost:3000/local-cluster/api/admin/clusters/default`)
 
     if (response.ok) {
       const res = await response.json()
-      console.warn(`############### $$$$$$$$$$$$ RESULT: ${stringifyData(res)}`)
+      console.warn(`############### $$$$$$$$$$$$  SETSLOTCONFIG RESULT: ${stringifyData(res)}`)
       const serverInfo: YaciInfo = res
       if (serverInfo.startTime !== 0) {
         SLOT_CONFIG_NETWORK[network] = {
@@ -140,15 +129,15 @@ export async function setSloctConfig(network: Network, env: string) {
         }
       }
     } else {
-      throw Error(`Could not set the slot config`)
+      throw Error(`Could not set the slot config ${response.json()}`)
     }
-  // XXXX } catch (error) {
-  //  throw Error(`Could not set the slot config`)
-  // }
+  } catch (error) {
+    throw Error(`Could not set the slot config ${(error as Error)?.message}`)
+  }
 }
 
 export function a2h(str: string) {
-  const arr1 = []
+  const arr1: string[] = []
   for (let n = 0, l = str.length; n < l; n++) {
     const hex = Number(str.charCodeAt(n)).toString(16)
     arr1.push(hex)
@@ -173,7 +162,7 @@ export const debounce = (func: any, delay: number) => {
 }
 
 export const delay = (milliseconds: number) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
-};
+  return new Promise(resolve => {
+    setTimeout(resolve, milliseconds)
+  })
+}

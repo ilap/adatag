@@ -1,0 +1,72 @@
+{
+  "name": "@adatag/adatag.io",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/adatag.io/src",
+  "projectType": "application",
+  "outputPath": "../../dist/apps/adatag.io/",
+  "tags": [],
+  "implicitDependencies": ["@adatag/deploy", "!@adatag/common", "!@adatag/integri-tree"],
+  "// targets": "to see all targets run: nx show project @adatag/adatag.io --web",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "copy-config",
+          "params": "forward"
+        }
+      ]
+    },
+    "serve": {
+      "dependsOn": [
+        {
+          "target": "copy-config",
+          "params": "forward"
+        }
+      ]
+    },
+    "serve-static": {
+      "configurations": {
+        "custom": {
+          "buildTarget": "build:custom"
+        },
+        "preview": {
+          "buildTarget": "build:preview"
+        },
+        "preprod": {
+          "buildTarget": "build:preprod"
+        },
+        "mainnet": {
+          "buildTarget": "build:mainnet"
+        }
+      },
+      "defaultConfiguration": "custom"
+    },
+    "copy-config": {
+      "dependsOn": ["^deploy"],
+      "executor": "nx:run-commands",
+      "options": {
+        "color": true,
+        "cwd": "apps/adatag.io",
+        "parallel": false
+      },
+      "configurations": {
+        "custom": {
+          "command": "echo y | cp -f  ../deploy/config/genesis-config-custom.json  ./public/genesis-config.json"
+        },
+        "preview": {
+          "command": "echo y | cp -f  ../deploy/config/genesis-config-preview.json ./public/genesis-config.json"
+        },
+        "preprod": {
+          "command": "echo y | cp -f  ../deploy/config/genesis-config-preprod.json ./public/genesis-config.json"
+        },
+        "mainnet": {
+          "command": "echo y | cp -f  ../deploy/config/genesis-config-mainnet.json ./public/genesis-config.json"
+        },
+        "dev": {
+          "command": "echo 'No config is saved'"
+        }
+      },
+      "defaultConfiguration": "dev"
+    }
+  }
+}

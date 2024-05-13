@@ -1,28 +1,53 @@
+const { createGlobPatternsForDependencies } = require('@nx/react/tailwind')
+const { join } = require('path')
+const { nextui } = require('@nextui-org/react')
+
 /** @type {import('tailwindcss').Config} */
-
-const {nextui} = require("@nextui-org/react");
-
-export default {
+module.exports = {
   content: [
-  './index.html', 
-  './src/**/*.{js,ts,jsx,tsx}',
-  '../../node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}'
-],
+    './index.html',
+    './src/**/*.{vue,js,ts,jsx,tsx}',
+    '../../node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
+  ],
+  darkMode: 'class',
+  plugins: [
+    nextui({
+      layout: {},
+      themes: {
+        light: {
+          colors: {
+            primary: {
+              DEFAULT: '#ffbf04',
+              foreground: '#000000',
+            },
+            focus: '#ffbf04',
+          },
+        },
+      },
+    }),
+  ],
   theme: {
     extend: {
-      colors: {
-        accent: {
-          1: 'var(--accent1)',
+      fontSize: {
+        '9xl': '7rem',
+        '10xl': '8rem',
+      },
+      borderRadius: {
+        xl: '2rem',
+      },
+      animation: {
+        blink: 'blink 1250ms step-end infinite',
+      },
+      keyframes: {
+        blink: {
+          'from, to': {
+            opacity: '100%',
+          },
+          '50%': {
+            opacity: '0%',
+          },
         },
-        primary: 'var(--at-primary)',
-        onPrimary: 'var(--at-on-primary)',
-        secondary: 'var(--at-secondary)',
-        onSecondary: 'var(--at-on-secondary)',
-        backGround: 'var(--at-background)',
-        onBackground: 'var(--at-on-background)',
       },
     },
   },
-  darkMode: "class",
-  plugins: [nextui()],
 }

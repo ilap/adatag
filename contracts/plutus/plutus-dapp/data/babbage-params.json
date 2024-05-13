@@ -380,7 +380,7 @@
   "poolDeposit": 0,
   "prices": {
     "prMem": 0.0577,
-    "prSteps": 7.21e-05
+    "prSteps": 7.21e-5
   },
   "protocolVersion": {
     "major": 6,

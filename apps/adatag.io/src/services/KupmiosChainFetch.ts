@@ -1,16 +1,19 @@
 import { JSONParser } from '@streamparser/json'
-import { SAFETY_SLOTS, KUPO_URL } from '../configs/settings.ts'
-import genesisConfig from '../configs/genesis-config.json'
+import { SAFETY_SLOTS, KUPO_URL, FETCH_TIMEOUT } from '../configs/settings'
+
 import {
   ChainData,
   DataStoreService,
   ChainFetchService,
   SyncStateCallback,
-  TreeState,
   TreeDetails,
-} from './types.ts'
-import { debugMessage, hexToASCII } from '../utils.ts'
+  TransactionOutput,
+} from './types'
+import { debugMessage, hexToASCII } from '../utils'
 import { fromText } from 'translucent-cardano'
+import { Asset } from '@meshsdk/core'
+
+import { genesisConfig } from '../utils/config'
 
 export class KupmiosChainFetch implements ChainFetchService {
   private dataStore: DataStoreService
@@ -20,11 +23,15 @@ export class KupmiosChainFetch implements ChainFetchService {
 
   constructor(dataStore: DataStoreService) {
     this.dataStore = dataStore
-    this.policyId = genesisConfig.adatagMinting.policyId
+    this.policyId = genesisConfig!.adatagMinting.policyId
   }
-  setSyncStateCallback(callback: SyncStateCallback): void {
+
+  // TODO: implement it
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setSyncStateCallback(_callback: SyncStateCallback): void {
     throw new Error('Method not implemented.')
   }
+
   onSyncStatusChange?: SyncStateCallback | undefined
 
   async initialise(): Promise<void> {
@@ -32,43 +39,45 @@ export class KupmiosChainFetch implements ChainFetchService {
     // fetch and save elements....
   }
 
-  private getAdatagFromAssets(assets: any, policyId: string): string {
-    const keysStartingWithPrefix = Object.keys(assets).filter(key =>
-      key.startsWith(policyId),
-    )
+  private getAdatagFromAssets(assets: Asset[], policyId: string): string {
+    const keysStartingWithPrefix = Object.keys(assets).filter(key => key.startsWith(policyId))
     const tokenHex = keysStartingWithPrefix.map(key => key.split('.')[1])[0]
     return hexToASCII(tokenHex)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchData(url: string): Promise<any[] | any> {
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT),
+    })
     return await response.json()
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async fetchFromUrl(url: string, onData: (chunk: any) => void): Promise<void> {
+    const controller = new AbortController()
+    setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+    const response = await fetch(url, { signal: controller.signal })
+
+    if (!response.ok) {
+      throw new Error(`Network error: ${response.status} - ${response.statusText}`)
+    }
+
+    const parser = new JSONParser({ paths: ['$.*'] })
+    parser.onValue = onData
+
+    await this.parseResponseStream(response, parser)
   }
 
   // Function to parse response stream
   private async parseResponseStream(response: Response, parser: JSONParser) {
     const reader = response.body?.getReader()
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader!.read()
       if (done) break
       parser.write(value)
     }
-  }
-
-  private async fetchFromUrl(
-    url: string,
-    onData: (chunk: any) => void,
-  ): Promise<void> {
-    const parser = new JSONParser({ paths: ['$.*'] })
-    parser.onValue = onData
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(
-        `Network error: ${response.status} - ${response.statusText}`,
-      )
-    }
-
-    await this.parseResponseStream(response, parser)
   }
 
   async fetchTip(): Promise<number> {
@@ -116,16 +125,13 @@ export class KupmiosChainFetch implements ChainFetchService {
       const tip = await this.fetchTip()
       console.warn(`### FROM ${from} ... TIP ${tip}`)
       const to = tip - SAFETY_SLOTS
-      const queryParams = [
-        `order=oldest_first`,
-        `created_after=${from}`,
-        `created_before=${to}`,
-      ].join('&')
-      // TODO: remove const policyId = genesisConfig.adatagMinting.policyId
+      const queryParams = [`order=oldest_first`, `created_after=${from}`, `created_before=${to}`].join('&')
+      // TODO: remove const policyId = config.adatagMinting.policyId
       const url = `${KUPO_URL}/matches/${this.policyId}.*?${queryParams}`
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await this.fetchFromUrl(url, async (chunk: any) => {
-        // @ts-ignore: next-line
+        // @ts-expext-error: next-line
         const { value, created_at } = chunk.value
         const adatag = this.getAdatagFromAssets(value.assets, this.policyId)
 
@@ -154,10 +160,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  async fetchElements(
-    fromSlot: number,
-    toSlot: number | null,
-  ): Promise<string[]> {
+  async fetchElements(fromSlot: number, toSlot: number | null): Promise<string[]> {
     if (toSlot && toSlot <= fromSlot) {
       return []
     }
@@ -168,11 +171,12 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
 
     const queryParams = params.join('&')
-    const policyId = genesisConfig.adatagMinting.policyId
+    const policyId = genesisConfig!.adatagMinting.policyId
     const url = `${KUPO_URL}/matches/${policyId}.*?${queryParams}`
 
     const adatags: string[] = []
     debugMessage(`#### URL: ${url}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await this.fetchFromUrl(url, (chunk: any) => {
       const { value } = chunk.value
       const adatag = this.getAdatagFromAssets(value.assets, policyId)
@@ -187,7 +191,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     try {
       const authHex = fromText(authNft) //authNft.charCodeAt(0).toString(16)
       // Construct URL for fetching matches
-      const authPolicyId = genesisConfig.authTokenScript.policyId
+      const authPolicyId = genesisConfig!.authTokenScript.policyId
       const url = `${KUPO_URL}/matches/${authPolicyId}.${authHex}?unspent`
 
       const [eutxo] = await this.fetchData(url)
@@ -210,12 +214,67 @@ export class KupmiosChainFetch implements ChainFetchService {
     }
   }
 
-  async fetchAsset(adatag: string): Promise<any> {
-    const hexStr = fromText(adatag)
-    const url = `${KUPO_URL}/matches/${this.policyId}.${hexStr}?unspent`
+  async fetchDatum(txHash: string, address: string): Promise<{ output_index: number; datum: string } | undefined> {
+    try {
+      const utxos = await this.fetchTxUtxos(txHash)
+
+      const utxo = utxos.find(txOutput => txOutput.address === address)
+      if (utxo) {
+        const { output_index, datum_type, datum_hash } = utxo
+
+        if (datum_type != 'inline') {
+          throw Error(`Inconsistent eUTxO: datum is not presented`)
+        }
+
+        // Get the datum...
+        const datUrl = `${KUPO_URL}/datums/${datum_hash}`
+        const { datum } = await this.fetchData(datUrl)
+
+        return {
+          output_index,
+          datum,
+        }
+      } else {
+        return undefined
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      throw Error()
+    }
+  }
+
+  async fetchTxUtxos(transaction_id: string): Promise<TransactionOutput[]> {
+    // FIXME: Add HEADER-HASH into the config and use created_after
+    const url = `${KUPO_URL}/matches/*@${transaction_id}`
     // It must be an NFT.
-    const [asset] = await this.fetchData(url)
-    //debugMessage(`AAASSSEETT: ${asset} ... ${url}`)
-    return asset
+    try {
+      const transactions = await this.fetchData(url)
+      debugMessage(`fetchTxUtxos tx: ${JSON.stringify(transactions)} ... ${url}`)
+      return transactions
+    } catch (e) {
+      debugMessage(`fetchTxUtxos Error: ${(e as Error).message} ...`)
+      throw e
+    }
+  }
+
+  async fetchAsset(
+    adatag: string,
+    oldestFirst: boolean = false,
+    unspent: boolean = false
+  ): Promise<TransactionOutput | undefined> {
+    const hexStr = fromText(adatag)
+    // FIXME: Add HEADER-HASH into the config and use created_after
+    const url = `${KUPO_URL}/matches/${this.policyId}.${hexStr}?order=${
+      oldestFirst ? 'oldest_first' : 'most_recent_first'
+    }${unspent ? '&unspent' : ''}`
+    // It must be an NFT.
+    try {
+      const [asset] = await this.fetchData(url)
+      debugMessage(`fetchAsset Asset: ${JSON.stringify(asset)} ... ${url}`)
+      return asset
+    } catch (e) {
+      debugMessage(`fetchAsset Error: ${(e as Error).message} ...`)
+      throw e
+    }
   }
 }

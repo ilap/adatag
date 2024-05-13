@@ -1,6 +1,5 @@
 import { emptyHash, hashVal, combineThreeHashes } from './hash'
-import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/shared/plutus'
-
+import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/common/plutus'
 import { Data, fromText } from 'translucent-cardano'
 
 /**
@@ -60,10 +59,7 @@ export class IntegriTree {
   /**
    * Creates an IntegriTree based on specified constraints.
    */
-  public static fromConstraints(
-    lowerBound: string,
-    upperBound: string,
-  ): IntegriTree {
+  public static fromConstraints(lowerBound: string, upperBound: string): IntegriTree {
     const xs = [{ xi: '0', xa: lowerBound, xb: upperBound }]
     return new IntegriTree(xs)
   }
@@ -73,9 +69,7 @@ export class IntegriTree {
    */
   public static fromLetter(letter: string): IntegriTree {
     if (!/^[a-z]$/.test(letter)) {
-      throw Error(
-        'The initialization string must be a lower case letter and length 1',
-      )
+      throw Error('The initialization string must be a lower case letter and length 1')
     }
     const cc = letter.charCodeAt(0)
     const xs = [
@@ -154,7 +148,7 @@ export class IntegriTree {
   append(element: string): boolean {
     const [a, b] = this.search(element)
 
-    if(a != undefined && b == undefined) {
+    if (a != undefined && b == undefined) {
       this.elements.push({
         xi: this.elements.length.toString(),
         xa: element,
@@ -243,8 +237,6 @@ export class IntegriTree {
     return left != -1 ? left : right
   }
 
-
-
   /**
    * Generates the minimal subtree (proof tree) for a specified element.
    * @param element - The element for which to generate the minimal subtree.
@@ -253,7 +245,6 @@ export class IntegriTree {
    * Note: It returns hex-encoded values.
    */
   public generateMinimalSubtree(element: string): { updateVal: Val; appendVal: Val; proof: Proof } | null {
-
     const [updateNode, deleteNode] = this.search(element)
 
     // FIXME: Implement delete node proof
@@ -274,16 +265,16 @@ export class IntegriTree {
       return {
         updateVal: updateVal,
         appendVal: appendVal,
-        proof: this.buildProof(appendNode, 0, node)
+        proof: this.buildProof(appendNode, 0, node),
       }
     } else if (appendNode === lca) {
       // append node is the parent of the update node, so one traversal from update node is enough
       const node: Proof = this.buildProofNode(updateNode)
-      
+
       return {
         updateVal: updateVal,
         appendVal: appendVal,
-        proof: this.buildProof(updateNode, 0, node)
+        proof: this.buildProof(updateNode, 0, node),
       }
     } else {
       // neither of them is a parent of the other, so both nodes must traversal to the lca,
@@ -298,10 +289,8 @@ export class IntegriTree {
       if ('HashNode' in lcaUn && 'HashNode' in lcaAn) {
         const { hash, left, right } = lcaUn.HashNode
 
-        const lcaLeft =
-          'NodeHash' in left ? lcaAn.HashNode.left : lcaUn.HashNode.left
-        const lcaRight =
-          'NodeHash' in right ? lcaAn.HashNode.right : lcaUn.HashNode.right
+        const lcaLeft = 'NodeHash' in left ? lcaAn.HashNode.left : lcaUn.HashNode.left
+        const lcaRight = 'NodeHash' in right ? lcaAn.HashNode.right : lcaUn.HashNode.right
 
         const lcaNode: Proof = {
           HashNode: {
@@ -314,7 +303,7 @@ export class IntegriTree {
         return {
           updateVal: updateVal,
           appendVal: appendVal,
-          proof: this.buildProof(lca, 0, lcaNode)
+          proof: this.buildProof(lca, 0, lcaNode),
         }
       } else {
         throw new Error(`Error: Invalid tree.`)
@@ -328,7 +317,7 @@ export class IntegriTree {
    * @param appendVal - append Val
    * @param proof - proof
    * @returns return the Mint redeemer
-   * 
+   *
    * > Note: It assumes that the val contains the hex encoded properties.
    */
   public static buildRedeemer(updateVal: Val, appendVal: Val, proof: Proof): string {
@@ -342,7 +331,7 @@ export class IntegriTree {
       ], // Use 'as const' to assert that Minting is a tuple with a single element
     }
     //console.log(`Redeemer: ${stringifyData(mintRedeemer)}`)
-    return  Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof') //mintRedeemer
+    return Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof') //mintRedeemer
   }
 
   /**
@@ -385,13 +374,13 @@ export class IntegriTree {
     // When the fromIndex is even then it's the right one (as the index starts from `0`)
     const { left, right } = this.isEven(fromIndex)
       ? {
-        left: { NodeHash: { hash: this.hashNode(fromIndex - 1) } },
-        right: node,
-      }
+          left: { NodeHash: { hash: this.hashNode(fromIndex - 1) } },
+          right: node,
+        }
       : {
-        left: node,
-        right: { NodeHash: { hash: this.hashNode(fromIndex + 1) } },
-      }
+          left: node,
+          right: { NodeHash: { hash: this.hashNode(fromIndex + 1) } },
+        }
 
     const parentNode: Proof = {
       HashNode: { hash: vh, left: left, right: right },
@@ -404,7 +393,7 @@ export class IntegriTree {
    * Serialise unserialised Vals
    * @param val - The val to hex encode
    * @returns The hex encoded Val
-   * 
+   *
    * > Note: It assumes that the val does not contain hex encoded properties.
    */
   private static serialiseVal(val: Val): Val {
@@ -417,9 +406,5 @@ export class IntegriTree {
 }
 
 export function stringifyData(data: unknown) {
-  return JSON.stringify(
-    data,
-    (key, value) => (typeof value === 'bigint' ? value.toString() : value),
-    '  ',
-  )
+  return JSON.stringify(data, (key, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
 }

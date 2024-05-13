@@ -1,0 +1,14 @@
+{
+  "Custom": {
+    "txs": "http://localhost:5173/transactions"
+  },
+  "Preview": {
+    "txs": "https://preview.cardanoscan.io/transactions"
+  },
+  "Preprod": {
+    "txs": "https://preprod.cardanoscan.io/transactions"
+  },
+  "Mainnet": {
+    "txs": "https://cardanoscan.io/transactions"
+  }
+}

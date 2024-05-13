@@ -1,0 +1,70 @@
+{
+  "name": "@adatag/deploy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/deploy/",
+  "projectType": "application",
+  "implicitDependencies": ["@adatag/common", "chain"],
+  "tags": [],
+  "targets": {
+    "deploy": {
+      "command": "bun run src/cli/deploy.ts",
+      "dependsOn": [
+        "cors-proxy",
+        "^spin-up",
+        "^build"
+      ],
+      "options": {
+        "cwd": "apps/deploy"
+      },
+      "configurations": {
+        "dev": {},
+        "custom": {},
+        "preview": {},
+        "preprod": {},
+        "mainnet": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+    "test": {
+      "dependsOn": ["deploy"],
+      "executor": "@nx-bun/nx:test",
+      "options": {
+        "smol": false,
+        "bun": true,
+        "timeout": 60000,
+        "cwd": "apps/deploy"
+      },
+      "configurations": {
+        "dev": {},
+        "custom": {},
+        "preview": {},
+        "preprod": {},
+        "mainnet": {}
+      },
+      "defaultConfiguration": "dev"
+    },
+    "cors-proxy": {
+      "executor": "nx:run-commands",
+      "tty": true,
+      "options": {
+        "color": true,
+        "cwd": "tools",
+        "readyWhen": "CORS Proxy server",
+        "parallel": true
+      },
+      "inputs": [],
+      "configurations": {
+        "custom": {
+          "commands": [
+            "pkill -oxf 'bun run corsProxy.ts' ; bun run corsProxy.ts || echo 'CORS Proxy server'"
+          ]
+        },
+        "dev": {
+          "command": "echo 'No CORS Proxy server is required'"
+        }
+      },
+      "defaultConfiguration": "dev"
+    }
+
+  }
+}

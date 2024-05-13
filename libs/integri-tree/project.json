@@ -1,40 +1,24 @@
 {
-  "name": "integri-tree",
+  "name": "@adatag/integri-tree",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/integri-tree/src",
+  "sourceRoot": "libs/integri-tree/",
   "projectType": "library",
-  "implicitDependencies": [
-    "aiken"
-  ],
+  "tags": [],
+  "// targets": "to see all targets run: nx show project integri-tree --web",
   "targets": {
-    "lint": {
-      "dependsOn": [
-        "^lint"
-      ],
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+    "build": {
+      "executor": "nx:noop", 
+      "options": {},
+      "dependsOn": ["^build", "test"]
     },
     "test": {
       "executor": "@nx-bun/nx:test",
-      "dependsOn": [
-        "^build"
-      ],
       "options": {
         "smol": false,
-        "bail": true,
-        "bun": false
-      },
-      "configurations": {
-        "dev": {
-          "{options.timeout}": 15000
-        },
-        "prod": {
-          "{options.timeout}": 65000
-        }
-      },
-      "defaultConfiguration": "dev"
+        "bun": true,
+        "timeout": 15000
+      }
     }
   }
 }
+

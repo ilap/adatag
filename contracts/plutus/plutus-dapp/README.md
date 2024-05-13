@@ -1,10 +1,11 @@
 ## Introduction
 
 The adatag developer has to provide:
+
 - The one-shot "Authorization Token" minting policy to mint authorization tokens for the StateHolder
--   One "Authorization Token" validator for carrying the state of the username/adatag tree state in validator address contain one authorization Token and the tree state in the datum.
--   The "TimeDeposit" validator that un-locks the locked ADA deposit (when it's active).
--   The "Minting" policy to mint/burn of users' adatags.
+- One "Authorization Token" validator for carrying the state of the username/adatag tree state in validator address contain one authorization Token and the tree state in the datum.
+- The "TimeDeposit" validator that un-locks the locked ADA deposit (when it's active).
+- The "Minting" policy to mint/burn of users' adatags.
 
 ## Transactions diagrams
 
@@ -36,10 +37,9 @@ Constraints for creating validators:
 1. The Tree validator (TV) must parameterized with the minting policy's script hash, to check its existence on moving authorization Token.
 2. The TV must also need to be parameterised with the authorization Tokens currency symbol.
 3. The minting NFT mist parameterised with the contol NFT currency symbol.
-4. 
+4.
 
-
-  ```plantuml
+```plantuml
 @startmindmap
 !theme default from https://textchart.com/themes/
 title Deploy validators as Reference script
@@ -59,7 +59,7 @@ center footer They will be sent to an Always False Validator: AFV
 
 ### 3. Deploy Labeled Tree Validator and Minting Policy as Ref script
 
-  ```plantuml
+```plantuml
 @startmindmap
 !theme default from https://textchart.com/themes/
 title Deploy validators as Reference script
@@ -104,14 +104,16 @@ left side
 ```
 
 > Node: The datum contains:
-> - The nr. of elements  (`n`) of the Set, initially 0.
+>
+> - The nr. of elements (`n`) of the Set, initially 0.
 > - The element (`x`) added to the Set, initially an empty string (`""`),
-> - The accumulator  (`Acc`) of the relevant tree (`Ta`), means the username of the tree must start with `'a'`, initially with two constraints e.g. 'a' = 97 -> xa = 96 = '`'; xb = 97 = 'b':
+> - The accumulator (`Acc`) of the relevant tree (`Ta`), means the username of the tree must start with `'a'`, initially with two constraints e.g. 'a' = 97 -> xa = 96 = '`'; xb = 97 = 'b':
 >   - `Acc(Ta0) = H( H( n || xa || xb) || H("") || H("") )`, otherwise
 >   - `Acc(Ta_i) = H( H( n_i || xa_i || xb_i) || LeftP_i || RigthP_i )`
 >   - LeftP = left child's proof, RightP = rigth child's proof
 
 ### 5. Mint @adatag starts with "a"
+
 ```plantuml
 @startmindmap
 !theme default from https://textchart.com/themes/
@@ -142,7 +144,7 @@ title Burn @adatag
 ** User's changes
 left side
 
-** User UTxO \n NFT: @adatag 
+** User UTxO \n NFT: @adatag
 ** AFV MP: \n Redeemer : { x, nu, na, U}
 ** AFV TV: \n NFT."a", \n datum: {n, x, Acc(Ta)}
 

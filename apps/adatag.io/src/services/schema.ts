@@ -1,9 +1,15 @@
-import { BOOTSTRAP_SLOT } from '../configs/settings.ts'
-import * as Config from '../configs/genesis-config.json'
+// TODO: Add bootstrap slot into the genesis-config.json
+import { BOOTSTRAP_SLOT } from '../configs/settings'
+import { genesisConfig } from '../utils/config'
+
+// TODO: find a better way...
+const polid = genesisConfig?.adatagMinting.policyId || ''
 
 // DB Worker constants
 // TODO: Find a better way to use consistend DB files.
-export const DBNAME = `adatagdb-${Config.adatagMinting.policyId}.sqlite3`
+// The provider must use CORS and respond COEP/COOP for using OPFS.
+export const DBNAME = `adatagdb-${polid}.sqlite3`
+
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS config ( id INTEGER PRIMARY KEY, tip INTEGER NOT NULL );
 INSERT OR IGNORE INTO config (id, tip) VALUES (1, ${BOOTSTRAP_SLOT});
@@ -151,14 +157,9 @@ INSERT OR IGNORE INTO z (xi, xa, xb) VALUES ( '0', 'y',  '{');
 export const nonmemberQuery = (tableName: string, element: string) =>
   `SELECT * FROM ${tableName} WHERE xa < ${element} AND ${element} < xb;`
 
-export const memberQuery = (element: string) =>
-  `SELECT * FROM {tableName}  WHERE xa = ${element} OR ${element} = xb;`
+export const memberQuery = (element: string) => `SELECT * FROM {tableName}  WHERE xa = ${element} OR ${element} = xb;`
 
-export const appendUpdateQuery = (
-  tableName: string,
-  element: string,
-  tip: number,
-) => `
+export const appendUpdateQuery = (tableName: string, element: string, tip: number) => `
 BEGIN TRANSACTION;
 
   -- Insert a new row only if xa < 'x' AND 'x' < xb holds.

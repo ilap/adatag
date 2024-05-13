@@ -1,24 +1,52 @@
-import { defineConfig } from 'vite'
-import { createHtmlPlugin } from 'vite-plugin-html'
-import { resolve } from 'path'
-
-import react from '@vitejs/plugin-react-swc'
+/// <reference types='vitest' />
+import { defineConfig, PluginOption } from 'vite'
+import react from '@vitejs/plugin-react'
 import wasm from 'vite-plugin-wasm'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
-import typescript from '@rollup/plugin-typescript';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 
 export default defineConfig({
-  rollupOptions: {
-    external: [
-      '@emurgo/cardano-message-signing-nodejs',
-      '@emurgo/cardano-serialization-lib-nodejs',
-      'axios', 'bip39', 'nanoid', 'zod',
-    ],
-    plugins: [
-      typescript(),
-    ]
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/adatag.io',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+    proxy: {
+      '/local-cluster': {
+        target: 'http://localhost:10000',
+        changeOrigin: true,
+        secure: false,
+        headers: {
+          // FIXME: for sqlite and proxy
+          'Cross-Origin-Opener-Policy': 'same-site',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      },
+    },
   },
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [wasm(), react(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  worker: {
+    format: 'es',
+    plugins: (): PluginOption[] => [wasm(), nxViteTsPaths()],
+  },
+
   build: {
+    outDir: '../../dist/apps/adatag.io',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     cssCodeSplit: true,
     target: 'esnext',
     rollupOptions: {
@@ -26,23 +54,29 @@ export default defineConfig({
         main: 'index.html',
         worker: 'src/workers/TreeWorker.ts',
       },
-    },
-  },
-  plugins: [
-    wasm(),
-    react(),
-    createHtmlPlugin({
-      inject: {
-        data: {
-          injectScript: `<script src="coi-serviceworker.min.js"></script>`,
+      output: {
+        manualChunks: {
+          // Manually split code into smaller chunks
+          vendor: [],
         },
       },
-    }),
-  ],
-  worker: {
-    format: 'es',
-    plugins: [wasm()],
+    },
   },
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/adatag.io',
+      provider: 'v8',
+    },
+  },
+
   optimizeDeps: {
     exclude: [
       '@sqlite.org/sqlite-wasm',
@@ -50,11 +84,11 @@ export default defineConfig({
       '@dcspark/cardano-multiplatform-lib-browser',
     ],
     esbuildOptions: {
-      // Node.js global to browser globalThis
       define: {
         global: 'globalThis',
+        process: 'process',
+        Buffer: 'Buffer',
       },
-      // Enable esbuild polyfill plugins
       plugins: [
         NodeGlobalsPolyfillPlugin({
           buffer: true,
@@ -62,40 +96,7 @@ export default defineConfig({
       ],
     },
   },
-  server: {
-    headers: {
-      //'Cross-Origin-Opener-Policy': 'same-origin',
-      //'Cross-Origin-Resource-Policy': 'cross-origin',
-      //'Cross-Origin-Embedder-Policy': 'credentialless'
-      // COOP COEP
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    },
-    cors: {
-      origin: '*', // Allow requests from any origin
-    },
-    proxy: {
-      '/local-cluster': {
-        target: 'http://localhost:10000',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
   resolve: {
-    alias: {
-      '@adatag/shared/config': resolve(
-        __dirname,
-        '../../libs/deployment-ts/src/config/',
-      ),
-      '@adatag/integri-tree': resolve(
-        __dirname,
-        '../../libs/integri-tree/src/',
-      ),
-      '@adatag/shared/plutus': resolve(
-        __dirname,
-        '../../libs/deployment-ts/src/plutus/',
-      ),
-    },
+    dedupe: ['buffer', 'Buffer'],
   },
 })

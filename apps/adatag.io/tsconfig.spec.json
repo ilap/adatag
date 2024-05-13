@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "composite": true,
+    "declaration": true,
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
+    ]
+  },
+  "include": ["vite.config.ts", "vitest.config.ts", "src/**/*.{test,spec}.{ts,tsx,js,jsx}", "src/**/*.d.ts"]
+}

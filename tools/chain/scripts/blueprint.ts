@@ -1,126 +1,119 @@
 type Blueprint = {
   preamble: {
-    title: string;
-    description: string;
-    version: string;
-    plutusVersion: string;
-    license: string;
-  };
+    title: string
+    description: string
+    version: string
+    plutusVersion: string
+    license: string
+  }
   validators: {
-    title: string;
+    title: string
     datum?: {
-      title: string;
+      title: string
       schema: {
-        $ref: string;
-      };
-    };
+        $ref: string
+      }
+    }
     redeemer: {
-      title: string;
+      title: string
       schema: {
-        $ref: string;
-      };
-    };
+        $ref: string
+      }
+    }
     parameters?: {
-      title: string;
+      title: string
       schema: {
-        $ref: string;
-      };
-    }[];
-    compiledCode: string;
-    hash: string;
-  }[];
+        $ref: string
+      }
+    }[]
+    compiledCode: string
+    hash: string
+  }[]
   definitions: Record<
     string,
     {
-      title: string;
+      title: string
       schema: {
-        $ref: string;
-      };
+        $ref: string
+      }
     }
-  >;
-};
+  >
+}
 
 export async function parseBlueprint(blueprint: string, plutusTs: string) {
-  const plutusJson: Blueprint = JSON.parse(await Bun.file(blueprint).text());
+  const plutusJson: Blueprint = JSON.parse(await Bun.file(blueprint).text())
 
-  const plutusVersion =
-    "Plutus" + plutusJson.preamble.plutusVersion.toUpperCase();
+  const plutusVersion = 'Plutus' + plutusJson.preamble.plutusVersion.toUpperCase()
 
-  const definitions = plutusJson.definitions;
+  const definitions = plutusJson.definitions
 
   const imports = `
-import { applyParamsToScript, Data, Validator } from "translucent-cardano"`;
+import { applyParamsToScript, Data, Validator } from "translucent-cardano"`
 
-  const validators = plutusJson.validators.map((validator) => {
-    const title = validator.title;
+  const validators = plutusJson.validators.map(validator => {
+    const title = validator.title
     const name = (() => {
-      const [a, b] = title.split(".");
-      return upperFirst(snakeToCamel(a)) + upperFirst(snakeToCamel(b));
-    })();
-    const datum = validator.datum;
-    const datumTitle = datum ? snakeToCamel(datum.title) : null;
-    const datumSchema = datum ? resolveSchema(datum.schema, definitions) : null;
+      const [a, b] = title.split('.')
+      return upperFirst(snakeToCamel(a)) + upperFirst(snakeToCamel(b))
+    })()
+    const datum = validator.datum
+    const datumTitle = datum ? snakeToCamel(datum.title) : null
+    const datumSchema = datum ? resolveSchema(datum.schema, definitions) : null
 
-    const redeemer = validator.redeemer;
-    const redeemerTitle = snakeToCamel(redeemer.title);
-    const redeemerSchema = resolveSchema(redeemer.schema, definitions);
+    const redeemer = validator.redeemer
+    const redeemerTitle = snakeToCamel(redeemer.title)
+    const redeemerSchema = resolveSchema(redeemer.schema, definitions)
 
-    const params = validator.parameters || [];
+    const params = validator.parameters || []
     const paramsSchema = {
-      dataType: "list",
-      items: params.map((param) => resolveSchema(param.schema, definitions)),
-    };
+      dataType: 'list',
+      items: params.map(param => resolveSchema(param.schema, definitions)),
+    }
     const paramsArgs = params.map((param, index) => [
       snakeToCamel(param.title),
       schemaToType(paramsSchema.items[index]),
-    ]);
+    ])
 
-    const script = validator.compiledCode;
+    const script = validator.compiledCode
 
     return `export interface ${name} {
-    new (${paramsArgs.map((param) => param.join(":")).join(",")}): Validator;${
-      datum ? `\n${datumTitle}: ${schemaToType(datumSchema)};` : ""
+    new (${paramsArgs.map(param => param.join(':')).join(',')}): Validator;${
+      datum ? `\n${datumTitle}: ${schemaToType(datumSchema)};` : ''
     }
     ${redeemerTitle}: ${schemaToType(redeemerSchema)};
   };
 
   export const ${name} = Object.assign(
-    function (${paramsArgs.map((param) => param.join(":")).join(",")}) {${
+    function (${paramsArgs.map(param => param.join(':')).join(',')}) {${
       paramsArgs.length > 0
         ? `return { type: "${plutusVersion}", script: applyParamsToScript("${script}", [${paramsArgs
-            .map((param) => param[0])
-            .join(",")}], ${JSON.stringify(paramsSchema)} as any) };`
+            .map(param => param[0])
+            .join(',')}], ${JSON.stringify(paramsSchema)} as any) };`
         : `return {type: "${plutusVersion}", script: "${script}"};`
     }},
-    ${datum ? `{${datumTitle}: ${JSON.stringify(datumSchema)}},` : ""}
+    ${datum ? `{${datumTitle}: ${JSON.stringify(datumSchema)}},` : ''}
     {${redeemerTitle}: ${JSON.stringify(redeemerSchema)}},
-  ) as unknown as ${name};`;
-  });
+  ) as unknown as ${name};`
+  })
 
-  const plutus = imports + "\n\n" + validators.join("\n\n");
+  const plutus = imports + '\n\n' + validators.join('\n\n')
 
-  await Bun.write(plutusTs, plutus);
+  await Bun.write(plutusTs, plutus)
 
-  console.log(
-    "%cGenerated %cplutus.ts",
-    "color: green; font-weight: bold",
-    "font-weight: bold",
-  );
+  console.log(`%cGenerated %c${plutusTs}`, 'color: green; font-weight: bold', 'font-weight: bold')
 
   function resolveSchema(schema: any, definitions: any, refName?: string): any {
     if (schema.items) {
       if (schema.items instanceof Array) {
         return {
           ...schema,
-          items: schema.items.map((item: any) =>
-            resolveSchema(item, definitions),
-          ),
-        };
+          items: schema.items.map((item: any) => resolveSchema(item, definitions)),
+        }
       } else {
         return {
           ...schema,
           items: resolveSchema(schema.items, definitions, refName),
-        };
+        }
       }
     } else if (schema.anyOf) {
       return {
@@ -132,69 +125,60 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`;
             title: field.title ? snakeToCamel(field.title) : undefined,
           })),
         })),
-      };
+      }
     } else if (schema.keys && schema.values) {
       return {
         ...schema,
         keys: resolveSchema(schema.keys, definitions, refName),
         values: resolveSchema(schema.values, definitions, refName),
-      };
+      }
     } else {
-      if (schema["$ref"]) {
-        const refKey = schema["$ref"]
-          .replaceAll("~1", "/")
-          .split("#/definitions/")[1];
+      if (schema['$ref']) {
+        const refKey = schema['$ref'].replaceAll('~1', '/').split('#/definitions/')[1]
 
         if (refKey === refName) {
-          return schema;
+          return schema
         } else {
-          refName = refKey;
-          const resolved = resolveSchema(
-            definitions[refKey],
-            definitions,
-            refName,
-          );
-          return resolved;
+          refName = refKey
+          const resolved = resolveSchema(definitions[refKey], definitions, refName)
+          return resolved
         }
       } else {
-        return schema;
+        return schema
       }
     }
   }
 
   function schemaToType(schema: any): string {
-    if (!schema) throw new Error("Could not generate type.");
-    const shapeType = (schema.anyOf ? "enum" : "") || schema.dataType;
+    if (!schema) throw new Error('Could not generate type.')
+    const shapeType = (schema.anyOf ? 'enum' : '') || schema.dataType
 
     switch (shapeType) {
-      case "integer": {
-        return "bigint";
+      case 'integer': {
+        return 'bigint'
       }
-      case "bytes": {
-        return "string";
+      case 'bytes': {
+        return 'string'
       }
-      case "constructor": {
+      case 'constructor': {
         if (isVoid(schema)) {
-          return "undefined";
+          return 'undefined'
         } else {
           return `{${schema.fields
-            .map(
-              (field: any) =>
-                `${field.title || "wrapper"}:${schemaToType(field)}`,
-            )
-            .join(";")}}`;
+            .map((field: any) => `${field.title || 'wrapper'}:${schemaToType(field)}`)
+            .join(';')}}`
         }
       }
-      case "enum": {
+      case 'enum': {
         // When enum has only one entry it's a single constructor/record object
         if (schema.anyOf.length === 1) {
-          return schemaToType(schema.anyOf[0]);
+          return schemaToType(schema.anyOf[0])
         }
         if (isBoolean(schema)) {
-          return "boolean";
+          return 'boolean'
         }
         if (isNullable(schema)) {
-          return `${schemaToType(schema.anyOf[0].fields[0])} | null`;
+          return `${schemaToType(schema.anyOf[0].fields[0])} | null`
         }
         return schema.anyOf
           .map((entry: any) =>
@@ -202,79 +186,55 @@ import { applyParamsToScript, Data, Validator } from "translucent-cardano"`;
               ? `"${entry.title}"`
               : `{${entry.title}: ${
                   entry.fields[0].title
-                    ? `{${entry.fields
-                        .map((field: any) =>
-                          [field.title, schemaToType(field)].join(":"),
-                        )
-                        .join(",")}}}`
-                    : `[${entry.fields
-                        .map((field: any) => schemaToType(field))
-                        .join(",")}]}`
-                }`,
+                    ? `{${entry.fields.map((field: any) => [field.title, schemaToType(field)].join(':')).join(',')}}}`
+                    : `[${entry.fields.map((field: any) => schemaToType(field)).join(',')}]}`
+                }`
           )
-          .join(" | ");
+          .join(' | ')
       }
-      case "list": {
+      case 'list': {
         if (schema.items instanceof Array) {
-          return `[${schema.items
-            .map((item: any) => schemaToType(item))
-            .join(",")}]`;
+          return `[${schema.items.map((item: any) => schemaToType(item)).join(',')}]`
         } else {
-          return `Array<${schemaToType(schema.items)}>`;
+          return `Array<${schemaToType(schema.items)}>`
         }
       }
-      case "map": {
-        return `Map<${schemaToType(schema.keys)}, ${schemaToType(
-          schema.values,
-        )}>`;
+      case 'map': {
+        return `Map<${schemaToType(schema.keys)}, ${schemaToType(schema.values)}>`
       }
       case undefined: {
-        return "Data";
+        return 'Data'
       }
     }
-    throw new Error("Could not type cast data.");
+    throw new Error('Could not type cast data.')
   }
 
   function isBoolean(shape: any): boolean {
-    return (
-      shape.anyOf &&
-      shape.anyOf[0]?.title === "False" &&
-      shape.anyOf[1]?.title === "True"
-    );
+    return shape.anyOf && shape.anyOf[0]?.title === 'False' && shape.anyOf[1]?.title === 'True'
   }
 
   function isVoid(shape: any): boolean {
-    return shape.index === 0 && shape.fields.length === 0;
+    return shape.index === 0 && shape.fields.length === 0
   }
 
   function isNullable(shape: any): boolean {
-    return (
-      shape.anyOf &&
-      shape.anyOf[0]?.title === "Some" &&
-      shape.anyOf[1]?.title === "None"
-    );
+    return shape.anyOf && shape.anyOf[0]?.title === 'Some' && shape.anyOf[1]?.title === 'None'
   }
 
   function snakeToCamel(s: string): string {
-    const withUnderscore = s.charAt(0) === "_" ? s.charAt(0) : "";
+    const withUnderscore = s.charAt(0) === '_' ? s.charAt(0) : ''
     return (
       withUnderscore +
       (withUnderscore ? s.slice(1) : s)
         .toLowerCase()
-        .replace(/([-_][a-z])/g, (group) =>
-          group.toUpperCase().replace("-", "").replace("_", ""),
-        )
-    );
+        .replace(/([-_][a-z])/g, group => group.toUpperCase().replace('-', '').replace('_', ''))
+    )
   }
 
   function upperFirst(s: string): string {
-    const withUnderscore = s.charAt(0) === "_" ? s.charAt(0) : "";
-    return (
-      withUnderscore +
-      s.charAt(withUnderscore ? 1 : 0).toUpperCase() +
-      s.slice((withUnderscore ? 1 : 0) + 1)
-    );
+    const withUnderscore = s.charAt(0) === '_' ? s.charAt(0) : ''
+    return withUnderscore + s.charAt(withUnderscore ? 1 : 0).toUpperCase() + s.slice((withUnderscore ? 1 : 0) + 1)
   }
 }
 
-parseBlueprint("./plutus.json", "../../libs/deployment-ts/src/plutus/plutus.ts")
+parseBlueprint('./plutus.json', '../../libs/common/src/plutus/plutus.ts')

@@ -25,9 +25,7 @@ waitForOgmios(urlToCheck, timeout)
     if (serverInfo) {
       console.log(`Ogmios is up!`)
     } else {
-      console.error(
-        `Timeout: Server did not become available within ${timeout} ms.`,
-      )
+      console.error(`Timeout: Server did not become available within ${timeout} ms.`)
       process.exit(1)
     }
   })

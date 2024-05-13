@@ -5,6 +5,7 @@ YACI_CLI_CMD=${YACI_CLI_CMD:-sleep infinity}
 
 yaci_store_enabled=true
 ogmios_enabled=true
+kupo_enabled=true
 
 #######################################################
 # Ports

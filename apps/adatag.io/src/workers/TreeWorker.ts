@@ -1,25 +1,26 @@
 import * as Comlink from 'comlink'
 import { Data, fromText, toText } from 'translucent-cardano'
 
-import { KupmiosChainFetch } from '../services/KupmiosChainFetch.ts'
-import { SQLiteDataStore } from '../services/SQLiteDataStore.ts'
+import { KupmiosChainFetch } from '../services/KupmiosChainFetch'
+import { SQLiteDataStore } from '../services/SQLiteDataStore'
+import { ChainFetchService, DataStoreService, TreeState } from '../services/types'
+import { debugMessage, hexToASCII, stringifyData } from '../utils'
+
+import { IntegriTree } from '@adatag/integri-tree'
+
 import {
-  ChainFetchService,
-  DataStoreService,
-  TreeState,
-} from '../services/types.ts'
-import { debugMessage, hexToASCII, stringifyData } from '../utils.ts'
-import Config from '../configs/genesis-config.json'
-import { IntegriTree } from '../../../../libs/integri-tree/src/lib/integri-tree.ts'
-import * as T from '../configs/types.ts'
-import * as P from '../configs/plutus.ts'
-import { TreeWorkerService } from './types.ts'
+  TimeDepositDatum,
+  StateHolderStateHolder,
+  MintRedeemer,
+  Operation,
+  AdatagAdatagMinting,
+  Val,
+} from '@adatag/common/plutus'
+import { TreeWorkerService } from './types'
+import { genesisConfig } from '../utils/config'
 
 class TreeWorker implements TreeWorkerService {
-  constructor(
-    private dataStore: DataStoreService,
-    private chainFetch: ChainFetchService,
-  ) {}
+  constructor(private dataStore: DataStoreService, private chainFetch: ChainFetchService) {}
 
   async initialise(): Promise<void> {
     // Initialise the database
@@ -29,7 +30,56 @@ class TreeWorker implements TreeWorkerService {
   }
 
   async checkIfAdatagMinted(adatag: string): Promise<boolean> {
-    return this.chainFetch.fetchAsset(adatag);
+    //const a = await this.getDepositDetails(adatag)
+    //console.log(`@@@@@###### DATUM ${JSON.stringify(a)}`)
+    return (await this.chainFetch.fetchAsset(adatag)) !== undefined
+  }
+
+  async checkIfAdatagNotMinted(adatag: string): Promise<boolean> {
+    return (await this.getDepositDetails(adatag)) === undefined
+  }
+
+  async getDepositDetails(adatag: string): Promise<
+    | {
+        txId: string
+        outputIndex: number
+        beneficiary: string
+        deadline: number
+      }
+    | undefined
+  > {
+    // 1. Retrieve the oldest transaction output for the given adatag
+    const asset = await this.chainFetch.fetchAsset(adatag, true)
+
+    if (!asset) {
+      return undefined
+    }
+
+    // 2. Retrieve the datum for the transaction output
+    const result = await this.chainFetch.fetchDatum(asset.transaction_id, genesisConfig!.timelockScript.scriptAddress)
+
+    if (!result) {
+      return undefined
+    }
+
+    //const datum = Data.from(result.datum, P.TimeDepositTimedeposit.datum as  unknown as TreeState)
+    const datum: TimeDepositDatum['datum'] = Data.from(result.datum, TimeDepositDatum.datum)
+    console.log(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
+    // 3. Return the transaction ID, output index, and datum
+    return {
+      txId: asset.transaction_id,
+      outputIndex: result.output_index,
+      beneficiary: datum.beneficiary,
+      deadline: Number(datum.deadLine),
+    }
+  }
+
+  serialiseVal(val: Val): Val {
+    return {
+      xi: fromText(val.xi),
+      xa: fromText(val.xa),
+      xb: fromText(val.xb),
+    }
   }
 
   async createMintingDetails(adatag: string): Promise<{
@@ -45,9 +95,7 @@ class TreeWorker implements TreeWorkerService {
     return await this.createTxInputs(adatag, tree, state)
   }
 
-  private async buildTreeFromChain(
-    adatag: string,
-  ): Promise<{ tree: IntegriTree; state: TreeState }> {
+  private async buildTreeFromChain(adatag: string): Promise<{ tree: IntegriTree; state: TreeState }> {
     // try {
     // Authtoken is always the 1st char of the @adatag
     const authToken = adatag[0]
@@ -58,16 +106,14 @@ class TreeWorker implements TreeWorkerService {
 
     let fromSlot = cachedSlot
     let done = false
-    let state = null
+    let state: TreeState | undefined = undefined
 
     while (!done) {
       // Fetch all missing elements till the tip
       const tip = await this.chainFetch.fetchTip()
       const elems = await this.chainFetch.fetchElements(fromSlot, tip)
 
-      const filteredElems = elems.filter(
-        (elem: string) => elem[0] === authToken,
-      )
+      const filteredElems = elems.filter((elem: string) => elem[0] === authToken)
 
       filteredElems.forEach(elem => {
         debugMessage(`Append elem: ${elem}`)
@@ -83,8 +129,11 @@ class TreeWorker implements TreeWorkerService {
 
       const { datum } = fetchedDatum
 
-      state = Data.from(datum, P.StateHolderStateHolder.oldState) as TreeState
+      state = (Data.from(datum, StateHolderStateHolder.oldState) as TreeState) || undefined
 
+      if (!state) {
+        throw Error(`Cannot convert datum to typescript's type`)
+      }
       // Sanity checks
       const treeProof = tree.rootHash()
 
@@ -98,7 +147,9 @@ class TreeWorker implements TreeWorkerService {
         done = true
       } else {
         throw new Error(
-          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${elems[elems.length - 1]} .... ${state.adatag}`,
+          `Inconsistent tree: ERROR & HALT ${state.rootHash} ${treeProof} ${elems[elems.length - 1]} .... ${
+            state.adatag
+          }`
         )
       }
       fromSlot = tip
@@ -118,14 +169,12 @@ class TreeWorker implements TreeWorkerService {
   private async createTxInputs(
     adatag: string,
     tree: IntegriTree,
-    oldState: TreeState,
+    oldState: TreeState
   ): Promise<{ datum: string; redeemer: string }> {
-    const minTree = tree.generateMinimalSubtree(adatag)
+    const minTree = tree.generateMinimalSubtree(adatag, this.serialiseVal)
 
     if (!minTree) {
-      throw new Error(
-        `Cannot create minimal subtree for "${adatag}". Probably minted already.`,
-      )
+      throw new Error(`Cannot create minimal subtree for "${adatag}". Probably minted already.`)
     }
 
     const { updateVal, appendVal, proof } = minTree
@@ -142,26 +191,26 @@ class TreeWorker implements TreeWorkerService {
     debugMessage(`Old root  : ${JSON.stringify(oldState.rootHash)}  `)
 
     // Construct the new tree state
-    const action: T.Operation = 'AdatagAdded'
+    const action: Operation = 'AdatagAdded'
     const size = (parseInt(toText(oldState.size)) + 1).toString()
 
-    const newState: P.StateHolderStateHolder['oldState'] = {
+    const newState: StateHolderStateHolder['oldState'] = {
       operationCount: oldState.operationCount + 1n,
       adatag: fromText(adatag),
-      operation: action as T.Operation,
+      operation: action as Operation,
       size: fromText(size),
       rootHash: rootHash,
-      mintingPolicy: Config.adatagMinting.policyId,
+      mintingPolicy: genesisConfig!.adatagMinting.policyId,
     }
 
     console.log(`Old State: ${stringifyData(oldState)}`)
     console.log(`New State: ${stringifyData(newState)}`)
 
     // Construct datum
-    const datum = Data.to(newState, P.StateHolderStateHolder.oldState)
+    const datum = Data.to(newState, StateHolderStateHolder.oldState)
 
     // Construct redeemer
-    const mintRedeemer: T.MintRedeemer = {
+    const mintRedeemer: MintRedeemer = {
       Minting: [
         {
           updateVal: updateVal,
@@ -171,7 +220,7 @@ class TreeWorker implements TreeWorkerService {
       ], // Use 'as const' to assert that Minting is a tuple with a single element
     }
 
-    const redeemer = Data.to(mintRedeemer, P.AdatagAdatagMinting.rdmr, 'proof')
+    const redeemer = Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof')
 
     return { datum, redeemer }
   }

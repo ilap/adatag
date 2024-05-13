@@ -3,9 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/chain/",
   "projectType": "library",
-  "implicitDependencies": [
-    "aiken"
-  ],
   "targets": {
     "spin-up": {
       "executor": "nx:run-commands",
@@ -18,18 +15,15 @@
         }
       },
       "configurations": {
-        "int": {
-          "cache": false,
+        "custom": {
           "commands": [
-            "docker-compose --env-file env kill ",
-            "docker compose --env-file env up -d --wait-timeout 120",
+            "docker compose --env-file env --env-file version up -d --wait-timeout 120",
             "bun run scripts/waitfor_ogmios.ts http://localhost:1442/health 120"
           ]
         },
-        "dev": { "command": "echo 'Dev: No spin-up is required'"},
-        "prd": {"command": "echo 'Prd: No spin-up is required'"}
+        "dev": { "command": "echo 'No spin-up is required'" }
       },
-      "defaultConfiguration": "int"
+      "defaultConfiguration": "dev"
     },
     "tear-down": {
       "executor": "nx:run-commands",
@@ -38,11 +32,10 @@
         "color": true
       },
       "configurations": {
-        "int": {
-          "command": "docker-compose --env-file env kill"
+        "custom": {
+          "command": "docker compose --env-file env --env-file version kill"
         },
-        "dev": { "command": "echo 'Dev: No tear-down is required'"},
-        "prd": {"command": "echo 'Prd: No tear-down is required'"}
+        "dev": { "command": "echo 'No tear-down is required'" }
       },
       "defaultConfiguration": "dev"
     }
