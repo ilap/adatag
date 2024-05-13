@@ -33,7 +33,7 @@ Using @Adatag involves bootstrapping, which includes generating the required Plu
 - Enforced Integrity Logic: The integrity of the tree is maintained through specific logic implemented within the smart contracts.
 
 
-For more details, refer tothe [Design Specification](./doc/DESIGNSPEC.md) and [IntegriTree Technical Specification](./doc/TECHSPEC.md).
+For more details, refer to the [Design Specification](./doc/DESIGNSPEC.md) and [IntegriTree Technical Specification](./doc/TECHSPEC.md).
 
 ### Monorepo Contents
 
@@ -52,6 +52,8 @@ To get started with @Adatag, ensure you have the necessary dependencies installe
 - [bun](https://bun.sh): A fast all-in-one JavaScript runtime.
 - [Node.js (v18)](https://nodejs.org/en/download/package-manager/): JavaScript runtime.
 - [Aiken](https://aiken-lang.org/installation-instructions): A modern smart contract platform for Cardano.
+
+For more details, read the [Development Environment Overview](./tools/README.md)
 
 > Note: These dependencies are essential for setting up and running @Adatag effectively.
 
