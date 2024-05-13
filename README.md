@@ -6,11 +6,11 @@
 
 </div>
 
-## Introduction
+# Introduction
 Welcome to **@Adatag**, a web3 username service built on the Cardano blockchain that enables users to manage unique, NFT-based usernames.
 It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity of usernames.
 
-## Adatag Features
+# Adatag Features
 
 - **Decentralized**: @Adatag is a ***real*** dApp, not controlled by any single entity or keys.
 - **Transparent**: @Adatag is completely open-source to allow anybody to validate and audit its logic.
@@ -20,11 +20,11 @@ It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity o
 
 > Note: Users must time-lock deposit a certain value (depending on the length of the @Adatag) to prevent abuse of the system. These deposits are redeemable by the rightful beneficiaries after a certain time (preferably 20 days) of minting.
 
-## IntegriTree
+# IntegriTree
 
 IntegriTree is a complete-binary tree-based data structure that stores only unique elements using open-interval, featuring a short accumulator (hash of the tree) and proofs (member, non-member, addition, and deletion proofs) that can be stored on-chain, similar to Merkle Tree, Trie, or Patricia Trees proofs.
 
-## How @Adatag Works
+# How @Adatag Works
 
 Using @Adatag involves bootstrapping, which includes generating the required Plutus scripts based on the protocol parameters and deploying them onto the Cardano blockchain along with the initial state(s) of the protocol.
 
@@ -35,7 +35,7 @@ Using @Adatag involves bootstrapping, which includes generating the required Plu
 
 For more details, refer to the [Design Specification](./doc/DESIGNSPEC.md) and [IntegriTree Technical Specification](./doc/TECHSPEC.md).
 
-### Monorepo Contents
+# Monorepo Contents
 
 This repository contains everything needed for @Adatag, serving as a Minimum Viable Product (MVP). It includes:
 
@@ -44,7 +44,7 @@ This repository contains everything needed for @Adatag, serving as a Minimum Via
 - [**Smart Contract Source Code (aiken)**](./contracts/aiken): All smart contracts written in Aiken (Plutus deprecated) for validating username creation and deletion (TBD).
 - [**Demo Website (@adatag/adatag.io)**](./apps/adatag.io): The source code for the demo website will be hosted at [adatag.io](https://adatag.io), providing users with a user-friendly interface for interacting with the dApp.
 
-## Getting Started
+# Getting Started
 
 To get started with @Adatag, ensure you have the necessary dependencies installed:
 - [git](https://git-scm.com/download/): A free and open-source distributed version control system.
@@ -57,7 +57,7 @@ For more details, read the [Development Environment Overview](./tools/README.md)
 
 > Note: These dependencies are essential for setting up and running @Adatag effectively.
 
-### Local Demo
+# Local Demo
 
 For demoing @Adatag, please follow these steps (assuming all prerequisites are completed):
 
@@ -77,10 +77,52 @@ $ npx nx run @Adatag/adatag.io:serve:custom
   ➜  Press h + enter to show help
 ```
 
-## Contribution
+# TODOs
+
+## General
+
+- [x] Test the integration with private Cardano blockchain
+- [x] Create a deployment guide for users
+- [ ] Address any security concerns or vulnerabilities
+- [ ] Improve project's code quality and maintainability
+- [ ] Investigate and implement potential performance optimizations
+- [ ] Evaluate and consider integrating with other relevant projects or services
+- [ ] Implement unit tests for critical functionalities
+- [x] Document code architecture and design patterns used
+- [x] Refactor codebase for improved readability and maintainability
+- [x] Update project documentation
+- [ ] Add a troubleshooting section to the documentation
+- [ ] Write more unit tests
+- [ ] Write integration tests for both off-chain and on-chain components
+- [ ] Set up continuous integration (CI) for automated testing
+- [x] Feature completeness
+
+## Off-chain
+
+- [ ] Clean up the codes
+- [x] Implement user interface for username minting
+- [x] Implement user interface for time-lock deposit claiming
+- [ ] Implement user interface for username burning
+- [x] Implement user interfaces for Lagal dosuments and FAQ
+- [ ] Implement proper error handling
+- [ ] Add more comprehensive logging
+- [x] Refactor off-chain code for better modularity
+
+## On-chain
+
+- [ ] Reconsider deactivation feature
+- [ ] Use Blake2b for hashing after Chang hard fork
+- [ ] Review and update Plutus script validators
+- [x] Optimize on-chain script performance
+- [x] Add functionality to handle time-lock deposits for username minting
+- [x] Add functionality to handle adahandle for avoiding time-lock deposits
+- [ ] Add more test cases for on-chain scripts
+
+
+# Contribution
 
 Contributions to the @adatag IntegriTree PoC and MVP implementation are welcome! Whether it's bug fixes, feature enhancements, or documentation improvements, feel free to submit an [issue](https://github.com/ilap/adatag/issues) or [pull request](https://github.com/ilap/adatag/pulls) to help improve the project.
 
-## License
+# License
 
 This project is licensed under the [MIT License](LICENSE).
