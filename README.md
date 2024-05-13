@@ -101,6 +101,23 @@ ENVIRONMENT=Integration
 PROVIDER=Kupmios
 EOF
 
+$ cat <<EOF>  ./libs/common/src/config/keys/api-keys.json
+{
+  "Blockfrost": {
+    "Custom": "",
+    "Preview": "",
+    "Preprod": "",
+    "Mainnet": ""
+  },
+  "Maestro": {
+    "Custom": "",
+    "Preview": "",
+    "Preprod": "",
+    "Mainnet": ""
+  }
+}
+EOF
+
 $ cat <<EOF>  ./libs/common/src/config/keys/test-users-seed.json
 {
   "deployer": {
