@@ -95,13 +95,13 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
 $ git clone https://github.com/ilap/adatag
 $ cd adatag
 $ npm i
-$ cat < EOF > .env.custom 
+$ cat <<EOF> .env.custom 
 NETWORK=Custom
 ENVIRONMENT=Integration
 PROVIDER=Kupmios
 EOF
 
-$ cat < EOF >  ./libs/common/src/config/keys/test-users-seed.json
+$ cat <<EOF>  ./libs/common/src/config/keys/test-users-seed.json
 {
   "deployer": {
     "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
