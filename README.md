@@ -50,24 +50,79 @@ To get started with @Adatag, ensure you have the necessary dependencies installe
 - [git](https://git-scm.com/download/): A free and open-source distributed version control system.
 - [docker](https://docs.docker.com/engine/install/): Docker engine for developing or demoing (using Yaci-devkit based private Cardano blockchain)
 - [bun](https://bun.sh): A fast all-in-one JavaScript runtime.
-- [Node.js (v18)](https://nodejs.org/en/download/package-manager/): JavaScript runtime.
+- [Node.js (v20)](https://nodejs.org/en/download/package-manager/): JavaScript runtime.
 - [Aiken](https://aiken-lang.org/installation-instructions): A modern smart contract platform for Cardano.
 
 For more details, read the [Development Environment Overview](./tools/README.md)
 
 > Note: These dependencies are essential for setting up and running @Adatag effectively.
 
-# Local Demo
+# Local Demo for @Adatag
 
-For demoing @Adatag, please follow these steps (assuming all prerequisites are completed):
+To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow these steps (assuming all prerequisites are completed):
+
+1. Custom Nami Wallet: Since Yaci Devkit does not fully support Blockfrost API, a custom-built Nami wallet is required for the demo.
+  - Clone the repository: 
+    ``` bash 
+    git clone http://github.com/ilap/nami
+    ```
+  - Navigate to the Nami's directory:
+    ``` bash
+    cd nami
+    ```
+
+  - Copy the testing secrets file:
+    ``` bash 
+    cp secrets.testing.js secrets.production.js
+    ```
+
+  - Install dependencies and build the wallet (Nami requires Node.js v20):
+    ``` bash 
+    npm i && npm run build
+    ```
+  - Add the custom Nami wallet to Chrome/Brave extensions:
+    - Open the extensions page: `brave://extensions/` or `chrome://extensions/`
+    - Enable "Developer mode" by toggling the switch in the top-right corner
+    - Click "Load unpacked" and select the `./build` directory from the Nami directory.
+
+  - Create a wallet using the following seed:
+  ` test test test test test test test test test test test test test test test test test test test test test test test sauce`
+
+
+2. Build and run @Adatag on custom private Cardano blockhain:
 
 ```bash
 $ git clone https://github.com/ilap/adatag
 $ cd adatag
-$ bun i && npm i
-$ npx nx run @Adatag/adatag.io:serve:custom
+$ npm i
+$ cat < EOF > .env.custom 
+NETWORK=Custom
+ENVIRONMENT=Integration
+PROVIDER=Kupmios
+EOF
+
+$ cat < EOF >  ./libs/common/src/config/keys/test-users-seed.json
+{
+  "deployer": {
+    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
+  },
+  "collector": {
+    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
+  },
+  "user": {
+    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
+  }
+}
+EOF
+
+```
+
+The application will be available at http://localhost:4200/.
+
+``` bash 
+$ npx nx run @adatag/adatag.io:serve:custom
 ...
-> nx run @Adatag/adatag.io:serve
+> nx run @adatag/adatag.io:serve
 
 > vite serve
 
@@ -76,6 +131,8 @@ $ npx nx run @Adatag/adatag.io:serve:custom
   ➜  Local:   http://localhost:4200/
   ➜  Press h + enter to show help
 ```
+
+
 
 # TODOs
 
