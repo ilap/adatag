@@ -36,7 +36,7 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
     default: {
       title: (
         <>
-          Own Your digital
+          Own <span className="text-transparent bg-clip-text bg-gradient-to-t from-[#ffcc53] to-[#ffb300]">Your</span> digital
           <br />
           identity with adatag
         </>
@@ -51,12 +51,12 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
       panel: null,
     },
     mint: {
-      title: <>Mint your adatag now</>,
+      title: <><span className="text-transparent bg-clip-text bg-gradient-to-t  from-[#ffcc53] to-[#ffb300]">Mint </span> your adatag now</>,
       subTitle: <>Never miss a chance to claim your digital identity.</>,
       panel: <MintPanel />,
     },
     claim: {
-      title: <>Claim what is yours</>, // Claim your time-locked deposit
+      title: <><span className="text-transparent bg-clip-text bg-gradient-to-t from-[#ffcc53] to-[#ffb300]">Claim</span> what is yours</>, // Claim your time-locked deposit
       subTitle: <>When it's time, redeem your time-locked deposit hassle-free.</>,
       panel: <ClaimPanel />,
     },

@@ -32,13 +32,14 @@ for (let i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); i++) {
 
 // Create a newParams object by spreading the values from the original params
 const useTimelock = Bun.env.USE_TIMELOCK == undefined || Bun.env.USE_TIMELOCK === 'true'
+const useMockColector = Bun.env.NETWORK === 'Custom'
 
 // Access the params object for the specified network
 const params = genesisParams[network]
 
 const finalParams = {
   ...params,
-  collectorAddress: collectorAddress,
+  collectorAddress: useMockColector ? collectorAddress : params.collectorAddress,
   collectionTime: useTimelock ? params.collectionTime : 0.0,
   deactivationTime: useTimelock ? params.deactivationTime : 0.0,
   lockingDays: useTimelock ? params.lockingDays : 0.0,

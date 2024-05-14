@@ -4,12 +4,12 @@ Copyright 2023 Pal Dorogi <pal.dorogi@gmail.com>
 IntegriTree - Labeled Complete Binary Tree
 Copyright 2023 Pal Dorogi <pal.dorogi@gmail.com>
 
-This project uses code (as a template) from and was also inspired by the Plutus Pioneer Program 4th Cohort, 
+DEPRECATED (PlutusTx based smart contracts): ~~This project uses code (as a template) from and was also inspired by the Plutus Pioneer Program 4th Cohort, 
 which is licensed under the Creative Commons Attribution 4.0 International License. 
-You can find the Plutus Pioneer Program repository here: https://github.com/input-output-hk/plutus-pioneer-program
+You can find the Plutus Pioneer Program repository here: https://github.com/input-output-hk/plutus-pioneer-program~~
 
-This project was also inspired by and uses code (as a template) from the Hydra,
-which is licensed under the Apache 2.0 license.
-You can find the Hydra repository here: https://github.com/input-output-hk/hydra
+DEPRECATED (PlutusTx based smart contracts): ~~This project was also inspired by and uses code (as a template) from the Hydra,
+which is licensed under the Apache 2.0 license
+You can find the Hydra repository here: https://github.com/input-output-hk/hydra~~
 
 We would like to thank the original authors for their work.

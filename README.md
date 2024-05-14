@@ -55,13 +55,13 @@ To get started with @Adatag, ensure you have the necessary dependencies installe
 
 For more details, read the [Development Environment Overview](./tools/README.md)
 
-> Note: These dependencies are essential for setting up and running @Adatag effectively.
+> Note: These dependencies are essential for setting up, running and developing @Adatag effectively.
 
 # Local Demo for @Adatag
 
 To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow these steps (assuming all prerequisites are completed):
 
-1. Custom Nami Wallet: Since Yaci Devkit does not fully support Blockfrost API, a custom-built Nami wallet is required for the demo.
+1. Custom Nami Wallet: Since Yaci Devkit does not fully support Blockfrost API, and cannot use custom API endpoints, a custom-built Nami wallet is required for the demo.
   - Clone the repository: 
     ``` bash 
     git clone http://github.com/ilap/nami
@@ -86,68 +86,107 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
     - Click "Load unpacked" and select the `./build` directory from the Nami directory.
 
   - Create a wallet using the following seed:
-  ` test test test test test test test test test test test test test test test test test test test test test test test sauce`
+    ``` text
+    test test test test test test test test test test test test test test test test test test test test test test test sauce
+    ```
 
 
 2. Build and run @Adatag on custom private Cardano blockhain:
 
-```bash
-$ git clone https://github.com/ilap/adatag
-$ cd adatag
-$ npm i
-$ cat <<EOF> .env.custom 
-NETWORK=Custom
-ENVIRONMENT=Integration
-PROVIDER=Kupmios
-EOF
+- Clone the repository: 
+  ``` bash 
+  $ git clone https://github.com/ilap/adatag
+  ```
 
-$ cat <<EOF>  ./libs/common/src/config/keys/api-keys.json
-{
-  "Blockfrost": {
-    "Custom": "",
-    "Preview": "",
-    "Preprod": "",
-    "Mainnet": ""
-  },
-  "Maestro": {
-    "Custom": "",
-    "Preview": "",
-    "Preprod": "",
-    "Mainnet": ""
+- Install dependencies: 
+  ``` bash 
+  $ cd adatag
+  $ npm i
+  ```
+
+- Create the required `.env` file:
+  ``` bash
+  $ cat <<EOF> .env.custom 
+  NETWORK=Custom
+  ENVIRONMENT=Integration
+  PROVIDER=Kupmios
+  EOF
+  ```
+
+- Create the required `API keys` and `secrets` file:
+  ``` bash
+  $ cat <<EOF>  ./libs/common/src/config/keys/api-keys.json
+  {
+    "Blockfrost": {
+      "Custom": "",
+      "Preview": "",
+      "Preprod": "",
+      "Mainnet": ""
+    },
+    "Maestro": {
+      "Custom": "",
+      "Preview": "",
+      "Preprod": "",
+      "Mainnet": ""
+    }
+  } 
+  EOF
+
+  $ cat <<EOF>  ./libs/common/src/config/keys/test-users-seed.json
+  {
+    "deployer": {
+      "seed": "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo buddy"
+    },
+    "collector": {
+      "seed": "ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice afford"
+    },
+    "user": {
+      "seed": "test test test test test test test test test test test test test test test test test test test test test test sauce"
+    }
   }
-}
-EOF
+  EOF
+  ```
 
-$ cat <<EOF>  ./libs/common/src/config/keys/test-users-seed.json
-{
-  "deployer": {
-    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
-  },
-  "collector": {
-    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
-  },
-  "user": {
-    "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
-  }
-}
-EOF
+- Run the local demo:
 
-```
+  ``` bash 
+  $ npx nx run @adatag/adatag.io:serve:custom
+  ...
+  > nx run @adatag/adatag.io:serve
 
-The application will be available at http://localhost:4200/.
+  > vite serve
 
-``` bash 
-$ npx nx run @adatag/adatag.io:serve:custom
-...
-> nx run @adatag/adatag.io:serve
+    VITE v5.2.10  ready in 397 ms
 
-> vite serve
+    ➜  Local:   http://localhost:4200/
+    ➜  Press h + enter to show help
+  ```
 
-  VITE v5.2.10  ready in 397 ms
+  The application will be available at http://localhost:4200/:
 
-  ➜  Local:   http://localhost:4200/
-  ➜  Press h + enter to show help
-```
+  > Note: The command `npx nx run @adatag/adatag.io:serve-static:custom` will build and run the project in a production-like environment.
+
+## User Roles 
+Three types of users are involved in the protocol:
+1. Deployer: This user pootstraps the protocol.
+2. User: Users who mint the @adatag and become the beneficiaries of the time-lock deposit (the rightful owners).
+3. Collector: User who can collect unclaimed time-lock deposits (donations).
+
+For testing or local demos, the following seed phrases and their corresponding addresses with a derivation path of 1852H/1815H/0H/0/0 are used:
+
+
+- Deployer's Seed: `zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo buddy`
+- Deployer's Address:`addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk`
+
+- User's Seed: `test test test test test test test test test test test test test test test test test test test test test test sauce`
+- User's Address: `addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex`
+
+- Collector's Seed: `ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice afford`
+- Collector's Address: `addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk`
+
+
+**DISCLAIMER**: These seeds should never be used on the mainnet as they could result in the loss of funds associated with these addresses.
+
 
 
 
