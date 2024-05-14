@@ -90,6 +90,8 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
     test test test test test test test test test test test test test test test test test test test test test test test sauce
     ```
 
+  - Switch to the `Custom` network in Nami:
+    `Top Right Avatar -> Settings -> Network -> Custom Node`
 
 2. Build and run @Adatag on custom private Cardano blockhain:
 
@@ -162,7 +164,7 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
     ➜  Press h + enter to show help
   ```
 
-  The application will be available at http://localhost:4200/:
+  The application will be available at http://localhost:4200/
 
   > Note: The command `npx nx run @adatag/adatag.io:serve-static:custom` will build and run the project in a production-like environment.
 
