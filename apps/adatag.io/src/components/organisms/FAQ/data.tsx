@@ -7,7 +7,45 @@ export const faqData = [
   {
     question: 'What is the cost of minting an adatag?',
     answer:
-      "Minting an adatag is completely free, with users only required to pay a transaction fee and a user's claimable time lock deposit.",
+      "Minting an adatag is completely free, with users only required to pay a transaction fee and a user's claimable time-lock deposit.",
+  },
+  {
+    question:
+      "How does @Adatag use time-lock deposits, deadlines, deactivation time, and collection time?",
+    answer:
+      "@Adatag uses time-lock deposits to prevent abuse of the system, deadlines to allow users to claim their deposits after a set period of time, deactivation time to remove the time-lock deposit requirement after a set period of time, and collection time to allow collectors to redeem unclaimed deposits.",
+  },
+  {
+    question: "What is a time-lock deposit?",
+    answer:
+      'A time-lock deposit is a user claimable deposit that the user needs to pay at username/adatag minting time, to avoid abusing the system.',
+  },
+  {
+    question: "What is the purpose of the deadline?",
+    answer:
+      'The deadline is the time after minting the user can claim their time-lock deposit. It is a configurable parameter that is used for bootstrapping the protocol, and is generally set to 20 days after minting.',
+  },
+  {
+    question: "What is deactivation time?",
+    answer:
+      'Deactivation time is the time when the time-lock deposit requirement is no longer in effect. After this time, there is no time-lock deposit requirement at all. It is a configurable parameter at bootstrap time, and is set to approximately 6 months.',
+  },
+  {
+    question: "What happens to unclaimed time-lock deposits after the collection time?",
+    answer:
+      'Unclaimed time-lock deposits after the collection time are handled as donations. The collection time is the time when the collector can redeem unclaimed deposits.',
+  },
+  {
+    question:
+      "Are the parameters for time-lock deposits, deadlines, deactivation time, and collection time configurable?",
+    answer:
+      "Yes, these parameters are configurable. The deadline and deactivation time are set at bootstrap time, while the time-lock deposit amount may vary depending on the specific implementation.",
+  },
+  {
+    question:
+      "What happens if a user does not claim their time-lock deposit before the deadline?",
+    answer:
+      'If a user does not claim their time-lock deposit before the deadline, the deposit is considered unclaimed and can be redeemed by the collector after the collection time. Any unclaimed deposits after the collection time are handled as donations.',
   },
   {
     question: 'How does adatag work in simple terms?',
@@ -41,11 +79,6 @@ export const faqData = [
       'No, minted usernames (adatags) cannot be used or bought from an exchange. They are minted directly on the Cardano blockchain.',
   },
   {
-    question: 'Why are some characters not allowed in minted usernames (adatags)?',
-    answer:
-      'Some characters are not allowed in minted usernames (adatags) to ensure compatibility and prevent potential issues with the Cardano blockchain.',
-  },
-  {
     question: 'How long before users can start using their minted usernames (adatags)?',
     answer:
       'Users can start using their minted usernames (adatags) immediately after minting, but the claimable time lock deposit is usually available for claiming after 20 days.',
@@ -59,5 +92,5 @@ export const faqData = [
     question: 'Why are some characters not allowed in minted usernames (adatags)?',
     answer:
       'Some characters are not allowed in adatags to ensure compatibility with client side apps and to align with popular social media platforms.',
-  },
+  }
 ]

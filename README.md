@@ -10,9 +10,11 @@
 Welcome to **@Adatag**, a web3 username service built on the Cardano blockchain that enables users to manage unique, NFT-based usernames.
 It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity of usernames.
 
+To our knowledge, @Adatag is the first decentralized application (dApp) on the Cardano blockchain to enable dynamic minting of non-fungible tokens (NFTs) using the same policy ID, without requiring any third-party involvement.
+
 # Adatag Features
 
-- **Decentralized**: @Adatag is a ***real*** dApp, not controlled by any single entity or keys.
+- **Decentralized**: @Adatag is a ***real*** dApp, not controlled by any entity or keys.
 - **Transparent**: @Adatag is completely open-source to allow anybody to validate and audit its logic.
 - **Free**: @Adatag username creation (minting) and deletion (burning TBD) are completely free, with no price or royalty fees.
 - **Instant**: @Adatag usernames - if available - can be created and deleted instantly, without any third-party involvement.
@@ -74,6 +76,11 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
   - Copy the testing secrets file:
     ``` bash 
     cp secrets.testing.js secrets.production.js
+    ```
+
+  - Switch to the `feature-yaci` branch
+    ``` bash
+    git checkout feature-yaci
     ```
 
   - Install dependencies and build the wallet (Nami requires Node.js v20):
