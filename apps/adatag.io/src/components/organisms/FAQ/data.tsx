@@ -1,24 +1,19 @@
 export const faqData = [
   {
-    question: 'What is the purpose of the adatag project?',
-    answer:
-      'The purpose of the adatag project is to provide users with a decentralized solution for creating and managing minted usernames on the Cardano blockchain.',
-  },
-  {
     question: 'What is the cost of minting an adatag?',
     answer:
       "Minting an adatag is completely free, with users only required to pay a transaction fee and a user's claimable time-lock deposit.",
+  },
+  {
+    question: "What is a time-lock deposit?",
+    answer:
+      'To prevent abuse of the system, a time-lock deposit feature has been implemented. This feature is designed to prevent users from buying up all very rare usernames, such as the 1-char ones, for nearly free and then selling them at a very high price. When a user mints an adatag, they must deposit some ADA, proportional to the length of the adatag. This deposit is always claimable only by the minter after some time, i.e., the deadline, which is a protocol parameter. The suggested deadline is 20 days. This ensures that users have a stake in the system and are discouraged from abusing it.'
   },
   {
     question:
       "How does @Adatag use time-lock deposits, deadlines, deactivation time, and collection time?",
     answer:
       "@Adatag uses time-lock deposits to prevent abuse of the system, deadlines to allow users to claim their deposits after a set period of time, deactivation time to remove the time-lock deposit requirement after a set period of time, and collection time to allow collectors to redeem unclaimed deposits.",
-  },
-  {
-    question: "What is a time-lock deposit?",
-    answer:
-      'A time-lock deposit is a user claimable deposit that the user needs to pay at username/adatag minting time, to avoid abusing the system.',
   },
   {
     question: "What is the purpose of the deadline?",
@@ -92,5 +87,10 @@ export const faqData = [
     question: 'Why are some characters not allowed in minted usernames (adatags)?',
     answer:
       'Some characters are not allowed in adatags to ensure compatibility with client side apps and to align with popular social media platforms.',
+  },
+  {
+    question: 'What is the purpose of the adatag project?',
+    answer:
+      'The purpose of the adatag project is to provide users with a decentralized solution for creating and managing minted usernames on the Cardano blockchain.',
   }
 ]
