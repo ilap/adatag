@@ -166,11 +166,6 @@ test test_find_script_input_datum() {
   cbor.diagnostic(datum) != @"a"
 }
 
-/// We do not allow dots as it's the client's SDK responsibility
-/// how to handle the names similar to this: firstnamelastname to firstname.lastname
-/// to avoid creating very similar names.
-///
-/// > Note: we could implement hamming distance for too similar names too.
 pub fn is_valid_tag(tag: ByteArray) -> Bool {
   let n = bytearray.length(tag)
 
@@ -179,10 +174,10 @@ pub fn is_valid_tag(tag: ByteArray) -> Bool {
     True -> {
       let fst = builtin.index_bytearray(tag, 0)
       let lst = builtin.index_bytearray(tag, n - 1)
-      // 1st char must be letter
-      is_lowercase(fst) && // Last char must be letters or digits
-      is_lowercase_or_digit(lst) && // otherwise only allowed chars.
-      has_only_valid_chars(tag)
+
+      is_lowercase(fst) && // 1st char must be letter
+      is_lowercase_or_digit(lst) && // Last char must be letters or digits
+      has_only_valid_chars(tag) // otherwise only allowed chars.
     }
     _ -> False
   }

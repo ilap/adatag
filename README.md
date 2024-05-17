@@ -150,7 +150,7 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
       "seed": "ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice afford"
     },
     "user": {
-      "seed": "test test test test test test test test test test test test test test test test test test test test test test sauce"
+      "seed": "test test test test test test test test test test test test test test test test test test test test test test test sauce"
     }
   }
   EOF

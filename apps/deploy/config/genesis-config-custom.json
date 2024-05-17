@@ -1,10 +1,10 @@
 {
   "network": "Custom",
   "hashAlg": "SHA2_256",
-  "genesisTransaction": "d9e6312c558b9537d6af7a79b9ece2b853395fad179b6b28262683a2257f10c5",
+  "genesisTransaction": "40af93eaa33bfc4e30c67552adc8efb7e47dca31e222fdce475651a682889029",
   "bootstrapTime": {
-    "epoch": 1715704884654,
-    "date": "Tue May 14 2024 18:41:24 GMT+0200 (Central European Summer Time)"
+    "epoch": 1715842692996,
+    "date": "Thu May 16 2024 08:58:12 GMT+0200 (Central European Summer Time)"
   },
   "referenceScript": {
     "scriptAddress": "addr_test1wqh89j4q7e8ud7wd2wh8sy25lwa3xhrkyhcsln0kqdtxhjgr08ngw",
@@ -20,13 +20,13 @@
     }
   },
   "timelockScript": {
-    "scriptHash": "ea81676d8523946496f867df21929558e1d4e71ca8719c410664a076",
-    "scriptAddress": "addr_test1wr4gzemds53egeyklpna7gvjj4vwr488rj58r8zpqej2qastv8l0j",
+    "scriptHash": "8bfd6c6526c8690debc628c43648ef80c2104cfc07b0a5aa54161183",
+    "scriptAddress": "addr_test1wz9l6mr9ymyxjr0tcc5vgdjga7qvyyzvlsrmpfd22stprqcwrfhcr",
     "params": {
       "collectorAddr": "addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk",
       "collectionTime": {
-        "epoch": 1715705575854,
-        "date": "Tue May 14 2024 18:52:55 GMT+0200 (Central European Summer Time)"
+        "epoch": 1715843384196,
+        "date": "Thu May 16 2024 09:09:44 GMT+0200 (Central European Summer Time)"
       }
     },
     "refIndex": 2
@@ -40,15 +40,15 @@
     "refIndex": 0
   },
   "adatagMinting": {
-    "policyId": "7fbe388df65f1b190eb0ee096817bb645b692294b30cbc854b76d571",
+    "policyId": "45b60f93bc0a42294f8e8f417e6d04cb00c9fd813556671941dafe27",
     "params": {
       "lockingDays": {
         "days": 0.002,
         "ms": 172800
       },
       "deactivationTime": {
-        "epoch": 1715705230254,
-        "date": "Tue May 14 2024 18:47:10 GMT+0200 (Central European Summer Time)"
+        "epoch": 1715843038596,
+        "date": "Thu May 16 2024 09:03:58 GMT+0200 (Central European Summer Time)"
       },
       "depositBase": 1750,
       "adahandle": "12b96851f48bac3b2758f3e221208d584d043ec4e6715a9955d5209d"

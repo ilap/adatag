@@ -1,9 +1,3 @@
-//// 
-//// The `TimeDepositDatum`
-////
-//// Note:  The minting policy will validate the deadline at minting time.
-////
-
 use aiken/hash
 use aiken/time.{PosixTime}
 use aiken/transaction/credential.{Script, VerificationKey}
@@ -28,11 +22,16 @@ pub type TimeDepositRedeemer {
   Redeem
 }
 
+/// 
+/// The `TimeDepositDatum`
+///
+/// Note:  The minting policy will validate the deadline at minting time.
+///
 pub type TimeDepositDatum {
   // Beneficiary of the locked time deposit. It can be any payment credential
   beneficiary: Credential,
   // Deadline to claim deposits. 
-  // Preferably ~20 days (minting policy's parameter) from the date of the 
+  // Preferably ~20 days (minting policy's parameter) from the time of the 
   // submitted adatag minting transaction
   deadline: PosixTime,
 }
@@ -54,8 +53,8 @@ pub type OperationType {
 }
 
 // Initial 
-
 pub type TreeState {
+  // The number of operations (mints/burns) from bootstrap.
   operation_count: Int,
   // The operation performed on the  Tree. 
   // Initial operation is AdatagRemove, as the old state's operation will never be
@@ -69,7 +68,7 @@ pub type TreeState {
   // The root hash of the tree
   root_hash: Hash,
   // Corresponding adatag minting policy. It is used to avoid circular dependency
-  // between the StateHolder and minting policy.
+  // between the StateHolder and Minting policy.
   minting_policy: ScriptHash,
 }
 
@@ -102,7 +101,7 @@ pub type MintParams {
   // after the corresponding @adatag is minted.
   locking_days: PosixTime,
   // TODO: Consider allowing not locking when adahandle is present in the output.
-  // For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created
+  // For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created/minted
   adahandle: ScriptHash,
 }
 

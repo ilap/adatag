@@ -5,8 +5,8 @@ import { resolveMockData, stringifyData } from '@adatag/common/utils'
 import * as P from '@adatag/common/plutus'
 
 test('Simple Auth NFT mint', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { deployerSeed, collectorSeed, userSeed, network, provider } =
+
+  const { deployerSeed, userSeed, network, provider } =
     await resolveMockData()
 
   // Always apply network to the constructor.

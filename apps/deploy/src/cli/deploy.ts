@@ -1,10 +1,21 @@
 import { Translucent } from 'translucent-cardano'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
 import { Bootstrap } from '../lib/bootstrap'
-import { setSloctConfig, resolveMockData, stringifyData } from '@adatag/common/utils'
+import { setSloctConfig, resolveMockData, stringifyData, mintAdahandle } from '@adatag/common/utils'
 import { IntegriTree } from '@adatag/integri-tree'
 
-const { deployerSeed, collectorSeed, network, provider } = await resolveMockData()
+const { deployerSeed, collectorSeed, userSeed, network, provider } = await resolveMockData()
+
+export async function mintMockAdahandle(translucent: Translucent, userSeed: string) {
+
+  const address = await translucent
+    .selectWalletFromSeed(userSeed)
+    .wallet.address()
+
+  translucent.selectWalletFromSeed(deployerSeed)
+  console.log(`Minting mock-adahandles.`)
+  mintAdahandle(translucent, ['ilap', 'pal','ada'], address)
+}
 
 // If we want tu use validity ranges for transactin with private networks that use dynamic
 // startup time and slot length then we need to gather the proper parameters somehow.
@@ -32,14 +43,14 @@ for (let i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); i++) {
 
 // Create a newParams object by spreading the values from the original params
 const useTimelock = Bun.env.USE_TIMELOCK == undefined || Bun.env.USE_TIMELOCK === 'true'
-const useMockColector = Bun.env.NETWORK === 'Custom'
+const useMockCollector = Bun.env.NETWORK === 'Custom'
 
 // Access the params object for the specified network
 const params = genesisParams[network]
 
 const finalParams = {
   ...params,
-  collectorAddress: useMockColector ? collectorAddress : params.collectorAddress,
+  collectorAddress: useMockCollector ? collectorAddress : params.collectorAddress,
   collectionTime: useTimelock ? params.collectionTime : 0.0,
   deactivationTime: useTimelock ? params.deactivationTime : 0.0,
   lockingDays: useTimelock ? params.lockingDays : 0.0,
@@ -57,12 +68,17 @@ const result =
   Bun.env.ENVIRONMENT == 'Development'
     ? await Bootstrap.deploy(translucent, utxo, finalParams)
     : await Bootstrap.deployAndSave(
-        `./config/genesis-config-${network.toString().toLowerCase()}.json`,
-        translucent,
-        utxo,
-        finalParams
-      )
+      `./config/genesis-config-${network.toString().toLowerCase()}.json`,
+      translucent,
+      utxo,
+      finalParams
+    )
 
 const bd: GenesisConfig = result
 
 console.log(`##### BD: ${stringifyData(bd)}`)
+
+if (Bun.env.NETWORK === 'Custom') {
+  // Private network: imitate adahandle
+  await mintMockAdahandle(translucent, userSeed)
+}

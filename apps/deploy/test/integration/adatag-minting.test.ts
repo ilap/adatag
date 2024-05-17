@@ -21,19 +21,17 @@ import {
 } from '@adatag/common/utils'
 import { IntegriTree } from '@adatag/integri-tree'
 
-
-//import { stringifyData } from '../utils/utils'
-
 /*
   https://github.com/input-output-hk/plutus-pioneer-program/blob/b55a7d2409cbf09a04ab471796f410083129acb6/code/Week03/lucid-ref-script/src/index.js
 
   Note: Topup the user's wallet
-  Collector address : addr_test1qrqsm293uxd7zvs8yhaswenzzkkjxpfyfpaqufe0xjagp0hgyslwlf6ca9eend95lyw7pea32c2rtspq43sxd4a7sqwskerfjg
-  Deployer address  : addr_test1qp0ueqgz64d3vns8j2tp4ef8jh9dgq5qevhdrg2tz3vw0fnzl28slr3x8ngs8x72w3jgsgeympuscxfyzl53yd4k0cas4u67dp
-  Test User address : addr_test1qzza6achtargva760zfz8q37wfyl03sjgzev2rtsphew5r0qsh7mgst7chd99j6y6zqf00wx7whmydyjx2tqzxg0vv2qrn4s4m
+  Collector address : addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk
+  Deployer address  : addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk
+  Test User address : addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex
+
 */
 
-// FIXME: only "a"'s and  
+// FIXME: only "a"'s for testin  
 const prefix = "a" // or null
 
 // It OOMs over 2K elements.
@@ -112,14 +110,7 @@ console.log(`PARAMS: ${stringifyData(testParams)}`)
   translucent.selectWalletFromSeed(deployerSeed)
   const [utxo] = await translucent.wallet.getUtxos()
 
-  // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-  //console.log(`#########  saveTo ./config/genesis-config-${network.toString().toLowerCase()}.json`)
-  //const result = Bun.env.ENVIRONMENT == 'Development' ?
-  const result = await Bootstrap.deploy(translucent, utxo, testParams)
-    //: await Bootstrap.deployAndSave(`./config/genesis-config-${network.toString().toLowerCase()}.json`, translucent, utxo, testParams)
-
-
-  const bd: GenesisConfig = result
+  const bd: GenesisConfig = await Bootstrap.deploy(translucent, utxo, testParams)
 
   // Set the minting- and state-hodler policies' reference UTxOs
   // TODO: Find some better method to fetch these static references from chain.
@@ -223,7 +214,7 @@ console.log(`PARAMS: ${stringifyData(testParams)}`)
         .newTx()
         .collectFrom([authUtxo], Data.void())
 
-      // FIXME: implement timelock test
+      // TODO: implement timelock test
       const timelockActive = bd.adatagMinting.params.deactivationTime.epoch > from
 
       if (useTimelock && timelockActive) {
@@ -245,7 +236,7 @@ console.log(`PARAMS: ${stringifyData(testParams)}`)
 
         const datumCbor = Data.to(datum, P.TimeDepositDatum.datum)
 
-        // Retrieve the TielockDeposit's UTxO
+        // Retrieve the TimelockDeposit's UTxO
         const timelockRefUtxo = await translucent!.utxosByOutRef([
           {
             txHash: bd.genesisTransaction,

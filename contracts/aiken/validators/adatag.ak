@@ -6,7 +6,6 @@ use aiken/transaction.{
   TransactionId, ValidityRange, find_script_outputs,
 }
 use aiken/transaction/value.{from_minted_value, quantity_of}
-//use ilap/adatag/constants.{base_deposit, feature_expired, locking_days}
 use ilap/adatag/tests/fixture as tag_fixture
 use ilap/adatag/types.{
   AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting,

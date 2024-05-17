@@ -10,11 +10,6 @@ import { GenesisConfig, genesisParams } from '@adatag/common/config'
 import { resolveMockData, setSloctConfig } from '@adatag/common/utils'
 
 describe('Timelock Deposit Tests', async () => {
-  // The envs can be overwritten for dynamic testings, see and example below.
-  // Bun.env.ENVIRONMENT = "Integration";
-  // Bun.env.NETWORK = "Custom";
-  // Bun.env.PROVIDER = "KupmiosV5";
-  // Bun.env.ZERO_TIME=
 
   const { deployerSeed, collectorSeed, userSeed, network, provider } =
     await resolveMockData()
@@ -35,7 +30,7 @@ describe('Timelock Deposit Tests', async () => {
   // Access the params object for the specified network
   const params = genesisParams[network]
 
-  let GenesisConfig: GenesisConfig
+  let genesisConfig: GenesisConfig
 
   test('On-chain deployment', async () => {
     // Create a newParams object by spreading the values from the original params
@@ -54,7 +49,7 @@ describe('Timelock Deposit Tests', async () => {
     const result = await Bootstrap.deploy(translucent, utxo, testParams)
     expect(result).toBeDefined()
 
-    GenesisConfig = result
+    genesisConfig = result
   })
 
   test('Deposit timelock', async () => {
@@ -62,15 +57,13 @@ describe('Timelock Deposit Tests', async () => {
       translucent.provider.awaitBlock(30)
     }
 
-    const bd = GenesisConfig
-
     const lovelace: Assets = { lovelace: 1_500_000_000n }
 
     translucent.selectWalletFromSeed(userSeed)
     const tx = await translucent
       .newTx()
       .payToContract(
-        bd.timelockScript.scriptAddress,
+        genesisConfig.timelockScript.scriptAddress,
         { inline: Data.void() },
         lovelace,
       )
@@ -87,19 +80,17 @@ describe('Timelock Deposit Tests', async () => {
       translucent.provider.awaitBlock(30)
     }
 
-    const bd = GenesisConfig
-
     const lovelace: Assets = { lovelace: 1_500_000_000n }
 
     const utxoRef = await translucent.utxosByOutRef([
       {
-        txHash: bd.genesisTransaction,
-        outputIndex: bd.timelockScript.refIndex,
+        txHash: genesisConfig.genesisTransaction,
+        outputIndex: genesisConfig.timelockScript.refIndex,
       },
     ])
 
     const [spendingUtxo] = await translucent.utxosAt(
-      bd.timelockScript.scriptAddress,
+      genesisConfig.timelockScript.scriptAddress,
     )
 
     const timelockRedeemer = 'Collect'

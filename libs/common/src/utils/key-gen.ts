@@ -25,13 +25,10 @@ const collector = 'collector'
 const deployer = 'deployer'
 const user = 'user'
 
-// export const collectorPrivateKey = await handleKey(COLLECTOR_KEY, translucent.utils.select..generatePrivateKey)
-// translucent.selectWalletFromPrivateKey(collectorPrivateKey).wallet.address())
 const collectorSeed: string = await handleIO(dir, collector + '.seed', translucent.utils.generateSeedPhrase)
 const collectorAddress: string = await handleIO(dir, collector + '.addr', () =>
   translucent.selectWalletFromSeed(collectorSeed).wallet.address()
 )
-//const collectorPkh: string = getAddressDetails(collectorAddress).paymentCredential?.hash || "";
 
 const ownerSeed: string = await handleIO(dir, deployer + '.seed', translucent.utils.generateSeedPhrase)
 const ownerAddress: string = await handleIO(dir, deployer + '.addr', () =>

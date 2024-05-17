@@ -11,6 +11,7 @@ import { HowItWorks } from '../HowItWorks/HowItWorks'
 import { ScrollButton } from '../../molecules/ScrollButton'
 import { useConfig } from '../../../hooks/useConfig'
 import React from 'react'
+import StatusChip from '../../atoms/StatusChip'
 
 interface Props {
   headerState: 'mint' | 'claim'
@@ -87,6 +88,7 @@ export const Hero: React.FC<Props> = ({ headerState, connected }) => {
           </div>
           {/*<Status connected={connected} />*/}
           <ScrollButton onClick={scrollToHow} />
+          <StatusChip />
         </motion.section>
       </AnimatePresence>
       <div ref={howtoRef}>
