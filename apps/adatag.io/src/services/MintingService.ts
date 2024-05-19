@@ -5,18 +5,43 @@ import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
 import { genesisConfig } from '../utils/config'
 import { TimeDepositDatum } from '@adatag/common/plutus'
 
+/**
+ * Implementation of the MintingService interface for Adatag minting.
+ */
 export class AdatagMintingService implements MintingService {
+  /**
+   * The Translucent instance used for building and finalizing transactions.
+   */
   constructor(private translucent: Translucent) {}
 
+  /**
+   * Calculates the minimum deposit required for minting an Adatag.
+   * @param adatag The Adatag to calculate the deposit for.
+   * @returns The minimum deposit required in Lovelace.
+   */
   static getMinDeposit(adatag: string): bigint {
     return calculateDeposit(adatag, genesisConfig!.adatagMinting.params.depositBase, MINDEPOSIT, MAXDEPOSITLENGTH)
   }
 
+  /**
+   * Retrieves the UTxO containing the specified asset.
+   * @param pid The policy ID of the asset.
+   * @param assetName The name of the asset.
+   * @returns The UTxO containing the specified asset, or undefined if not found.
+   */
   async getAssetUTxo(pid: string, assetName: string): Promise<UTxO | undefined> {
     const unit = toUnit(pid, fromText(assetName))
     return await this.translucent!.utxoByUnit(unit)
   }
 
+  /**
+   * Builds a base transaction for minting an Adatag.
+   * @param adatag The Adatag to mint.
+   * @param useAdaHandle Whether to use the user's Ada handle for avoiding time lock deposits.
+   * @param userAddress The address of the user minting the Adatag.
+   * @param deposit The deposit amount in Lovelace.
+   * @returns The base transaction ready for signing.
+   */
   async buildBaseTx(
     adatag: string,
     useAdaHandle: boolean,
@@ -115,6 +140,15 @@ export class AdatagMintingService implements MintingService {
     return tx.readFrom(refUtxos).validFrom(validFrom)
   }
 
+  /**
+   * Finalizes the transaction by minting the Adatag and paying the user.
+   * @param tx The base transaction to finalize.
+   * @param adatag The Adatag to mint.
+   * @param userAddress The address of the user minting the Adatag.
+   * @param datum The datum to be stored in the minted Adatag.
+   * @param redeemer The redeemer to be used for minting the Adatag.
+   * @returns The finalized transaction ready for submission.
+   */
   async finaliseTx(
     tx: Tx,
     adatag: string,

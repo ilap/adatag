@@ -2,13 +2,13 @@ services:
   yaci-cli:
     image: bloxbean/yaci-cli:${tag}
     ports:
-      - "${HOST_N2N_PORT}:3001"
-      - "${HOST_N2C_SOCAT_PORT}:3333"
-      - "${HOST_SUBMIT_API_PORT}:8090"
-      - "${HOST_STORE_API_PORT}:8080"
-      - "${HOST_CLUSTER_API_PORT}:10000"
-      - "${HOST_OGMIOS_PORT}:1337"
-      - "${HOST_KUPO_PORT}:1442"
+      - '${HOST_N2N_PORT}:3001'
+      - '${HOST_N2C_SOCAT_PORT}:3333'
+      - '${HOST_SUBMIT_API_PORT}:8090'
+      - '${HOST_STORE_API_PORT}:8080'
+      - '${HOST_CLUSTER_API_PORT}:10000'
+      - '${HOST_OGMIOS_PORT}:1337'
+      - '${HOST_KUPO_PORT}:1442'
     volumes:
       - cluster-data:/clusters
     env_file:
@@ -21,7 +21,7 @@ services:
   yaci-viewer:
     image: bloxbean/yaci-viewer:${tag}
     ports:
-      - "${HOST_VIEWER_PORT}:5173"
+      - '${HOST_VIEWER_PORT}:5173'
     env_file:
       - ./env
 

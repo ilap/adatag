@@ -7,7 +7,7 @@
   "// targets": "to see all targets run: nx show project integri-tree --web",
   "targets": {
     "build": {
-      "executor": "nx:noop", 
+      "executor": "nx:noop",
       "options": {},
       "dependsOn": ["^build", "test"]
     },
@@ -21,4 +21,3 @@
     }
   }
 }
-

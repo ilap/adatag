@@ -15,11 +15,9 @@ IntegriTree, a new accumulator scheme, leverages a complete binary hash tree for
 
 In addition, verifying addition of an element `x` requires proving the existence of `(xα, xβ)`, where `xα ≺ x ≺ xβ` of the tree `T` to be appended, and ensuring that the pairs `(xα, x)` and `(x, xβ)`, are present in the new updated tree `T'` while maintaining completeness. Deletion from the `T` requires similar proofs.
 
-
 > Note: Open-interval pairs enforce the uniqueness of the elements by setting the initial value to some minimum and maximum bounds. For example `(xα: -Infinity, xβ: +Infinity)`.
 
 In our `@adatag` Proof of Concept (PoC) implementation, the lower and upper bounds will be represented by lowercase letters (in lexicographical order), for example the `xα: "a"` and `xβ: "c"`, with the additional constraint that the first letter of the element must be `"b"`. This ensures that only elements starting with `"b"` are included in the interval. However, in other implementations, they could take any form that enforces the condition `xα ≺ x ≺ xβ`, such as hashes (ranging from `"0x0000...00"` to `"0xFFFF...FF"`).
-
 
 ## Brief Overview of Proofs
 
@@ -37,6 +35,7 @@ For example, a complex addition proof involves creating a minimal subtree from t
 > Note: to enforce completness of the tree the nodes' value contains the index `xi` that represents the size of the tree in the current state. Therefore, the appendable node's index `xi` is always half (by integer deivision) of the new size of the tree (`old_state.tree_size +/- 1` depends on the operation)
 
 During validation, the Plutus script checks the following:
+
 - The accumulator in the old state matches with the calculated root hash from the provided proof (minimal subtree), and the two values (`Vu` and `Vp`) provided by the users.
 - The Plutus script generates three new values (`Vu'`, `Vp'` and `Vl`) from the two provided values and the element `x` to be added into the tree by:
   - Replacing the `Vu`'s `(xα, xβ)` with `(xα, x)` and
@@ -45,11 +44,11 @@ During validation, the Plutus script checks the following:
 - Finally, the accumulator of the new state matches with calculated in the plutus script from the original proof, and where the two values (`Vu` and `Vp`) are replaced by the three new values during the validation process.
 
 During the validation the value where:
+
 1. the current node's `valHash == hashVal(Vu)`, the `hashVal` will be replaced by `Vu'` and where
 2. the current nodes's `valHash == hashVal(Vp)`, the `hashVal` will be replaced with `Vp'` and one of its children will be replaced by the `hash( hashVal(Vl) || empty_hash || empty_hash)`
 
 > Note: which children is replaced is depends on the new tree size (even-odd rule)
-
 
 ## Implementation
 
@@ -67,6 +66,7 @@ Each state change (element added or removed) is validated by the corresponding P
 > Note: The redeemer contains the proof(s) and the required values (`Val`s) are required for minting and burning elements.
 
 Therefore, the validation process utilizes these three parts:
+
 - The existing old state stored on chain as an EUTxO.
 - The user's provided new state as an output.
 - The append or delete proof and the required Values as the user's input.
@@ -80,22 +80,22 @@ Indeed, the implementation resembles a state machine, tracking transitions from 
 - **IntegriTree Data Structure**: Represents the complete structure of the tree, including Val, left and right child nodes.
 - **Minimal Subtree**: Used for proofs and contains only hash values of vals, nodes and branches along the path of specific nodes.
 
-
 ## Node Structure
 
 Each node in the IntegriTree consists of:
-- `Val`: A data structure containing information about the node, including the index of the node in the tree in level-order i.e. size of the tree (`xi`) and the  pairs of consecutive elements (as two bounds) of the open-interval (`xa` and `xb`).
+
+- `Val`: A data structure containing information about the node, including the index of the node in the tree in level-order i.e. size of the tree (`xi`) and the pairs of consecutive elements (as two bounds) of the open-interval (`xa` and `xb`).
 - `Children`: left and right child nodes.
 
 Typescript's example:
-``` typescript
 
-export type Val =  { xi: string; xa: string; xb: string }
+```typescript
+export type Val = { xi: string; xa: string; xb: string }
 
 export type IntegriTree = {
-  val: Val;
-  left: IntegriTree;
-  right: IntegriTree;
+  val: Val
+  left: IntegriTree
+  right: IntegriTree
 }
 ```
 
@@ -104,7 +104,8 @@ export type IntegriTree = {
 ### Root Hash Calculation of IntegriTree
 
 The off-chain root hash calculateion of the tree or any of its branch is calculated using the following function:
-``` typescript
+
+```typescript
 
   /**
    * Calculates the hash for a specified node in the tree.
@@ -134,12 +135,11 @@ The off-chain root hash calculateion of the tree or any of its branch is calcula
 
 The proof provided by IntegriTree is a minimal subtree together with the required values (depends on the proofs). In other words, the minimal subtre is a path from the root node to the provable node (membership or non-membership) contains hash of the nodes' value the hash of the child not in the path down to the node and the child contains the node as path down to the provabel node.
 
-
 > Note: The minimal subtree is used for proofs and contains only hash values of Vals, nodes and branches along the path of specific nodes (e.g., membership, non-membership, update, delete).
 
 Typescript definition example of the minimal subtree (TreeProof)
 
-``` typescript
+```typescript
 export type TreeProof =
   | {
       // `hash` is the valHash of the Val of the node
@@ -151,13 +151,12 @@ export type TreeProof =
     }
 ```
 
-
 This structure regenerates the exact hash of the tree as the whole IntegriTree would be hashed.
 
 In merkle tree the leaf pairs (that contain data) are hashed up to the tree while in IntegriTree the nodes' values (`Val`) are part of the proof.
 For example, for the following Proof
 
-``` typescript
+```typescript
 const proof = HashNode {
   hash: valHash(Val{ xi: 1, xa: "a", xb: "adam"}),
   left: HashNode {
@@ -172,12 +171,11 @@ const proof = HashNode {
 It's easily can be proven that "adam" is in the tree, but "aby" is not, having a `Val { xi: "1", xa: "a", xb: "adam"}` and the Proof
 as the proof's `rootHash(proof)` exactly the same with the rootHash of the whole integritree, and the hash of proof contains the hash of the required proovable `Val`
 
-
 ### Root Hash Calculation of the minimal subtree
 
 The root hash of the minimal subtree use similar function as in the IntegriTree, see the `aiken`'s implementation below:
 
-``` gleam
+```gleam
 pub fn root_hash(root: Proof) -> Hash {
   when root is {
     NodeHash { hash } -> hash
@@ -199,8 +197,7 @@ IntegriTree provides proofs for both membership and non-membership of elements i
 Proofs are available for appending new elements to the tree and deleting existing elements:
 
 - **Append Proof**: If an element is not in the tree, the proof contains the non-membership (update node's) value `Vu`, the value `Vp` of the node will be the parent of the new appendable node of the new element, and the minimal subtree of the two `Val`'s nodes.
-- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') values the `Vu1` and `Vu2` (the `(xα, x)` and `(x, xβ)`),  and the value `Vp` the parent node of the last (in level-order) node in the tree, and the minimal subtree create from the nodes of the three values.
-
+- **Delete Proof**: If an element is in the tree, the proof contains the two membership (update nodes') values the `Vu1` and `Vu2` (the `(xα, x)` and `(x, xβ)`), and the value `Vp` the parent node of the last (in level-order) node in the tree, and the minimal subtree create from the nodes of the three values.
 
 ### Val Types of the Proof
 
@@ -218,7 +215,7 @@ The tree must always maintain its completeness which enforced by the sequential 
 - The tree model **`T`** representing the set **`X = {x1, ..., xn}`** is and must always be a **`Complete Binary Tree`**.
 - A `Complete Binary Tree` can have an incomplete last level, as long as all the leaves in that level are arranged from left to right.
 - A **node** (**`N`**) of the `T` tree has two pointers: one to its left child, and one to its right child.
-- A **leaf** (**`L`**) is a node  that has two empty hashes (**`ε, ε`**) as its children.
+- A **leaf** (**`L`**) is a node that has two empty hashes (**`ε, ε`**) as its children.
 - Every node in `T` must be assigned a sequential index **`i`** starting from **`1`**, with the root of T having index 1, and this index `i` increases by 1 whenever a new node **`Ni`** is added. The value of `i` is always equal to the number of nodes (and not the numb er of elements) in `T`.
 - Therefore, the nr. of elements of the tree is always the `tree size - 1`
 - The depth (**`d`**) is defined as the length of the simple path (number of edges) from the `root` node of `T` to node `N`.
@@ -226,21 +223,18 @@ The tree must always maintain its completeness which enforced by the sequential 
 - The integrity of `T` is ensured by the sequential index (`i`).
 - Therefore the node index determines the position of any node within the 'T' tree and positions in its parent, except for the root node (as it doesn't have a parent).
   - The position of a node in the tree is determined by **`P = i - 2^d + 1`** which means it's the **`Pth`** node on level `d` of the `T` tree.
-  - The **left**/**right** position within a node follows the **`even-odd`** rule:  if its index `i` is even, the child is on the left side; otherwise, it's on the right. This position is determined by **`Pn = In - 2Ip`** (`Ip` is the parent's index)  where `Pn` is 0 when the child is on the left, 1 when it's on the right, and results in an **error** otherwise.
+  - The **left**/**right** position within a node follows the **`even-odd`** rule: if its index `i` is even, the child is on the left side; otherwise, it's on the right. This position is determined by **`Pn = In - 2Ip`** (`Ip` is the parent's index) where `Pn` is 0 when the child is on the left, 1 when it's on the right, and results in an **error** otherwise.
 - In order to keep track of changes in the state of the `T` tree, there are two types of nodes:
   - Updateable node (**`Nu`**): These nodes are already part of the tree, but their values will be updated sometime by an update process.
   - Parent node (**`Np`**): These are then nodes where a new leaf `L` will be appended to or the last leaf removed from.
 - The right child (`Nr`) of an parent node (`Np`), must always be an empty hash, represented as **`ε`**. The left child can be either an empty hash (**`ε`**) or a leaf.
 
-
-
 ## Appendix
 
 ### Letter Frequency Table for English Words
- 
 
 | Letter | Approximate Frequency |
-|--------|------------------------|
+| ------ | --------------------- |
 | E      | ~12-15%               |
 | T      | ~8-10%                |
 | A      | ~7-9%                 |
@@ -267,4 +261,3 @@ The tree must always maintain its completeness which enforced by the sequential 
 | X      | ~0.1-0.5%             |
 | Q      | ~0.1%                 |
 | Z      | ~0.1%                 |
-

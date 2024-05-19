@@ -5,17 +5,13 @@ import { resolveMockData, stringifyData } from '@adatag/common/utils'
 import * as P from '@adatag/common/plutus'
 
 test('Simple Auth NFT mint', async () => {
-
-  const { deployerSeed, userSeed, network, provider } =
-    await resolveMockData()
+  const { deployerSeed, userSeed, network, provider } = await resolveMockData()
 
   // Always apply network to the constructor.
   const translucent = await Translucent.new(provider, network)
 
   // Select the receiving wallet.
-  const userAddress = await translucent
-    .selectWalletFromSeed(userSeed)
-    .wallet.address()
+  const userAddress = await translucent.selectWalletFromSeed(userSeed).wallet.address()
 
   // Select the spending wallet.
   translucent.selectWalletFromSeed(deployerSeed)

@@ -7,6 +7,7 @@
 </div>
 
 # Introduction
+
 Welcome to **@Adatag**, a web3 username service built on the Cardano blockchain that enables users to manage unique, NFT-based usernames.
 It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity of usernames.
 
@@ -14,11 +15,10 @@ To our knowledge, @Adatag is the first decentralized application (dApp) on the C
 
 # Adatag Features
 
-- **Decentralized**: @Adatag is a ***real*** dApp, not controlled by any entity or keys.
+- **Decentralized**: @Adatag is a **_real_** dApp, not controlled by any entity or keys.
 - **Transparent**: @Adatag is completely open-source to allow anybody to validate and audit its logic.
 - **Free**: @Adatag username creation (minting) and deletion (burning TBD) are completely free, with no price or royalty fees.
 - **Instant**: @Adatag usernames - if available - can be created and deleted instantly, without any third-party involvement.
-
 
 > Note: Users must time-lock deposit a certain value (depending on the length of the @Adatag) to prevent abuse of the system. These deposits are redeemable by the rightful beneficiaries after a certain time (preferably 20 days) of minting.
 
@@ -30,10 +30,9 @@ IntegriTree is a complete-binary tree-based data structure that stores only uniq
 
 Using @Adatag involves bootstrapping, which includes generating the required Plutus scripts based on the protocol parameters and deploying them onto the Cardano blockchain along with the initial state(s) of the protocol.
 
-- Protocol State:  Initially, the protocol state is based on the relevant trees containing only one initial node that includes the lower and upper bounds of the open interval (e.g., like a `[-Infinity, +Infinity]` open interval). This initial bootstrap is crucial for ensuring the integrity of the system.
+- Protocol State: Initially, the protocol state is based on the relevant trees containing only one initial node that includes the lower and upper bounds of the open interval (e.g., like a `[-Infinity, +Infinity]` open interval). This initial bootstrap is crucial for ensuring the integrity of the system.
 - User-Generated Proofs: Users generate proofs off-chain, which the blockchain smart contract validates. This eliminates the need for trusted users or third parties, as the chain only stores and handles states with valid proofs. These can be easily reconstructed and validated by building up the tree from the minted and burned elements.
 - Enforced Integrity Logic: The integrity of the tree is maintained through specific logic implemented within the smart contracts.
-
 
 For more details, refer to the [Design Specification](./doc/DESIGNSPEC.md) and [IntegriTree Technical Specification](./doc/TECHSPEC.md).
 
@@ -49,6 +48,7 @@ This repository contains everything needed for @Adatag, serving as a Minimum Via
 # Getting Started
 
 To get started with @Adatag, ensure you have the necessary dependencies installed:
+
 - [git](https://git-scm.com/download/): A free and open-source distributed version control system.
 - [docker](https://docs.docker.com/engine/install/): Docker engine for developing or demoing (using Yaci-devkit based private Cardano blockchain)
 - [bun](https://bun.sh): A fast all-in-one JavaScript runtime.
@@ -64,58 +64,67 @@ For more details, read the [Development Environment Overview](./tools/README.md)
 To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow these steps (assuming all prerequisites are completed):
 
 1. Custom Nami Wallet: Since Yaci Devkit does not fully support Blockfrost API, and cannot use custom API endpoints, a custom-built Nami wallet is required for the demo.
-  - Clone the repository: 
-    ``` bash 
-    git clone http://github.com/ilap/nami
-    ```
-  - Navigate to the Nami's directory:
-    ``` bash
-    cd nami
-    ```
 
-  - Copy the testing secrets file:
-    ``` bash 
-    cp secrets.testing.js secrets.production.js
-    ```
+- Clone the repository:
+  ```bash
+  git clone http://github.com/ilap/nami
+  ```
+- Navigate to the Nami's directory:
 
-  - Switch to the `feature-yaci` branch
-    ``` bash
-    git checkout feature-yaci
-    ```
+  ```bash
+  cd nami
+  ```
 
-  - Install dependencies and build the wallet (Nami requires Node.js v20):
-    ``` bash 
-    npm i && npm run build
-    ```
-  - Add the custom Nami wallet to Chrome/Brave extensions:
-    - Open the extensions page: `brave://extensions/` or `chrome://extensions/`
-    - Enable "Developer mode" by toggling the switch in the top-right corner
-    - Click "Load unpacked" and select the `./build` directory from the Nami directory.
+- Copy the testing secrets file:
 
-  - Create a wallet using the following seed:
-    ``` text
-    test test test test test test test test test test test test test test test test test test test test test test test sauce
-    ```
+  ```bash
+  cp secrets.testing.js secrets.production.js
+  ```
 
-  - Switch to the `Custom` network in Nami:
-    `Top Right Avatar -> Settings -> Network -> Custom Node`
+- Switch to the `feature-yaci` branch
+
+  ```bash
+  git checkout feature-yaci
+  ```
+
+- Install dependencies and build the wallet (Nami requires Node.js v20):
+  ```bash
+  npm i && npm run build
+  ```
+- Add the custom Nami wallet to Chrome/Brave extensions:
+
+  - Open the extensions page: `brave://extensions/` or `chrome://extensions/`
+  - Enable "Developer mode" by toggling the switch in the top-right corner
+  - Click "Load unpacked" and select the `./build` directory from the Nami directory.
+
+- Create a wallet using the following seed:
+
+  ```text
+  test test test test test test test test test test test test test test test test test test test test test test test sauce
+  ```
+
+- Switch to the `Custom` network in Nami:
+  `Top Right Avatar -> Settings -> Network -> Custom Node`
 
 2. Build and run @Adatag on custom private Cardano blockhain:
 
-- Clone the repository: 
-  ``` bash 
+- Clone the repository:
+
+  ```bash
   $ git clone https://github.com/ilap/adatag
   ```
 
-- Install dependencies: 
-  ``` bash 
+- Install dependencies:
+
+  ```bash
   $ cd adatag
   $ npm i
   ```
 
 - Create the required `.env` file:
-  ``` bash
-  $ cat <<EOF> .env.custom 
+
+  ```bash
+  $ cat <<EOF> .env.custom
   NETWORK=Custom
   ENVIRONMENT=Integration
   PROVIDER=Kupmios
@@ -123,7 +132,8 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
   ```
 
 - Create the required `API keys` and `secrets` file:
-  ``` bash
+
+  ```bash
   $ cat <<EOF>  ./libs/common/src/config/keys/api-keys.json
   {
     "Blockfrost": {
@@ -138,7 +148,7 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
       "Preprod": "",
       "Mainnet": ""
     }
-  } 
+  }
   EOF
 
   $ cat <<EOF>  ./libs/common/src/config/keys/test-users-seed.json
@@ -158,7 +168,7 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
 
 - Run the local demo:
 
-  ``` bash 
+  ```bash
   $ npx nx run @adatag/adatag.io:serve:custom
   ...
   > nx run @adatag/adatag.io:serve
@@ -175,14 +185,15 @@ To demo @Adatag on a custom private Cardano blockchain using Yaci Devkit, follow
 
   > Note: The command `npx nx run @adatag/adatag.io:serve-static:custom` will build and run the project in a production-like environment.
 
-## User Roles 
+## User Roles
+
 Three types of users are involved in the protocol:
+
 1. Deployer: This user pootstraps the protocol.
 2. User: Users who mint the @adatag and become the beneficiaries of the time-lock deposit (the rightful owners).
 3. Collector: User who can collect unclaimed time-lock deposits (donations).
 
 For testing or local demos, the following seed phrases and their corresponding addresses with a derivation path of 1852H/1815H/0H/0/0 are used:
-
 
 - Deployer's Seed: `zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo buddy`
 - Deployer's Address:`addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk`
@@ -193,11 +204,7 @@ For testing or local demos, the following seed phrases and their corresponding a
 - Collector's Seed: `ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice ice afford`
 - Collector's Address: `addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk`
 
-
 **DISCLAIMER**: These seeds should never be used on the mainnet as they could result in the loss of funds associated with these addresses.
-
-
-
 
 # TODOs
 
@@ -239,7 +246,6 @@ For testing or local demos, the following seed phrases and their corresponding a
 - [x] Add functionality to handle time-lock deposits for username minting
 - [x] Add functionality to handle adahandle for avoiding time-lock deposits
 - [ ] Add more test cases for on-chain scripts
-
 
 # Contribution
 

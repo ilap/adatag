@@ -16,7 +16,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["test"],
       "options": {
-        "cwd": "contracts/aiken" 
+        "cwd": "contracts/aiken"
       },
       "inputs": ["contractsDefault"],
       "outputs": ["{projectRoot}/plutus.json"],

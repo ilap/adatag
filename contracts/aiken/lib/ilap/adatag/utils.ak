@@ -177,8 +177,9 @@ pub fn is_valid_tag(tag: ByteArray) -> Bool {
 
       is_lowercase(fst) && // 1st char must be letter
       is_lowercase_or_digit(lst) && // Last char must be letters or digits
-      has_only_valid_chars(tag) // otherwise only allowed chars.
+      has_only_valid_chars(tag)
     }
+    // otherwise only allowed chars.
     _ -> False
   }
 }

@@ -75,7 +75,7 @@ export class Bootstrap {
     deployerUtxo: UTxO,
     params: GenesisParams
   ): Promise<GenesisConfig> {
-    const result = await this.deploy(translucent, deployerUtxo, params)
+    const result = await Bootstrap.deploy(translucent, deployerUtxo, params)
     Bun.write(Bun.file(file), JSON.stringify(result, null, '  '))
     return result
   }

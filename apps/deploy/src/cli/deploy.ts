@@ -7,14 +7,11 @@ import { IntegriTree } from '@adatag/integri-tree'
 const { deployerSeed, collectorSeed, userSeed, network, provider } = await resolveMockData()
 
 export async function mintMockAdahandle(translucent: Translucent, userSeed: string) {
-
-  const address = await translucent
-    .selectWalletFromSeed(userSeed)
-    .wallet.address()
+  const address = await translucent.selectWalletFromSeed(userSeed).wallet.address()
 
   translucent.selectWalletFromSeed(deployerSeed)
   console.log(`Minting mock-adahandles.`)
-  mintAdahandle(translucent, ['ilap', 'pal','ada'], address)
+  mintAdahandle(translucent, ['ilap', 'pal', 'ada'], address)
 }
 
 // If we want tu use validity ranges for transactin with private networks that use dynamic
@@ -63,16 +60,18 @@ translucent.selectWalletFromSeed(deployerSeed)
 const [utxo] = await translucent.wallet.getUtxos()
 
 // FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
-console.log(`Genesis config (${network.toString()}) is saved to: ./config/genesis-config-${network.toString().toLowerCase()}.json`)
+console.log(
+  `Genesis config (${network.toString()}) is saved to: ./config/genesis-config-${network.toString().toLowerCase()}.json`
+)
 const result =
   Bun.env.ENVIRONMENT == 'Development'
     ? await Bootstrap.deploy(translucent, utxo, finalParams)
     : await Bootstrap.deployAndSave(
-      `./config/genesis-config-${network.toString().toLowerCase()}.json`,
-      translucent,
-      utxo,
-      finalParams
-    )
+        `./config/genesis-config-${network.toString().toLowerCase()}.json`,
+        translucent,
+        utxo,
+        finalParams
+      )
 
 const bd: GenesisConfig = result
 

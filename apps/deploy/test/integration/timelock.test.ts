@@ -10,9 +10,7 @@ import { GenesisConfig, genesisParams } from '@adatag/common/config'
 import { resolveMockData, setSloctConfig } from '@adatag/common/utils'
 
 describe('Timelock Deposit Tests', async () => {
-
-  const { deployerSeed, collectorSeed, userSeed, network, provider } =
-    await resolveMockData()
+  const { deployerSeed, collectorSeed, userSeed, network, provider } = await resolveMockData()
 
   // If we want to use validity ranges for transactin with private networks that use dynamic
   // startup time and slot length then we need to gather the proper parameters somehow.
@@ -23,9 +21,7 @@ describe('Timelock Deposit Tests', async () => {
   const translucent = await Translucent.new(provider, network)
 
   // Select the receiving wallet.
-  const collectorAddress = await translucent
-    .selectWalletFromSeed(collectorSeed)
-    .wallet.address()
+  const collectorAddress = await translucent.selectWalletFromSeed(collectorSeed).wallet.address()
 
   // Access the params object for the specified network
   const params = genesisParams[network]
@@ -62,11 +58,7 @@ describe('Timelock Deposit Tests', async () => {
     translucent.selectWalletFromSeed(userSeed)
     const tx = await translucent
       .newTx()
-      .payToContract(
-        genesisConfig.timelockScript.scriptAddress,
-        { inline: Data.void() },
-        lovelace,
-      )
+      .payToContract(genesisConfig.timelockScript.scriptAddress, { inline: Data.void() }, lovelace)
       .complete()
 
     const signedTx = await tx.sign().complete()
@@ -89,9 +81,7 @@ describe('Timelock Deposit Tests', async () => {
       },
     ])
 
-    const [spendingUtxo] = await translucent.utxosAt(
-      genesisConfig.timelockScript.scriptAddress,
-    )
+    const [spendingUtxo] = await translucent.utxosAt(genesisConfig.timelockScript.scriptAddress)
 
     const timelockRedeemer = 'Collect'
 

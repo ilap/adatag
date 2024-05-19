@@ -31,7 +31,7 @@ class TreeWorker implements TreeWorkerService {
 
   async checkIfAdatagMinted(adatag: string): Promise<boolean> {
     //const a = await this.getDepositDetails(adatag)
-    //console.log(`@@@@@###### DATUM ${JSON.stringify(a)}`)
+    //debugMessage(`@@@@@###### DATUM ${JSON.stringify(a)}`)
     return (await this.chainFetch.fetchAsset(adatag)) !== undefined
   }
 
@@ -64,7 +64,7 @@ class TreeWorker implements TreeWorkerService {
 
     //const datum = Data.from(result.datum, P.TimeDepositTimedeposit.datum as  unknown as TreeState)
     const datum: TimeDepositDatum['datum'] = Data.from(result.datum, TimeDepositDatum.datum)
-    console.log(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
+    debugMessage(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
     // 3. Return the transaction ID, output index, and datum
     return {
       txId: asset.transaction_id,
@@ -86,12 +86,12 @@ class TreeWorker implements TreeWorkerService {
     datum: string
     redeemer: string
   }> {
-    console.warn(`###### 1. Fetching Chain `)
+    debugMessage(`###### 1. Fetching Chain `)
     await this.chainFetch.fetchAndSaveElements()
-    console.warn(`###### 2. Building Tree `)
+    debugMessage(`###### 2. Building Tree `)
     const { tree, state } = await this.buildTreeFromChain(adatag)
 
-    console.warn(`###### 3. Constructing Datum and Redeemer`)
+    debugMessage(`###### 3. Constructing Datum and Redeemer`)
     return await this.createTxInputs(adatag, tree, state)
   }
 
@@ -203,8 +203,8 @@ class TreeWorker implements TreeWorkerService {
       mintingPolicy: genesisConfig!.adatagMinting.policyId,
     }
 
-    console.log(`Old State: ${stringifyData(oldState)}`)
-    console.log(`New State: ${stringifyData(newState)}`)
+    debugMessage(`Old State: ${stringifyData(oldState)}`)
+    debugMessage(`New State: ${stringifyData(newState)}`)
 
     // Construct datum
     const datum = Data.to(newState, StateHolderStateHolder.oldState)
@@ -238,7 +238,7 @@ export async function createWorker(): Promise<TreeWorkerService> {
       // await dataStore.cleanup()
       _workerInstance = new TreeWorker(dataStore, fetch)
       await _workerInstance.initialise()
-      console.warn(`TreeWorker is initialised.`)
+      debugMessage(`TreeWorker is initialised.`)
     } catch (error) {
       throw new Error(`Error initializing tree worker: ${error}`)
     }
