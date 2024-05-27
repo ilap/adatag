@@ -1,3 +1,4 @@
+use aiken/bytearray
 use ilap/integri_tree/hash.{empty_hash, hash_val, root_hash}
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture.{generate_proof}
@@ -62,4 +63,8 @@ test test_initial_added_state() {
     rootVal,
     tree,
   )
+}
+
+test bytearray_compare_check() {
+  bytearray.compare(#"00", #"0000") == Less
 }

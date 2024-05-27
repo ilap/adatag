@@ -68,3 +68,74 @@ Find more on the [Aiken's user manual](https://aiken-lang.org).
 | **Insertion/Deletion**     | Requires restructuring for efficient insertion and deletion.                                       | Limited in terms of dynamic updates; typically used for static data sets.                                      | More flexibility than Merkle Tree, but still may require restructuring for updates.                   | Efficient for insertion and deletion, especially in blockchain applications.                               |
 | **Use Cases**              | Binary heap, priority queues.                                                                      | Data integrity verification, especially in cryptocurrencies (e.g., Bitcoin).                                   | Sparse data sets, blockchain applications.                                                            | Ethereum's state trie for contract storage.                                                                |
 | **Examples in Blockchain** | Not commonly used directly in blockchain applications.                                             | Commonly used to verify the integrity of transactions and blocks.                                              | Used to optimize storage in Ethereum's state trie.                                                    | Used in Ethereum's state trie for key-value storage.                                                       |
+
+## Adding BLS Idea
+
+### ADDD ilap
+
+DATUM1
+
+```
+oldState   : ALLOLDSTATE
+element    : "f"
+action     : ElementAdded
+
+oldPk1     : verify
+oldSign1   : sign of message
+
+oldPk1     : verify
+oldSign1   : sign of message
+
+oldMessage: ["a", "f"], ["f","h"]
+```
+
+DATUM2
+
+```
+newState    : bls.aggregate(rdmrState, newSign)
+element     : "ilap"
+action      : ElementAdded
+
+newPk1     : verify
+newSign1   : sign of message
+
+newPk2     : verify
+newSign1   : sign of message
+
+newMessage  :["h", "ilap"],["ilap", j]
+```
+
+REDEEMER:
+
+```
+rdmrPk   : pk of verifying ["h", "j"]
+rdmrSign : signature of ["h", "j"]
+rdmrState: oldState - ["h", "j"]
+rdmrMsg  : ["h", "j"]
+element  : ilap
+```
+
+### Append VERIFICATION
+
+```
+bls.verify(oldPk, ["h", "j"], oldSign)
+bls.verifyBatch([newPk1, newPk2], [["a", "b"],["b", "z"]], [newsign1, newSign2])
+or
+bls.verify(newPk1, ["a", "b"], newSign1)
+bls.verify(newPk2, ["b", "z"], newSign1)
+
+oldSatate == bls.aggregate(rdmrState, oldSign)
+newState == bls.aggregate(rdmrState, [newSign1, newSign2])
+```
+
+### Delete VERIFICATION
+
+```
+bls.verify(oldAgrPk,  [["a", "b"],["b", "z"]], oldagrSign)
+bls.verify(newPk, ["a", "z"], newSign)
+
+oldSatate == bls.aggregate(rdmrState, oldAgrSign)
+newState == bls.aggregate(rdmrState, newSign)
+```
+
+> Note: The computation of the `rdmrState` is expensive off-chain operation.

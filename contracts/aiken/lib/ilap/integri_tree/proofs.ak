@@ -80,8 +80,8 @@ pub fn append_check(
   let nuh = hash_val(nuv)
   let nah = hash_val(nav)
   let nodes = append_values(x: e, idx: t_size, nuv: nuv, nav: nav)
-
-  check_proof(False, root, proof, nuh, nah, nodes) && check_proof(
+  // Check the root hash before and after the insertion of the element.
+  check_append_proof(False, root, proof, nuh, nah, nodes) && check_append_proof(
     True,
     updated_root,
     proof,
@@ -102,7 +102,7 @@ pub fn append_check(
 /// Meaning, the tree size is always != element in the tree as the tree with no element (except the lower- and upper bounds)
 /// - tree size: number of nodes in the tree.
 /// - nr of elements: tree size - 1
-fn check_proof(
+fn check_append_proof(
   is_new_state: Bool,
   root: Hash,
   proof: Proof,
@@ -111,7 +111,7 @@ fn check_proof(
   nodes: (Val, Val, Val),
 ) -> Bool {
   let (has_nu, has_na, calculated_root) =
-    validate_proof(
+    validate_append_proof(
       is_new_state: is_new_state,
       has_nu: False,
       has_na: False,
@@ -126,7 +126,7 @@ fn check_proof(
 /// The proof must contain the update node and the append node and the calulated root hash
 /// must be 
 /// Brief: Recursive function to validate a proof
-pub fn validate_proof(
+pub fn validate_append_proof(
   is_new_state: Bool,
   has_nu: Bool,
   has_na: Bool,
@@ -145,7 +145,7 @@ pub fn validate_proof(
       let has_na = has_na || ena
 
       let (lnu, lna, lh) =
-        validate_proof(
+        validate_append_proof(
           is_new_state: is_new_state,
           has_nu: has_nu,
           has_na: has_na,
@@ -155,7 +155,7 @@ pub fn validate_proof(
           nodes: nodes,
         )
       let (rnu, rna, rh) =
-        validate_proof(
+        validate_append_proof(
           is_new_state: is_new_state,
           has_nu: has_nu,
           has_na: has_na,

@@ -112,7 +112,7 @@ pub type MintParams {
 // Note: Not implemented in this version of @adatag.
 pub type MintAction {
   Minting(MintRedeemer)
-  Burning
+  Burning(BurnRedeemer)
 }
 
 // The users can only mint or burn usernames based on the redeemer.
@@ -120,5 +120,12 @@ pub type MintRedeemer {
   //adatag: ByteArray, It must be already presented in the state (datum) and minting value
   update_val: Val,
   append_val: Val,
+  proof: Proof,
+}
+
+pub type BurnRedeemer {
+  update_val1: Val,
+  update_val2: Val,
+  delete_val: Val,
   proof: Proof,
 }
