@@ -9,11 +9,12 @@ use aiken/transaction/value.{from_minted_value, quantity_of}
 use ilap/adatag/tests/fixture as tag_fixture
 use ilap/adatag/types.{
   AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting,
-  ScriptHash, TimeDepositDatum, TreeState,
+  ScriptHash, State, TimeDepositDatum,
 }
 use ilap/adatag/utils.{
   find_script_inputs, is_valid_tag, output_has_token, time_elapsed,
 }
+// TODO: use ilap/integri_tree/delete_proofs.{delete_check}
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture as tree_fixture
 
@@ -29,38 +30,44 @@ validator(params: MintParams) {
     expect [validator_input] =
       find_script_inputs(inputs: inputs, script_hash: params.state_holder)
     expect InlineDatum(old_state) = validator_input.output.datum
-    expect old_state: TreeState = old_state
+    expect old_state: State = old_state
 
     // Retrieve the state'
     // only one output is allowed
     expect [validator_output] =
       find_script_outputs(outputs, params.state_holder)
     expect InlineDatum(new_state) = validator_output.datum
-    expect new_state: TreeState = new_state
+    expect new_state: State = new_state
 
     // Retrive the mint amount, keep in mind state holder validator did all the sanity check.
     let mint_amount =
       quantity_of(from_minted_value(mint), own_policy, new_state.adatag)
 
-    is_valid_tag(new_state.adatag) && when rdmr is {
-      Minting(mint_redeemer) -> and {
+    is_valid_tag(new_state.adatag) && check_timedeposit(
+      new_state.adatag,
+      outputs,
+      params,
+      validity_range,
+    ) && when rdmr is {
+      Minting(redeemer) -> and {
           mint_amount == 1,
-          check_timedeposit(new_state.adatag, outputs, params, validity_range),
           append_check(
             new_state.adatag,
             new_state.size,
             old_state.root_hash,
             new_state.root_hash,
-            mint_redeemer.update_val,
-            mint_redeemer.append_val,
-            mint_redeemer.proof,
+            redeemer.update_val,
+            redeemer.append_val,
+            redeemer.proof,
           ),
         }
-      Burning -> and {
+      Burning(redeemer) -> and {
           mint_amount == -1,
-          False,
+          // TODO: implement burning
+          redeemer == redeemer,
         }
     }
+    // FIXME: Implement
   }
 }
 
@@ -165,7 +172,7 @@ test test_adatag_minting_2_20() {
   let twenty_days = curr_time + 20 * day
 
   let os =
-    TreeState {
+    State {
       operation_count: 1,
       operation: AdatagAdded,
       size: "131071",
@@ -175,7 +182,7 @@ test test_adatag_minting_2_20() {
     }
 
   let ns =
-    TreeState {
+    State {
       operation_count: 2,
       operation: AdatagAdded,
       size: tree_size,

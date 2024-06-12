@@ -32,10 +32,10 @@ pub fn has_only_token(
   token_name: ByteArray,
   token_quantity: Int,
 ) -> Bool {
-  expect [(tn, quantity)] =
+  expect [Pair(tn, quantity)] =
     val
       |> tokens(policy_id)
-      |> dict.to_list()
+      |> dict.to_pairs()
 
   tn == token_name && quantity == token_quantity
 }

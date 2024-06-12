@@ -6,7 +6,7 @@ use aiken/transaction.{
 }
 use aiken/transaction/value.{add}
 use ilap/adatag/tests/fixture.{other_hash, own_address, own_hash}
-use ilap/adatag/types.{AdatagAdded, ScriptHash, TreeState}
+use ilap/adatag/types.{AdatagAdded, ScriptHash, State}
 use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 
 //use aiken/cbor
@@ -37,11 +37,7 @@ use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 /// >Note: initial_state_a's proof i.e. root hash of ProofTree {Val { xi: 1, xa: "`", xb: "b"}, left: empty_hash, right: empty_hash}
 ///
 validator(auth_token: ScriptHash) {
-  fn state_holder(
-    old_state: TreeState,
-    _r: Redeemer,
-    ctx: ScriptContext,
-  ) -> Bool {
+  fn state_holder(old_state: State, _r: Redeemer, ctx: ScriptContext) -> Bool {
     let ScriptContext { transaction, purpose } = ctx
     expect Spend(own_ref) = purpose
 
@@ -61,7 +57,7 @@ validator(auth_token: ScriptHash) {
 
     // Condition(1): Only a valid inline datum is allowed.
     expect InlineDatum(new_state) = own_output.datum
-    expect new_state: TreeState = new_state
+    expect new_state: State = new_state
 
     // Condition(2): The MintValue's policy == new_state.minting_policy
     // Contidion(3): The minted asset class (symbol, token name, quantity) ==
@@ -121,7 +117,7 @@ test test_state_holder() {
   let adatag = "ilap"
 
   let os =
-    TreeState {
+    State {
       operation_count: 1,
       operation: AdatagAdded,
       size: "10",
@@ -131,7 +127,7 @@ test test_state_holder() {
     }
 
   let ns =
-    TreeState {
+    State {
       operation_count: 2,
       operation: AdatagAdded,
       size: "11",
@@ -182,7 +178,7 @@ test test_state_holder() {
 }
 //test test_tree_state() {
 //   let ns =
-//    TreeState {
+//    State {
 //      operation_count: 1110,
 //      operation: AdatagAdded,
 //      size: "0",
