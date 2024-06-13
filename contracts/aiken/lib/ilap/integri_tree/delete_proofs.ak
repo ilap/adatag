@@ -25,7 +25,7 @@ fn delete_values(x: ByteArray, nuv1: Val, nuv2: Val, ndv: Val) -> (Val, Val) {
   // Condition 1. The first update node must contain `(xa, x)` and the second `(x, xb)` 
   if
   bytearray.compare(nuv1.xb, x) == Equal && bytearray.compare(nuv2.xa, x) == Equal{
-
+  
     // Condition 2. the first updated node must contain `(xa, nuv2.xb)`
     let u1 = Val { xi: nuv1.xi, xa: nuv1.xa, xb: nuv2.xb }
     // Condition 3. If nuv1 is not equal to nuv2 than the second updated node must contain `(nd.xa, nd.xb)`

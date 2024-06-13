@@ -59,7 +59,16 @@ export type MintRedeemer =
         }
       ]
     }
-  | 'Burning'
+    | {
+      Burning: [
+        {
+          updateVal1: Val
+          updateVal2: Val
+          deleteVal: Val
+          proof: Proof
+        },
+      ]
+    }
 
 /**
  * Operation for minting and burning adatag
