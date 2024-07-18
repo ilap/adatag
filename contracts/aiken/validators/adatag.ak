@@ -64,7 +64,7 @@ validator(params: MintParams) {
       Burning(redeemer) -> and {
           mint_amount == -1,
           // TODO: implement burning
-          redeemer == redeemer,
+          False,
         }
     }
     // FIXME: Implement

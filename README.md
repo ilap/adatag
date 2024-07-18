@@ -13,6 +13,22 @@ It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity o
 
 To our knowledge, @Adatag is the first decentralized application (dApp) on the Cardano blockchain to enable dynamic minting of non-fungible tokens (NFTs) using the same policy ID, without requiring any third-party involvement.
 
+**Before We Begin, Please Review Our Core Values Below**:
+
+# Our Core Values
+
+- **Transparency**: We are fully committed to openness in all operations and communications.
+- **Accountability**: We hold ourselves strictly accountable for our actions and decisions.
+- **Intellectual Honesty**: We maintain unwavering truthfulness about our capabilities and limitations.
+- **Decentralization**: We strongly support decentralized solutions and firmly reject centralized alternatives, including projects that are closed-source.
+- **Integrity**: Our actions consistently reflect our deeply held core values.
+- **Community Engagement**: We actively listen to and deeply value community feedback.
+- **Inclusivity**: We embrace and promote a culture of inclusion where everyone is welcome without exception.
+- **Humility**: We approach our work with genuine modesty and reject all forms of arrogance.
+- **Openness**: We prioritise open-source development to foster collaboration, transparency, and community-driven innovation.
+
+> **We enforce these principles rigorously and do not tolerate deviations, especially closed-source or non-transparent centralized solutions.**
+
 # Adatag Features
 
 - **Decentralized**: @Adatag is a **_real_** dApp, not controlled by any entity or keys.
@@ -21,6 +37,7 @@ To our knowledge, @Adatag is the first decentralized application (dApp) on the C
 - **Instant**: @Adatag usernames - if available - can be created and deleted instantly, without any third-party involvement.
 
 > Note: Users must time-lock deposit a certain value (depending on the length of the @Adatag) to prevent abuse of the system. These deposits are redeemable by the rightful beneficiaries after a certain time (preferably 20 days) of minting.
+
 
 # IntegriTree
 
