@@ -1,10 +1,10 @@
 {
   "network": "Custom",
   "hashAlg": "SHA2_256",
-  "genesisTransaction": "40af93eaa33bfc4e30c67552adc8efb7e47dca31e222fdce475651a682889029",
+  "genesisTransaction": "daf2e439d49a1f3641e58f11ffc34ada510ebc6c1453c45b556e67f9c6b058cc",
   "bootstrapTime": {
-    "epoch": 1715842692996,
-    "date": "Thu May 16 2024 08:58:12 GMT+0200 (Central European Summer Time)"
+    "epoch": 1721322182252,
+    "date": "Thu Jul 18 2024 19:03:02 GMT+0200 (Central European Summer Time)"
   },
   "referenceScript": {
     "scriptAddress": "addr_test1wqh89j4q7e8ud7wd2wh8sy25lwa3xhrkyhcsln0kqdtxhjgr08ngw",
@@ -20,38 +20,38 @@
     }
   },
   "timelockScript": {
-    "scriptHash": "8bfd6c6526c8690debc628c43648ef80c2104cfc07b0a5aa54161183",
-    "scriptAddress": "addr_test1wz9l6mr9ymyxjr0tcc5vgdjga7qvyyzvlsrmpfd22stprqcwrfhcr",
+    "scriptHash": "2f59558956411b69d2b71caf2ce333f9cddce79cc20f1d9b7217d445",
+    "scriptAddress": "addr_test1wqh4j4vf2eq3k6wjkuw27t8rx0uumh88nnpq78vmwgtag3g5t0nsp",
     "params": {
       "collectorAddr": "addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk",
       "collectionTime": {
-        "epoch": 1715843384196,
-        "date": "Thu May 16 2024 09:09:44 GMT+0200 (Central European Summer Time)"
+        "epoch": 1721322873452,
+        "date": "Thu Jul 18 2024 19:14:33 GMT+0200 (Central European Summer Time)"
       }
     },
     "refIndex": 2
   },
   "stateholderScript": {
-    "scriptHash": "191480131c19aa18b01bf29603f3750f563df13e9f33e0c4e1b0ffbd",
-    "scriptAddress": "addr_test1wqv3fqqnrsv65x9sr0efvqlnw584v003860n8cxyuxc0l0g8g63py",
+    "scriptHash": "b73bcdad33ae416f493290ae5e4b347adef51d6557647a96e76951d9",
+    "scriptAddress": "addr_test1wzmnhnddxwhyzm6fx2g2uhjtx3adaagav4tkg75kua54rkg3c7ppv",
     "params": {
       "authToken": "33f18820ea20c5035bbe56908056b9b8db1430605fe59dcbc7d532e5"
     },
     "refIndex": 0
   },
   "adatagMinting": {
-    "policyId": "45b60f93bc0a42294f8e8f417e6d04cb00c9fd813556671941dafe27",
+    "policyId": "bd8f5dbeba7d3514940ab22be709d09ce54d7f4d051b607cb095d3a1",
     "params": {
       "lockingDays": {
         "days": 0.002,
         "ms": 172800
       },
       "deactivationTime": {
-        "epoch": 1715843038596,
-        "date": "Thu May 16 2024 09:03:58 GMT+0200 (Central European Summer Time)"
+        "epoch": 1721322527852,
+        "date": "Thu Jul 18 2024 19:08:47 GMT+0200 (Central European Summer Time)"
       },
       "depositBase": 1750,
-      "adahandle": "12b96851f48bac3b2758f3e221208d584d043ec4e6715a9955d5209d"
+      "adahandle": ""
     },
     "refIndex": 1
   }
