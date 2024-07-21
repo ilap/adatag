@@ -42,7 +42,7 @@
       "defaultConfiguration": "custom"
     },
     "copy-config": {
-      "dependsOn": ["^deploy"],
+      //"dependsOn": [],//"^deploy"],
       "executor": "nx:run-commands",
       "options": {
         "color": true,

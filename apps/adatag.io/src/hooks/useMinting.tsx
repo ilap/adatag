@@ -85,32 +85,32 @@ const useMinting = (): UseMintingResult => {
       // Step 3. Finalising the tx from the created datum and redeemer.
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Finalizing transaction')
-      await delay(2000)
+      //await delay(2000)
       const finalisedTx = await mintingService.finaliseTx(baseTx, adatag, address, datum, redeemer)
 
       // Step 4. Validate the built transaction.
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Completing transaction')
-      await delay(2000)
+      //await delay(2000)
       const completedTx = await finalisedTx.complete()
 
       // Step 5. Signing and submitting the validated transaction
       /////////////////////////////////////////////////////////////////////////////
       setMintingProgress('Signing transaction')
-      await delay(2000)
-      const signedTx = await completedTx.sign().complete()
+      //await delay(2000)
+      const signedTx =  await completedTx.sign().complete()
 
       setMintingProgress('Submitting transaction')
-      await delay(2000)
+      //await delay(2000)
       ///console.log(toHex(signedTx.txSigned.to_bytes()))
 
       const txHash = await signedTx.submit()
 
-      console.log(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
-      await delay(1000)
+      console.log(`@@ Submitted TX Hash: ${txHash}\n ... `)
+      //await delay(1000)
 
       setMintingProgress('Transaction submitted successfully!')
-      await delay(2000)
+      // await delay(2000)
       setMintResult(txHash)
     } catch (error) {
       console.warn(`@@@ ERROR: ${error} ... ${typeof error} ${(error as object).toString()} ${stringifyData(error)}`)
