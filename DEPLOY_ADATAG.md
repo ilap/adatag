@@ -23,7 +23,7 @@ $ git push origin aiken/v0.2.0
 2. Create a new `.env`   file
 ``` bash
 $ echo '
-NETWORK=Preprod
+NETWORK=Preview
 ENVIRONMENT=Integration
 PROVIDER=Kupmios
 ' > .env.preview
