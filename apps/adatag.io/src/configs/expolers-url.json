@@ -3,12 +3,12 @@
     "txs": "http://localhost:5173/transactions"
   },
   "Preview": {
-    "txs": "https://preview.cardanoscan.io/transactions"
+    "txs": "https://preview.cexplorer.io/tx"
   },
   "Preprod": {
-    "txs": "https://preprod.cardanoscan.io/transactions"
+    "txs": "https://preprod.cexplorer.io/tx"
   },
   "Mainnet": {
-    "txs": "https://cardanoscan.io/transactions"
+    "txs": "https://cexplorer.io/tx"
   }
 }
