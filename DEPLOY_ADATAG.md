@@ -17,13 +17,13 @@ contracts/aiken/aiken.toml:version = "0.2.0"
 $ git commit -m 'chore: Bumped aiken to v0.2.0'
 $ git push origin main
 $ git tag aiken/v0.2.0
-$ git push aiken/v0.2.0
+$ git push origin aiken/v0.2.0
 ```
 
 2. Create a new `.env`   file
 ``` bash
 $ echo '
-NETWORK=Preprod
+NETWORK=Preview
 ENVIRONMENT=Integration
 PROVIDER=Kupmios
 ' > .env.preview
