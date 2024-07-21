@@ -5,7 +5,7 @@
   "// 3": " https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json",
 
   "name": "aiken",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "root": "contracts/aiken",
   "projectType": "library",
   "namedInputs": {
