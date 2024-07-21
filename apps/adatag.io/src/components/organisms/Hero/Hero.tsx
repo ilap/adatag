@@ -21,7 +21,7 @@ interface Props {
 export const Hero: React.FC<Props> = ({ headerState, connected }) => {
   const howtoRef = useRef<HTMLDivElement>(null)
 
-  const config = useConfig()
+  //const config = useConfig()
 
   // DEBUG: console.log(`### CONFIG ##### ${JSON.stringify(config)}`)
   const scrollToHow = () => {

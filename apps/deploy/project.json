@@ -15,8 +15,8 @@
       "configurations": {
         "dev": {},
         "custom": {},
-        "preview": {},
         "preprod": {},
+        "preview": {},
         "mainnet": {}
       },
       "defaultConfiguration": "dev"
@@ -55,7 +55,12 @@
         },
         "dev": {
           "command": "echo 'No CORS Proxy server is required'"
-        }
+        },
+        "preview": {
+           "command": "echo 'No CORS Proxy server is required'"
+        },
+        "preprod": {},
+        "mainnet": {}
       },
       "defaultConfiguration": "dev"
     }

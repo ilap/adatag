@@ -10,25 +10,25 @@
   },
   "Preview": {
     "hashAlg": "SHA2_256",
-    "collectorAddress": "",
+    "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 2,
     "depositBase": 1750,
     "deactivationTime": 1,
     "lockingDays": 0.04,
-    "adahandle": "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a "
+    "adahandle": "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
   },
   "Preprod": {
     "hashAlg": "Blake2b_224",
-    "collectorAddress": "",
+    "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 365,
     "depositBase": 1750,
     "deactivationTime": 183,
     "lockingDays": 20,
-    "adahandle": "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a "
+    "adahandle": "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
   },
   "Mainnet": {
     "hashAlg": "Blake2b_224",
-    "collectorAddress": "",
+    "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 365,
     "depositBase": 1750,
     "deactivationTime": 183,

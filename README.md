@@ -11,33 +11,34 @@
 Welcome to **@Adatag**, a web3 username service built on the Cardano blockchain that enables users to manage unique, NFT-based usernames.
 It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity of usernames.
 
-To our knowledge, @Adatag is the first decentralized application (dApp) on the Cardano blockchain to enable dynamic minting of non-fungible tokens (NFTs) using the same policy ID, without requiring any third-party involvement.
+To our knowledge, @Adatag is the first decentralised application (dApp) on the Cardano blockchain to enable dynamic minting of non-fungible tokens (NFTs) using the same policy ID, without requiring any third-party involvement.
+
 
 **Before We Begin, Please Review Our Core Values Below**:
 
 # Our Core Values
 
-- **Transparency**: We are fully committed to openness in all operations and communications.
-- **Accountability**: We hold ourselves strictly accountable for our actions and decisions.
-- **Intellectual Honesty**: We maintain unwavering truthfulness about our capabilities and limitations.
-- **Decentralization**: We strongly support decentralized solutions and firmly reject centralized alternatives, including projects that are closed-source.
-- **Integrity**: Our actions consistently reflect our deeply held core values.
-- **Community Engagement**: We actively listen to and deeply value community feedback.
-- **Inclusivity**: We embrace and promote a culture of inclusion where everyone is welcome without exception.
-- **Humility**: We approach our work with genuine modesty and reject all forms of arrogance.
-- **Openness**: We prioritise open-source development to foster collaboration, transparency, and community-driven innovation.
+- **Transparency**: We are fully committed to openness in all our operations and communications.
+- **Accountability**: We take full responsibility for our actions and decisions.
+- **Intellectual Honesty**: We are committed to being truthful about our capabilities and limitations.
+- **Decentralisation**: We only support decentralised solutions and therefore firmly reject centralised alternatives, including projects that are not open-source. I.e. we reject any form of centralisation that compromises the decentralised nature of Cardano blockchain and our project(s).
+- **Integrity**: Our actions consistently align with our core values.
+- **Inclusivity**: We promote a culture where everyone is welcome and included without exception.
+- **Humility**: We approach our work with modesty and reject all forms of arrogance. Remember, overestimating our intelligence is often a sign of foolishness.
+- **Openness**: We prioritize open-source development to encourage collaboration, transparency, and community-driven innovation.
 
-> **We enforce these principles rigorously and do not tolerate deviations, especially closed-source or non-transparent centralized solutions.**
+**We strictly enforce these principles and do not tolerate deviations, especially closed-source or non-transparent centralised solutions.**
+
+**Additionally, we believe that genuine intelligence includes humility and collaboration, not arrogance or a sense of superiority.**
 
 # Adatag Features
 
-- **Decentralized**: @Adatag is a **_real_** dApp, not controlled by any entity or keys.
+- **Decentralised**: @Adatag is a **_real_** dApp, not controlled by any entity or keys.
 - **Transparent**: @Adatag is completely open-source to allow anybody to validate and audit its logic.
 - **Free**: @Adatag username creation (minting) and deletion (burning TBD) are completely free, with no price or royalty fees.
 - **Instant**: @Adatag usernames - if available - can be created and deleted instantly, without any third-party involvement.
 
 > Note: Users must time-lock deposit a certain value (depending on the length of the @Adatag) to prevent abuse of the system. These deposits are redeemable by the rightful beneficiaries after a certain time (preferably 20 days) of minting.
-
 
 # IntegriTree
 

@@ -48,8 +48,7 @@ export const Footer: React.FC = () => (
         <Link
           className="mr-6 font-normal text-gray-50"
           size="sm"
-          //** TODO: add proper discord channel.
-          href="https://discord.com/ilap"
+          href="https://discord.gg/dHQ8bppr"
           isExternal
           underline="none">
           <DiscordIcon width={24} height={24} />

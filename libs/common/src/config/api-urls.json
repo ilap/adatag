@@ -7,13 +7,13 @@
   },
   "Ogmios": {
     "Custom": "http://localhost:1337",
-    "Preview": "http://localhost:1337",
+    "Preview": "wss://dmtr_ogmios12pr4542n2ar8qu35fd29sstpwfrxkc28waqsvcjuxw.preview-v6.ogmios-m1.demeter.run",
     "Preprod": "http://localhost:1337",
     "Mainnet": "http://localhost:1337"
   },
   "Kupo": {
     "Custom": "http://localhost:1442",
-    "Preview": "http://localhost:1442",
+    "Preview": "https://dmtr_kupo12yunww2tgdn5k7z4g384gjfcd4zxgettvfqs2l75pp.preview-v2.kupo-m1.demeter.run",
     "Preprod": "http://localhost:1442",
     "Mainnet": "http://localhost:1442"
   }

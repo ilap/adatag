@@ -4,9 +4,13 @@ import { useConfig } from '../../hooks/useConfig'
 
 const Chip = () => {
   const config = useConfig()
+  const bgColor = config?.network === 'mainnet' ? 'bg-black' : 'bg-red'
+  const textColor = config?.network === 'mainnet' ? 'text-background' : 'text-foreground'
+
   return (
-    <div className="bg-white border-black  border-1 text-foreground px-6 py-3 rounded-full fixed bottom-10 right-10">
-      {config?.network}
+    <div
+      className={`bg-black border-black text-foreground-50 border-1 px-6 py-4 rounded-full absolute bottom-10 right-10`}>
+      {config?.network} Network
     </div>
   )
 }
