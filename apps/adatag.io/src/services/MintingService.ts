@@ -68,11 +68,12 @@ export class AdatagMintingService implements MintingService {
     ])
 
     // required for deactivation checking
-    const validFrom = Math.floor(Date.now() / 1000) * 1000
+    const currTime = Math.floor(Date.now() / 1000) * 1000
 
-    // required for deadline check
-    // TODO: use proper time buffer than the static 60secs
-    const validTo = validFrom + 60000
+    // lower bound of validFrom is 5 mins before the current time.
+    // TODO: Find proper value for the lower and upper bounds, then the current [5 mins before, 1hr after the current time]
+    const validFrom = currTime - 5 * 60 * 1000
+    const validTo = validFrom + 60 * 60 * 1000
 
     // TODO:
     // IDEA: We should remove tje deactivation time, meaning it should always active.
