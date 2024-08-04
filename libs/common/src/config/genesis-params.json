@@ -11,10 +11,10 @@
   "Preview": {
     "hashAlg": "SHA2_256",
     "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
-    "collectionTime": 2,
+    "collectionTime": 90,
     "depositBase": 1750,
-    "deactivationTime": 1,
-    "lockingDays": 0.04,
+    "deactivationTime": 60,
+    "lockingDays": 1,
     "adahandle": "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
   },
   "Preprod": {
