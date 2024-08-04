@@ -10,7 +10,7 @@
     "@nextui-org/react": "^2.4.3",
     "@nx-bun/nx": "^1.2.0",
     "@sqlite.org/sqlite-wasm": "^3.45.3-build1",
-    "@streamparser/json": "^0.0.20",
+    "@streamparser/json": "^0.0.21",
     "axios": "^1.6.0",
     "buffer": "^6.0.3",
     "comlink": "^4.4.1",
