@@ -1,9 +1,6 @@
-use aiken/list
-use aiken/transaction.{
-  Input, Mint, NoDatum, Output, OutputReference, ScriptContext, Transaction,
-  TransactionId,
-}
-use aiken/transaction/value
+use aiken/collection/list
+use cardano/assets.{PolicyId, add, zero}
+use cardano/transaction.{Input, NoDatum, Output, OutputReference, Transaction}
 use ilap/adatag/tests/fixture.{beneficiary_address, other_hash, own_hash}
 
 /// It does not need any check for correctness and integrity as it can be easily validated
@@ -11,20 +8,22 @@ use ilap/adatag/tests/fixture.{beneficiary_address, other_hash, own_hash}
 /// 
 /// A very simple one shot minting policy for minting 26 one letter token names that
 /// will be used with state holder validator.
-validator(utxo_ref: OutputReference) {
+validator auth_token(utxo_ref: OutputReference) {
   /// No any check other than the OutRef's is necessary, as the utxo garantees uniquess 
   /// of the authorization token's policy.
-  fn auth_token(_r: Void, ctx: ScriptContext) -> Bool {
-    let ScriptContext { transaction, purpose } = ctx
+  mint(_r: Void, _pid: PolicyId, transaction: Transaction) {
     let Transaction { inputs, .. } = transaction
 
-    expect Mint(_policy_id) = purpose
     let input =
       list.find(inputs, fn(input) { input.output_reference == utxo_ref })
     when input is {
       Some(_) -> True
       None -> False
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 
@@ -33,7 +32,7 @@ test test_auth_token() {
   let output =
     Output {
       address: beneficiary_address(),
-      value: value.zero(),
+      value: zero,
       datum: NoDatum,
       reference_script: None,
     }
@@ -43,26 +42,24 @@ test test_auth_token() {
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
       "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
     ]
-  let v = value.zero()
-  let mv =
-    list.foldl(letters, v, fn(tn, tv) { value.add(tv, own_hash, tn, 1) })
-      |> value.to_minted_value
+  let v = zero
+  let mv = list.foldl(letters, v, fn(tn, tv) { add(tv, own_hash, tn, 1) })
 
-  let utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+  // TODO: CHECK TransactionId
+  let utxo = OutputReference { transaction_id: #"", output_index: 0 }
 
   let input = Input { output_reference: utxo, output }
 
   let tx =
     Transaction {
-      ..transaction.placeholder(),
+      ..transaction.placeholder,
       mint: mv,
       extra_signatories: [other_hash],
       inputs: [input],
     }
-  let context = ScriptContext { purpose: Mint(own_hash), transaction: tx }
 
+  //let context = ScriptContext { purpose: Mint(own_hash), transaction: tx }
   // It always succeeds if the OutRef is in hte inputs.
   // goot for initial deployment's for authorization tokens.
-  auth_token(utxo, Void, context)
+  auth_token.mint(utxo, Void, own_hash, tx)
 }

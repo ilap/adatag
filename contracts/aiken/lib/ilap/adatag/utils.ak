@@ -5,30 +5,28 @@
 //// 3. token and amount of a value (MintedValue, Value)
 //// 4. Has signed by and address or credential etc.
 
-use aiken/builtin
-use aiken/bytearray
+use aiken/builtin.{append_string}
 use aiken/cbor
-use aiken/dict
+use aiken/collection/dict
+use aiken/collection/list
+use aiken/crypto.{ScriptHash}
 use aiken/interval.{Finite}
-use aiken/list
-use aiken/time.{PosixTime}
-use aiken/transaction.{
-  Datum, InlineDatum, Input, Output, OutputReference, TransactionId,
-  ValidityRange,
+use aiken/primitive/bytearray
+use cardano/address.{Script, VerificationKey}
+use cardano/assets.{AssetName, PolicyId, Value, add, quantity_of, tokens, zero}
+use cardano/transaction.{
+  Datum, InlineDatum, Input, Output, OutputReference, ValidityRange,
 }
-use aiken/transaction/credential.{ScriptCredential, VerificationKeyCredential}
-use aiken/transaction/value.{MintedValue, Value, tokens}
 use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
-use ilap/adatag/types.{ScriptHash, TokenName}
 
 pub fn debug_message(message: String, data: Data) -> String {
   let prefix = builtin.append_string(message, @": ")
-  builtin.append_string(prefix, cbor.diagnostic(data))
+  append_string(prefix, cbor.diagnostic(data))
 }
 
 pub fn has_only_token(
   val: Value,
-  policy_id: ScriptHash,
+  policy_id: PolicyId,
   token_name: ByteArray,
   token_quantity: Int,
 ) -> Bool {
@@ -42,9 +40,9 @@ pub fn has_only_token(
 
 pub fn correct_nft_amount(
   minting: Bool,
-  mint: MintedValue,
+  mint: Value,
   symbol: ScriptHash,
-  token_name: TokenName,
+  token_name: AssetName,
 ) {
   let mint_amount =
     if minting {
@@ -52,7 +50,8 @@ pub fn correct_nft_amount(
     } else {
       -1
     }
-  let mint_value = value.from_minted_value(mint)
+  // TODO(ilap): check minted value
+  let mint_value = mint
   has_only_token(mint_value, symbol, token_name, mint_amount)
 }
 
@@ -64,8 +63,7 @@ pub fn find_script_inputs(
     |> list.filter(
         fn(input) {
           when input.output.address.payment_credential is {
-            ScriptCredential(addr_script_hash) ->
-              script_hash == addr_script_hash
+            Script(addr_script_hash) -> script_hash == addr_script_hash
             _ -> False
           }
         },
@@ -74,8 +72,8 @@ pub fn find_script_inputs(
 
 pub fn output_has_token(
   outputs: List<Output>,
-  policy_id: ScriptHash,
-  asset_name: TokenName,
+  policy_id: PolicyId,
+  asset_name: AssetName,
 ) -> Bool {
   let result =
     outputs
@@ -83,7 +81,7 @@ pub fn output_has_token(
           fn(output) {
             let v = output.value
 
-            if value.quantity_of(v, policy_id, asset_name) > 0 {
+            if quantity_of(v, policy_id, asset_name) > 0 {
               Some(True)
             } else {
               None
@@ -100,9 +98,9 @@ pub fn output_has_token(
 
 test test_output_has_token() {
   let vv =
-    value.zero()
-      |> value.add(own_hash, "ilap", 1)
-      |> value.add("", "", 100)
+    zero
+      |> add(own_hash, "ilap", 1)
+      |> add("", "", 100)
   let output =
     Output {
       address: other_address(),
@@ -123,13 +121,13 @@ pub fn find_script_input_datum(
           let output = input.output
 
           when input.output.address.payment_credential is {
-            ScriptCredential(addr_script_hash) ->
+            Script(addr_script_hash) ->
               if script_hash == addr_script_hash {
                 Some(output.datum)
               } else {
                 None
               }
-            VerificationKeyCredential(_) -> None
+            VerificationKey(_) -> None
           }
         },
       )
@@ -139,7 +137,7 @@ pub fn signed_by(tx_signatures: List<ScriptHash>, beneficiary: ByteArray) {
   list.has(tx_signatures, beneficiary)?
 }
 
-pub fn time_elapsed(range: ValidityRange, time: PosixTime) -> Bool {
+pub fn time_elapsed(range: ValidityRange, time: Int) -> Bool {
   let from = interval.after(time)
 
   expect Finite(lower_bound) = range.lower_bound.bound_type
@@ -150,13 +148,12 @@ test test_find_script_input_datum() {
   let output =
     Output {
       address: own_address(),
-      value: value.zero(),
+      value: zero,
       datum: InlineDatum(Void),
       reference_script: None,
     }
 
-  let utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+  let utxo = OutputReference { transaction_id: "", output_index: 0 }
 
   let input = Input { output_reference: utxo, output }
 

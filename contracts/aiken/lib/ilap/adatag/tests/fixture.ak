@@ -1,8 +1,4 @@
-// This file creates some fixtures we can use for testing
-
-use aiken/transaction/credential.{
-  Address, ScriptCredential, VerificationKeyCredential,
-}
+use cardano/address.{Address, Script, VerificationKey}
 
 pub const own_hash = #"01020304050607080910111213140102030405060708091011121314"
 
@@ -33,14 +29,11 @@ pub fn other_address() {
 
 pub fn keyhash_address(keyhash: ByteArray) {
   Address {
-    payment_credential: VerificationKeyCredential(keyhash),
+    payment_credential: VerificationKey(keyhash),
     stake_credential: None,
   }
 }
 
 pub fn scripthash_address(scripthash: ByteArray) {
-  Address {
-    payment_credential: ScriptCredential(scripthash),
-    stake_credential: None,
-  }
+  Address { payment_credential: Script(scripthash), stake_credential: None }
 }

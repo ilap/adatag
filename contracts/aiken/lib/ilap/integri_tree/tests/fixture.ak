@@ -1,6 +1,5 @@
-use aiken/bytearray
-// use aiken/builtin
-use aiken/string
+use aiken/primitive/bytearray
+use aiken/primitive/string
 use ilap/integri_tree/hash.{empty_hash, hash_val, root_hash}
 use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 

@@ -1,4 +1,4 @@
-use aiken/bytearray
+use aiken/primitive/bytearray
 use ilap/integri_tree/hash.{combine_three_hashes, empty_hash, hash_val}
 use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 

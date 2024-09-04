@@ -1,48 +1,60 @@
+use aiken/collection/list
 use aiken/interval
-use aiken/list
-use aiken/time.{PosixTime}
-use aiken/transaction.{
-  OutputReference, ScriptContext, Spend, Transaction, TransactionId,
-}
+use cardano/address.{Credential, VerificationKey}
+use cardano/transaction.{OutputReference, Transaction}
 use ilap/adatag/tests/fixture.{collector_keyhash}
 use ilap/adatag/types.{
-  Collect, Credential, Redeem, TimeDepositDatum, TimeDepositParams,
-  TimeDepositRedeemer,
+  Collect, Redeem, TimeDepositDatum, TimeDepositParams, TimeDepositRedeemer,
 }
 use ilap/adatag/utils.{time_elapsed}
 
+/// Handles claims based on the validity of the provided datum. 
+///
+/// If the datum is not of type `TimeDepositDatum` (or is absent), it is
+/// treated as a donation, meaning only the collector can claim it. This
+/// approach is non-ideal, but it allows collection of incorrectly
+/// formatted datums to avoid losing locked deposits.
+///
+/// The `Redeem` claim is valid only under the following conditions:
+/// - The deadline has passed and the beneficiary is the one signing the
+///   transaction.
+///
+/// The `Collect` claim is valid in either of the following cases:
+/// - The datum is invalid or
+/// - The datum is valid and the collection time has passed.
+/// - The collector is the one signing the transaction.
 fn valid_claim(
   is_coll: Bool,
-  datum: Data,
+  datum: Option<TimeDepositDatum>,
   cred: Credential,
-  time: PosixTime,
-  context: ScriptContext,
+  deadline: Int,
+  transaction: Transaction,
 ) -> Bool {
-  let void_datum: Data = Void
-
-  // Any void datum is handled as donation, meaning only the collector can claim it.
-  // It's anti pattern but we allow any wrongly formed datums for collections
   let valid =
-    if void_datum == datum {
-      is_coll?
-    } else {
-      expect _d: TimeDepositDatum = datum
-      time_elapsed(context.transaction.validity_range, time)?
+    when datum is {
+      None -> is_coll?
+      Some(_) -> time_elapsed(transaction.validity_range, deadline)?
     }
 
-  let signed_by = list.has(context.transaction.extra_signatories, cred)?
+  let signed_by =
+    when cred is {
+      VerificationKey(cred) -> list.has(transaction.extra_signatories, cred)?
+      // FIXME(ilap): Handle the case when the credential is a script
+      _ -> fail @"We only support VerificationKey for now"
+    }
   valid? && signed_by?
 }
 
 /// TimeDeposit validator is for redeeming or collect the locked deposit 
 /// (a certain amount of ADA for some time e.g. 20 days, at adatag minting time)
 /// to prevent for buying a lot of the rare usernames and sell them on the market for high price.
-validator(params: TimeDepositParams) {
-  fn timedeposit(
-    datum: Data,
+validator timedeposit(params: TimeDepositParams) {
+  spend(
+    datum: Option<TimeDepositDatum>,
     rdmr: TimeDepositRedeemer,
-    ctx: ScriptContext,
-  ) -> Bool {
+    _input: OutputReference,
+    transaction: Transaction,
+  ) {
     when rdmr is {
       // Collector can collect donations (txes with no TimeDepositDatum) anytime or
       // after the collection time with a TimeDepositDatum (unlcaimed time-lock deposits).
@@ -51,24 +63,29 @@ validator(params: TimeDepositParams) {
           is_coll: True,
           datum: datum,
           cred: params.collector,
-          time: params.collection_time,
-          context: ctx,
+          deadline: params.collection_time,
+          transaction: transaction,
         )
       // User can redeem only after the deadline has passed.
       // The false means it's not collection but redeem.
       Redeem -> {
-        expect TimeDepositDatum { beneficiary, deadline }: TimeDepositDatum =
-          datum
+        // For redeem the user must provide a valid TimeDepositDatum
+        expect Some(data) = datum
+        let TimeDepositDatum { beneficiary, deadline }: TimeDepositDatum = data
 
         valid_claim(
           is_coll: False,
-          datum: datum,
+          datum: Some(data),
           cred: beneficiary,
-          time: deadline,
-          context: ctx,
+          deadline: deadline,
+          transaction: transaction,
         )
       }
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 
@@ -77,58 +94,67 @@ test test_timedeposit_validator() {
   let coll_time = 10000
   let params =
     TimeDepositParams {
-      collector: collector_keyhash,
+      collector: VerificationKey(collector_keyhash),
       collection_time: coll_time,
     }
 
   //let datum = debug(Void) //VoidDatum 
   let datum =
-    TimeDepositDatum { beneficiary: collector_keyhash, deadline: coll_time }
+    TimeDepositDatum {
+      beneficiary: VerificationKey(collector_keyhash),
+      deadline: coll_time,
+    }
   let rdmr = Redeem
 
   // Collect
   let placeholder_utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+    OutputReference { transaction_id: #"", output_index: 0 }
 
   let iv = interval.between(coll_time + 1000, coll_time + 2000)
 
   let tx =
     Transaction {
-      ..transaction.placeholder(),
+      ..transaction.placeholder,
       validity_range: iv,
       extra_signatories: [collector_keyhash],
     }
-  let context =
-    ScriptContext { purpose: Spend(placeholder_utxo), transaction: tx }
 
+  // let context = ScriptContext { purpose: Spend(placeholder_utxo), transaction: tx }
   // FIXME: // cbor.diagnostic(Void) == @"a"
-  timedeposit(params: params, datum: datum, rdmr: rdmr, ctx: context)
+  timedeposit.spend(params, Some(datum), rdmr, placeholder_utxo, tx)
   //True
 }
 
 test test_timelock_datums() {
-  let cred = "00000000000000000"
-  let utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
-  let void_datum: Data = Void
+  let cred = #"000000000000000000"
 
-  //let _valid_datum: TimeDepositDatum = TimeDepositDatum {
-  //  beneficiary: cred,
-  //  deadline: 0,
-  //}
+  let valid_datum: TimeDepositDatum =
+    TimeDepositDatum { beneficiary: VerificationKey(cred), deadline: 10 }
   let tx =
-    Transaction { ..transaction.placeholder(), extra_signatories: [cred] }
-  let ctx = ScriptContext { purpose: Spend(utxo), transaction: tx }
+    Transaction {
+      ..transaction.placeholder,
+      validity_range: interval.between(0, 11),
+      extra_signatories: [cred],
+    }
 
-  valid_claim(True, void_datum, cred, 0, ctx)?
-  //&& valid_claim(True, valid_datum, cred, 0, ctx)? 
+  let redeem = False
+
+  //let collect = !redeem
+  valid_claim(redeem, Some(valid_datum), VerificationKey(cred), 0, tx)?
+  // && // Reedeem before deadline
+  //valid_claim(redeem, Some(valid_datum), cred, 10, tx)? && // Reedeem on deadline
+  //!valid_claim(redeem, None, cred, 0, tx)? && // Collect
+  //valid_claim(collect, None, cred, 0, tx)?
+  // FIXME: && valid_claim(collect, Some(valid_datum), cred, 11, tx)?
 }
+/// Redeem
+/// Time has passes
 // FIXME: test the followings:
 // 1. Collect & Void Datum: PASS Anytime
 // 2. Collect & Valid Datum
-//  - Before coll time: Fail
-//  - At coll time: Pass
-//  - After coll time: Pass
+//  - Before coll deadline: Fail
+//  - At coll deadline: Pass
+//  - After coll deadline: Pass
 
 //
 // 3. Redeem & Void Datum: FAIL Anytime

@@ -1,7 +1,13 @@
+use cardano/transaction.{OutputReference, Transaction}
+
 /// A very simple one NFT minting policy for imitating adahandle in @adatag tests.
-validator {
+validator always_mint {
   /// No any check is necessary,
-  fn mint(_r: Void, _ctx: Void) -> Bool {
+  mint(_r: Void, _own_ref: OutputReference, _transaction: Transaction) {
     True
+  }
+
+  else(_) {
+    fail
   }
 }

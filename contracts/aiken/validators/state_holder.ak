@@ -1,12 +1,12 @@
-use aiken/bytearray
-use aiken/list
-use aiken/transaction.{
-  InlineDatum, Input, Output, OutputReference, Redeemer, ScriptContext, Spend,
-  Transaction, TransactionId, find_input,
+use aiken/collection/list
+use aiken/crypto.{ScriptHash}
+use aiken/primitive/bytearray
+use cardano/assets.{add, policies, zero}
+use cardano/transaction.{
+  InlineDatum, Input, Output, OutputReference, Redeemer, Transaction, find_input,
 }
-use aiken/transaction/value.{add}
 use ilap/adatag/tests/fixture.{other_hash, own_address, own_hash}
-use ilap/adatag/types.{AdatagAdded, ScriptHash, State}
+use ilap/adatag/types.{AdatagAdded, State}
 use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 
 //use aiken/cbor
@@ -36,10 +36,14 @@ use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 ///
 /// >Note: initial_state_a's proof i.e. root hash of ProofTree {Val { xi: 1, xa: "`", xb: "b"}, left: empty_hash, right: empty_hash}
 ///
-validator(auth_token: ScriptHash) {
-  fn state_holder(old_state: State, _r: Redeemer, ctx: ScriptContext) -> Bool {
-    let ScriptContext { transaction, purpose } = ctx
-    expect Spend(own_ref) = purpose
+validator state_holder(auth_token: ScriptHash) {
+  spend(
+    state: Option<State>,
+    _r: Redeemer,
+    own_ref: OutputReference,
+    transaction: Transaction,
+  ) {
+    expect Some(old_state) = state
 
     let Transaction { inputs, outputs, mint, .. } = transaction
 
@@ -86,7 +90,7 @@ validator(auth_token: ScriptHash) {
       )
     // Condition(5): No other than AdaSymbol and the auth token's policies (currency symbols) 
     // are alowed in the output.
-    expect list.length(value.policies(output_value)) == 2
+    expect list.length(policies(output_value)) == 2
 
     let old_size = parse_int(old_state.size)
     let new_size = parse_int(new_state.size)
@@ -108,6 +112,10 @@ validator(auth_token: ScriptHash) {
       // and in mint value (Condition(2))
       old_state.minting_policy == new_state.minting_policy,
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 
@@ -137,10 +145,10 @@ test test_state_holder() {
     }
 
   let mv =
-    value.zero()
+    zero
       |> add(mp, adatag, 1)
   let vv =
-    value.zero()
+    zero
       |> add("", "", 100)
       |> add(auth_token, bytearray.take(adatag, 1), 1)
   let output =
@@ -159,22 +167,27 @@ test test_state_holder() {
       reference_script: None,
     }
 
-  let utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+  let utxo = OutputReference { transaction_id: #"", output_index: 0 }
 
   let input = Input { output_reference: utxo, output }
 
   let tx =
     Transaction {
-      ..transaction.placeholder(),
-      mint: value.to_minted_value(mv),
+      ..transaction.placeholder,
+      mint: mv,
       extra_signatories: [other_hash],
       inputs: [input],
       outputs: [state_output],
     }
-  let ctx = ScriptContext { purpose: Spend(utxo), transaction: tx }
 
-  state_holder(Void, auth_token: auth_token, old_state: os, ctx: ctx)
+  //let ctx = ScriptContext { purpose: Spend(utxo), transaction: tx }
+  state_holder.spend(
+    Void,
+    auth_token: auth_token,
+    own_ref: utxo,
+    state: Some(os),
+    transaction: tx,
+  )
 }
 //test test_tree_state() {
 //   let ns =

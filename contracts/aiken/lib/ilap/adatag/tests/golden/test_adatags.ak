@@ -1,4 +1,4 @@
-use aiken/list
+use aiken/collection/list
 use ilap/adatag/tests/golden/data/invalid_tags.{get_invalid_adatags}
 use ilap/adatag/tests/golden/data/valid_tags.{get_valid_adatags}
 use ilap/adatag/utils.{is_valid_tag}

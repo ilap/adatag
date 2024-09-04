@@ -1,19 +1,7 @@
-use aiken/hash
-use aiken/time.{PosixTime}
-use aiken/transaction/credential.{Script, VerificationKey}
-use ilap/integri_tree/types.{Proof, Val}
-
-pub type TokenName =
-  ByteArray
-
-pub type ScriptHash =
-  hash.Hash<hash.Sha2_256, Script>
-
-pub type Credential =
-  hash.Hash<hash.Sha2_256, VerificationKey>
-
-pub type Hash =
-  hash.Hash<hash.Sha2_256, ByteArray>
+use aiken/crypto.{ScriptHash}
+use cardano/address.{Credential}
+use cardano/assets.{PolicyId}
+use ilap/integri_tree/types.{Hash, Proof, Val}
 
 //-----------------------------------------------------------------------------
 //-------------------------- 2. TimeDeposit types -----------------------------
@@ -33,7 +21,7 @@ pub type TimeDepositDatum {
   // Deadline to claim deposits. 
   // Preferably ~20 days (minting policy's parameter) from the time of the 
   // submitted adatag minting transaction
-  deadline: PosixTime,
+  deadline: Int,
 }
 
 pub type TimeDepositParams {
@@ -41,7 +29,7 @@ pub type TimeDepositParams {
   collector: Credential,
   // The time the collector can collect the donations and the unclaimed time-lock deposits. 
   // It should be twice as deactivation time. ~1-2yrs
-  collection_time: PosixTime,
+  collection_time: Int,
 }
 
 //-----------------------------------------------------------------------------
@@ -69,40 +57,40 @@ pub type State {
   root_hash: Hash,
   // Corresponding adatag minting policy. It is used to avoid circular dependency
   // between the StateHolder and Minting policy.
-  minting_policy: ScriptHash,
+  minting_policy: PolicyId,
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------// 4. Minting Types -------------------------
 
-// The POSIXTime (in ms) until the Lock Time Deposit Feature is active
+// The Int (in ms) until the Lock Time Deposit Feature is active
 // (e.g. ~6-9 months form the @adatag bootstrapping).
 // The users deposit locked in days, if the feature is active. Preferably 20 days.
 // The user's `deadline` in the datum - calculated by the front-end is currentTime + userDepositLockingDays * dayInseconds
 // Note: the script would fail if the user's lock end date time in the output datum is larger than the currentTime + 2 * userDepositLockingDays * 86400
 // to prevent any accidental over locking.
 // The user's min deposit for locking an @adatag.  locking_day: Int,
-//timelock_expiry: PosixTime,
+//timelock_expiry: Int,
 // The deposint base from which the user's deposit is calculated.
 // deposit_base: Int,
 pub type MintParams {
   // The authorization token that's carrying the state of the @adatag tree.
-  // AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
+  // AssetClass { unAssetClass :: (CurrencySymbol, AssetName) }
   auth_token: ScriptHash,
   // State holder validator, the authorization token and the state reside on.
   state_holder: ScriptHash,
   // TimeDeposit validator, for checking time-lock deposits' outputs.
   timedeposit_validator: ScriptHash,
   // The date when the time (in ms) lock deposit will be deactivated.
-  deactivation_time: PosixTime,
+  deactivation_time: Int,
   // The deposit is calculated based on the deposit base and the length of the @adatag being minted.
   deposit_base: Int,
   // Duration in milliseconds representing the waiting period for users to claim their time-locked deposit
   // after the corresponding @adatag is minted.
-  locking_days: PosixTime,
+  locking_days: Int,
   // TODO: Consider allowing not locking when adahandle is present in the output.
   // For bypassing the time-lock output requirement when the user own's and $adahandle same with the @adatag being created/minted
-  adahandle: ScriptHash,
+  adahandle: PolicyId,
 }
 
 // The users can mint new usernames or burn theirs.
