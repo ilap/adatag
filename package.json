@@ -4,9 +4,17 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@blaze-cardano/sdk": "0.1.33",
+    "@blaze-cardano/core":"0.4.4",
+    "@blaze-cardano/uplc": "0.1.26",
+    "@blaze-cardano/tx": "0.5.15",
+    "@blaze-cardano/wallet": "0.1.52",
+    "@blaze-cardano/ogmios": "0.0.6",
+    "@blaze-cardano/emulator": "0.1.72",
+    "@blaze-cardano/query": "0.2.17",
     "@heroicons/react": "^2.1.3",
-    "@meshsdk/core": "^1.5.11-beta.7",
-    "@meshsdk/react": "^1.1.10-beta.4",
+    "@meshsdk/core": "^1.7.3",
+    "@meshsdk/react": "^1.7.3",
     "@nextui-org/react": "^2.4.3",
     "@nx-bun/nx": "^1.2.0",
     "@sqlite.org/sqlite-wasm": "^3.45.3-build1",
@@ -19,11 +27,9 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "^6.23.0",
-    "translucent-cardano": "ilap/translucent"
+    "translucent-cardano": "file://../Temporary/translucent"
   },
   "devDependencies": {
-    "@dcspark/cardano-multiplatform-lib-browser": "^3.1.2",
-    "@dcspark/cardano-multiplatform-lib-nodejs": "^3.1.2",
     "@emurgo/cardano-message-signing-browser": "^1.0.1",
     "@emurgo/cardano-message-signing-nodejs": "^1.0.1",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
@@ -74,6 +80,8 @@
     "uplc-node": "^0.0.3",
     "uplc-web": "^0.0.3",
     "vite": "5.2.10",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-top-level-await": "^1.4.4",
     "vite-plugin-wasm": "^3.3.0",
     "vitest": "^1.5.3"
   },

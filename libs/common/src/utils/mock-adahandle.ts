@@ -1,33 +1,47 @@
+import { Blaze, Data, Provider, Wallet } from '@blaze-cardano/sdk'
 import * as P from '../../src/plutus/index.js'
-import { Address, Assets, Data, Translucent, fromText } from 'translucent-cardano'
+import { AssetName, TokenMap, Value, Address, AssetId, type Script, PolicyId } from '@blaze-cardano/core'
+import { cborToScript } from '@blaze-cardano/uplc'
+import { fromText } from './utils'
 
-export function getAdahandleScript() {
-  return new P.AlwaysMintMint()
+export function getAdahandleScript(): Script {
+  const adahandlePolicy = new P.AlwaysMintMint().script
+  return cborToScript(adahandlePolicy, 'PlutusV2')
 }
 
-export function getAdahandlePolicyId(translucent: Translucent) {
+export function getAdahandlePolicyId() {
   const adahandlePolicy = getAdahandleScript()
-  return translucent.utils.mintingPolicyToId(adahandlePolicy)
+  return adahandlePolicy.hash()
 }
 
-export async function mintAdahandle(translucent: Translucent, adatags: string[], toAddres: Address) {
+export async function mintAdahandle(blaze: Blaze<Provider, Wallet>, adatags: string[], toAddres: Address) {
   const adahandlePolicy = getAdahandleScript()
-  const policyId = getAdahandlePolicyId(translucent)
+  const policyId = PolicyId(adahandlePolicy.hash())
 
-  const assets: Assets = {}
+  const mint: TokenMap = new Map()
+  const assets: Map<AssetName, bigint> = new Map() //{}
+
   adatags.forEach(adatag => {
-    const assetId = policyId + fromText(adatag)
-    assets[assetId] = 1n
+    mint.set(AssetId.fromParts(policyId, AssetName(fromText(adatag))), 1n)
+    const assetName = AssetName(fromText(adatag))
+    assets.set(assetName, 1n)
   })
 
-  const tx = await translucent
-    .newTx()
-    .payToAddress(toAddres, assets)
-    .mintAssets(assets, Data.void())
-    .attachMintingPolicy(adahandlePolicy)
+  const value = new Value(0n, mint)
+
+  const tx = await blaze
+    .newTransaction()
+    .payAssets(toAddres, value)
+    .addMint(policyId, assets, Data.void())
+    .provideScript(adahandlePolicy)
     .complete()
 
-  const signedTx = await tx.sign().complete()
-  const txHash = await signedTx.submit()
-  return await translucent.awaitTx(txHash)
+  const signed = await blaze.wallet.signTransaction(tx, true)
+  const ws = tx.witnessSet()
+  ws.setVkeys(signed.vkeys()!)
+  tx.setWitnessSet(ws)
+  const txId = await blaze.provider.postTransactionToChain(tx)
+  const confirmed = await blaze.provider.awaitTransactionConfirmation(txId, 20_000)
+
+  return confirmed ? txId : undefined
 }

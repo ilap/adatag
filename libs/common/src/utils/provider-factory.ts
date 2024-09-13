@@ -1,14 +1,9 @@
-import {
-  Assets,
-  Emulator,
-  Kupmios,
-  KupmiosV5,
-  Maestro,
-  MaestroSupportedNetworks,
-  Network,
-  OutputData,
-  Provider,
-} from 'translucent-cardano'
+import { Provider, Kupmios } from '@blaze-cardano/sdk'
+import { Unwrapped } from '@blaze-cardano/ogmios'
+import { Emulator, EmulatorProvider } from '@blaze-cardano/emulator'
+import { TransactionOutput } from '@blaze-cardano/core'
+
+import { Network } from './types'
 
 import { ApiProvidersName } from '../config/index'
 import apiUrls from '../config/api-urls.json'
@@ -56,18 +51,12 @@ export class ProviderFactory {
     return validConfig[env]?.[network]?.[provider] !== undefined
   }
 
-  static createProvider(
+  static async createProvider(
     env: string,
     network: Network,
     provider: string,
-    genesisAssets?:
-      | {
-          address: string
-          assets: Assets
-          outputData?: OutputData | undefined
-        }[]
-      | undefined
-  ): Provider {
+    genesisAssets?: TransactionOutput[] | undefined
+  ): Promise<Provider> {
     if (!ProviderFactory.isValidConfig(env, network, provider)) {
       throw new Error(`Invalid configuration for environment: ${env}, network: ${network}, provider: ${provider}`)
     }
@@ -84,21 +73,18 @@ export class ProviderFactory {
     switch (provider) {
       case 'Emulator':
         // eslint-disable-next-line
-        return new Emulator(genesisAssets!)
+        return new EmulatorProvider(new Emulator(genesisAssets!))
 
       case 'Blockfrost':
         throw Error('Blockfrost: Unimplemented')
       case 'Maestro':
-        return new Maestro({
-          // As it's a valid MaestroSupportedNetworks now, as it's passed the validation.
-          network: network as MaestroSupportedNetworks,
-          apiKey: resolvedApikey,
-        })
+        throw Error('Maestro: Unimplemented')
 
       case 'Kupmios':
-        return new Kupmios(apiUrls.Kupo[network], apiUrls.Ogmios[network])
+        const ogmios = await Unwrapped.Ogmios.new(apiUrls.Ogmios[network])
+        return new Kupmios(apiUrls.Kupo[network], ogmios)
       case 'KupmiosV5':
-        return new KupmiosV5(apiUrls.Kupo[network], apiUrls.Ogmios[network])
+        throw Error('KupmiosV5: Unimplemented')
 
       default:
         throw new Error(`Unsupported provider: ${provider}`)

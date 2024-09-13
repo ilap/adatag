@@ -1,54 +1,48 @@
-import { Network, Provider } from 'translucent-cardano'
+import { wordlist, mnemonicToEntropy, Bip32PrivateKey } from '@blaze-cardano/core'
 import { ProviderFactory } from './provider-factory'
 import { generateAccountWithSeed } from './utils'
 import * as Seeds from '../config/keys/test-users-seed.json'
+import { Provider } from '@blaze-cardano/sdk'
+import { Bip32PrivateKeyHex } from '@blaze-cardano/core'
+import { Network } from './types'
 
-export function resolveEnvs(): {
-  envStr: string
-  networkStr: string
-  providerStr: string
-} {
-  const envStr = Bun.env.ENVIRONMENT || ''
-  const networkStr = Bun.env.NETWORK || ''
-  const providerStr = Bun.env.PROVIDER || ''
-  if (envStr === '' || networkStr === '' || providerStr === '')
-    throw Error(
-      `The required env variables not set: ENVIRONMENT ${envStr}, NETWORK: ${networkStr}, PROVIDER ${providerStr}.`
-    )
-
-  return { envStr, networkStr, providerStr }
+function getEnvVar(name: string): string {
+  const value = Bun.env[name] || ''
+  if (value === '') throw new Error(`The required env variable ${name} is not set.`)
+  return value
 }
 
 export async function resolveMockData(): Promise<{
-  deployerSeed: string
-  collectorSeed: string
-  userSeed: string
+  deployerMasterkey?: Bip32PrivateKeyHex
+  collectorMasterkey?: Bip32PrivateKeyHex
+  userMasterkey?: Bip32PrivateKeyHex
   network: Network
   provider: Provider
 }> {
-  const { envStr, networkStr, providerStr } = resolveEnvs()
-  const deployerSeed = Seeds.deployer.seed
-  const collectorSeed = Seeds.collector.seed
-  const userSeed = Seeds.user.seed
-
-  let provider: Provider
+  const envStr = getEnvVar('ENVIRONMENT')
+  const networkStr = getEnvVar('NETWORK')
+  const providerStr = getEnvVar('PROVIDER')
 
   const network: Network = networkStr as Network
 
   if (providerStr === 'Emulator') {
-    const deployer = await generateAccountWithSeed(deployerSeed, {
-      lovelace: 10_000_000_000_000n,
-    })
-    const collector = await generateAccountWithSeed(collectorSeed, {
-      lovelace: 10_000_000_000_000n,
-    })
-    const user = await generateAccountWithSeed(userSeed, {
-      lovelace: 10_000_000_000_000n,
-    })
-    provider = ProviderFactory.createProvider(envStr, network, providerStr, [deployer, collector, user])
+    const generateAccount = (seed: string) => generateAccountWithSeed({ seed, amount: 100000000n })
+    const { utxo: deployer, masterkeyHex: deployerMasterkey } = await generateAccount(Seeds.deployer.seed)
+    const { utxo: collector, masterkeyHex: collectorMasterkey } = await generateAccount(Seeds.collector.seed)
+    const { utxo: user, masterkeyHex: userMasterkey } = await generateAccount(Seeds.user.seed)
+    const provider = await ProviderFactory.createProvider(envStr, network, providerStr, [
+      ...deployer,
+      ...collector,
+      ...user,
+    ])
+    return { deployerMasterkey, collectorMasterkey, userMasterkey, network, provider }
   } else {
-    provider = ProviderFactory.createProvider(envStr, network as Network, providerStr)
+    const masterkeyFromMnenomic = (mnemonic: string) =>
+      Bip32PrivateKey.fromBip39Entropy(Buffer.from(mnemonicToEntropy(mnemonic, wordlist)), '').hex()
+    const deployerMasterkey = masterkeyFromMnenomic(Seeds.deployer.seed)
+    const collectorMasterkey = masterkeyFromMnenomic(Seeds.collector.seed)
+    const userMasterkey = masterkeyFromMnenomic(Seeds.user.seed)
+    const provider = await ProviderFactory.createProvider(envStr, network, providerStr)
+    return { deployerMasterkey, collectorMasterkey, userMasterkey, network, provider }
   }
-
-  return { deployerSeed, collectorSeed, userSeed, network, provider }
 }

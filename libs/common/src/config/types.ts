@@ -1,5 +1,6 @@
 export interface GenesisParams {
   hashAlg: string
+  networkName: string
   collectorAddress: string
   collectionTime: number
   depositBase: number

@@ -1,6 +1,8 @@
 import { emptyHash, hashVal, combineThreeHashes } from './hash'
 import { AdatagAdatagMinting, MintRedeemer, Proof, Val } from '@adatag/common/plutus'
-import { Data, fromText } from 'translucent-cardano'
+import { fromText } from '@adatag/common/utils'
+import { PlutusData } from '@blaze-cardano/core'
+import { Data } from '@blaze-cardano/sdk'
 
 /**
  * @module IntegriTree
@@ -320,7 +322,7 @@ export class IntegriTree {
    *
    * > Note: It assumes that the val contains the hex encoded properties.
    */
-  public static buildRedeemer(updateVal: Val, appendVal: Val, proof: Proof): string {
+  public static buildRedeemer(updateVal: Val, appendVal: Val, proof: Proof): PlutusData {
     const mintRedeemer: MintRedeemer = {
       Minting: [
         {

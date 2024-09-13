@@ -1,15 +1,17 @@
 {
   "Custom": {
     "hashAlg": "SHA2_256",
+    "networkName": "Custom",
     "collectorAddress": "",
-    "collectionTime": 0.008,
+    "collectionTime": 8,
     "depositBase": 1750,
-    "deactivationTime": 0.004,
-    "lockingDays": 0.002,
+    "deactivationTime": 4,
+    "lockingDays": 1,
     "adahandle": ""
   },
   "Preview": {
     "hashAlg": "SHA2_256",
+    "networkName": "Preview",
     "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 90,
     "depositBase": 1750,
@@ -19,6 +21,7 @@
   },
   "Preprod": {
     "hashAlg": "Blake2b_224",
+    "networkName": "Preprod",
     "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 365,
     "depositBase": 1750,
@@ -28,6 +31,7 @@
   },
   "Mainnet": {
     "hashAlg": "Blake2b_224",
+    "networkName": "Mainnet",
     "collectorAddress": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
     "collectionTime": 365,
     "depositBase": 1750,

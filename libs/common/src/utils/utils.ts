@@ -1,11 +1,21 @@
 import {
-  Assets,
-  MintingPolicy,
-  Network,
-  SLOT_CONFIG_NETWORK,
-  Translucent,
-  generateSeedPhrase,
-} from 'translucent-cardano'
+  wordlist,
+  mnemonicToEntropy,
+  Bip32PrivateKey,
+  TransactionOutput,
+  Transaction,
+  TransactionId,
+  AddressType,
+  NetworkId,
+  Address,
+} from '@blaze-cardano/core'
+
+import type { Provider } from '@blaze-cardano/query'
+import type { Blaze } from '@blaze-cardano/sdk'
+import { makeValue } from '@blaze-cardano/tx'
+import { HotWallet, type Wallet } from '@blaze-cardano/wallet'
+import { Network } from './types'
+import { SLOT_CONFIG_NETWORK } from './time'
 
 export function assert(condition: unknown, msg?: string): asserts condition {
   if (condition === false) throw new Error(msg)
@@ -16,25 +26,8 @@ export function delayRandom(max: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export async function generateAccountWithSeed(seed: string, assets: Assets) {
-  return {
-    seed,
-    address: await (await Translucent.new(undefined, 'Custom')).selectWalletFromSeed(seed).wallet.address(),
-    assets,
-  }
-}
-
-export async function generateAccount(assets: Assets) {
-  const seed = generateSeedPhrase()
-  return generateAccountWithSeed(seed, assets)
-}
-
-export async function getPolicyId(mp: MintingPolicy): Promise<string> {
-  return (await Translucent.new(undefined, 'Custom')).utils.mintingPolicyToId(mp)
-}
-
 export function stringifyData(data: unknown) {
-  return JSON.stringify(data, (key, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
+  return JSON.stringify(data, (_, value) => (typeof value === 'bigint' ? value.toString() : value), '  ')
 }
 
 interface YaciInfo {
@@ -56,16 +49,19 @@ interface YaciInfo {
   blockProducer: boolean
 }
 
-export async function setSloctConfig(network: Network, env: string) {
-  // Only for
-  if (!(network == 'Custom' && env == 'Integration')) {
-    return
-  }
-  try {
-    const response = await fetch(`http://localhost:10000/local-cluster/api/admin/clusters/default`)
+export async function setSlotConfig(network: Network, env: string, unixTime?: number) {
+  if (network === 'Custom' && env === 'Development') {
+    console.log(`Setting slot config for ${network}... ${unixTime}`)
+    SLOT_CONFIG_NETWORK[network] = {
+      zeroTime: unixTime ?? 0,
+      zeroSlot: 0,
+      slotLength: 1000,
+    }
+  } else if (network === 'Custom' && env === 'Integration') {
+    try {
+      const response = await fetch(`http://localhost:10000/local-cluster/api/admin/devnet`)
+      const serverInfo = await response.json()
 
-    if (response.ok) {
-      const serverInfo: YaciInfo = await response.json()
       if (serverInfo.startTime !== 0) {
         SLOT_CONFIG_NETWORK[network] = {
           zeroTime: serverInfo.startTime * 1000,
@@ -73,14 +69,13 @@ export async function setSloctConfig(network: Network, env: string) {
           slotLength: serverInfo.slotLength * 1000,
         }
       }
-    } else {
-      throw Error(`Could not set the slot config`)
+    } catch (error) {
+      throw new Error(`Could not set the slot config`)
     }
-  } catch (error) {
-    throw Error(`Could not set the slot config`)
   }
+  console.log(`SLOT_CONFIG_NETWORK[${network}]: ${JSON.stringify(SLOT_CONFIG_NETWORK[network])}`)
 }
-//
+
 function isLetter(letters: string, prefix: string | null) {
   const letter = letters.charCodeAt(0)
 
@@ -180,4 +175,64 @@ export function calculateDeposit(adatag: string, depositBase: number, minDeposit
   return len > maxLength
     ? BigInt(minDeposit)
     : BigInt(Math.max(minDeposit, (depositBase / 2 ** (adatag.length - 1)) >> 0))
+}
+
+export function generateGenesisOutputs(address: Address, n: number, value: bigint): TransactionOutput[] {
+  return Array(n).fill(new TransactionOutput(address, makeValue(value)))
+}
+
+export async function generateAccountWithSeed({
+  seed,
+  addressType = AddressType.BasePaymentKeyStakeKey,
+  amount,
+}: {
+  seed: string
+  addressType?: AddressType
+  amount: bigint
+}) {
+  const masterkey = await masterkeyFromMnenomic(seed)
+
+  const { address } = await HotWallet.generateAccountAddressFromMasterkey(masterkey, NetworkId.Testnet, addressType)
+
+  const utxo = generateGenesisOutputs(address, 1, amount)
+
+  return {
+    utxo,
+    masterkeyHex: masterkey.hex(),
+  }
+}
+
+export async function masterkeyFromMnenomic(mnemonic: string) {
+  const entropy = mnemonicToEntropy(mnemonic, wordlist)
+  const buff = Buffer.from(entropy)
+  const masterkey = Bip32PrivateKey.fromBip39Entropy(buff, '')
+  return masterkey
+}
+
+export function toText(hex: string): string {
+  return new TextDecoder().decode(fromHex(hex))
+}
+
+/** Convert a Utf-8 encoded string to a Hex encoded string. */
+export function fromText(text: string): string {
+  return toHex(new TextEncoder().encode(text))
+}
+
+export function fromHex(hex: string): Uint8Array {
+  const matched = hex.match(/.{1,2}/g)
+  return new Uint8Array(matched ? matched.map(byte => parseInt(byte, 16)) : [])
+}
+
+export function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+export async function signAndSubmit(tx: Transaction, blaze: Blaze<Provider, Wallet>): Promise<TransactionId> {
+  const signed = await blaze.wallet.signTransaction(tx, true)
+  const ws = tx.witnessSet()
+  ws.setVkeys(signed.vkeys()!)
+  tx.setWitnessSet(ws)
+  return await blaze.provider.postTransactionToChain(tx)
 }
