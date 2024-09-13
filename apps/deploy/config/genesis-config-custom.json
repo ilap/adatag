@@ -1,10 +1,10 @@
 {
   "network": "Custom",
   "hashAlg": "SHA2_256",
-  "genesisTransaction": "e90e4053d15b4a102245ef346ffeca028d87b69879c835e5f89c62d02a38ca11",
+  "genesisTransaction": "b0f7cf3ccb7bc5cc506cfee99a08162dee2901588491c993c151468aeaef86f8",
   "bootstrapTime": {
-    "epoch": 1721549406177,
-    "date": "Sun Jul 21 2024 10:10:06 GMT+0200 (Central European Summer Time)"
+    "epoch": 1725596436199,
+    "date": "Fri Sep 06 2024 06:20:36 GMT+0200 (Central European Summer Time)"
   },
   "referenceScript": {
     "scriptAddress": "addr_test1wqh89j4q7e8ud7wd2wh8sy25lwa3xhrkyhcsln0kqdtxhjgr08ngw",
@@ -20,13 +20,13 @@
     }
   },
   "timelockScript": {
-    "scriptHash": "7ed49d4e7b1da50cd3688c91e9726df78672cc8b8e7ad029d5f3d32b",
-    "scriptAddress": "addr_test1wpldf82w0vw62rxndzxfr6tjdhmcvukv3w8845pf6heax2cuvyscw",
+    "scriptHash": "b178828e69d8514540e4281738b7d955808d29da68c9b294471c71ae",
+    "scriptAddress": "addr_test1wzch3q5wd8v9z32qus5pww9hm92cprffmf5vnv55guw8rtsjddl2s",
     "params": {
       "collectorAddr": "addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw",
       "collectionTime": {
-        "epoch": 1721550097377,
-        "date": "Sun Jul 21 2024 10:21:37 GMT+0200 (Central European Summer Time)"
+        "epoch": 1726287636199,
+        "date": "Sat Sep 14 2024 06:20:36 GMT+0200 (Central European Summer Time)"
       }
     },
     "refIndex": 2
@@ -40,15 +40,15 @@
     "refIndex": 0
   },
   "adatagMinting": {
-    "policyId": "6b9c95e4eb3f32a556dfcbd5070e9b682dbdcaeacc7afa32d30945da",
+    "policyId": "506df45b66c329540e3986306b4dd298029c8efffeb41c5f416cb1e1",
     "params": {
       "lockingDays": {
-        "days": 0.002,
-        "ms": 172800
+        "days": 1,
+        "ms": 86400000
       },
       "deactivationTime": {
-        "epoch": 1721549751777,
-        "date": "Sun Jul 21 2024 10:15:51 GMT+0200 (Central European Summer Time)"
+        "epoch": 1725942036199,
+        "date": "Tue Sep 10 2024 06:20:36 GMT+0200 (Central European Summer Time)"
       },
       "depositBase": 1750,
       "adahandle": ""

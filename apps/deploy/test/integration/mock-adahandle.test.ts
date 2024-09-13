@@ -1,16 +1,14 @@
 import { test, expect } from 'bun:test'
-import { Translucent } from 'translucent-cardano'
+import { Blaze, HotWallet } from '@blaze-cardano/sdk'
 import { mintAdahandle, resolveMockData } from '@adatag/common/utils'
 
 test('Minting mock-adahandle', async () => {
-  const { deployerSeed, userSeed, network, provider } = await resolveMockData()
+  const { deployerMasterkey, userMasterkey, network, provider } = await resolveMockData()
 
-  const translucent = await Translucent.new(provider, network)
+  const address = (await HotWallet.fromMasterkey(userMasterkey, provider)).address
 
-  // Select the the receiving wallet.
-  const address = await translucent.selectWalletFromSeed(userSeed).wallet.address()
+  const wallet = await HotWallet.fromMasterkey(deployerMasterkey, provider)
+  const blaze = await Blaze.from(provider, wallet)
 
-  translucent.selectWalletFromSeed(deployerSeed)
-
-  expect(mintAdahandle(translucent, ['ilap', 'pal'], address)).resolves.toBeDefined()
+  expect(mintAdahandle(blaze, ['ilap', 'pal', 'adam'], address)).resolves.toBeDefined()
 })

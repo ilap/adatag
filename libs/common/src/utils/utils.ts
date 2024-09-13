@@ -51,7 +51,7 @@ interface YaciInfo {
 
 export async function setSlotConfig(network: Network, env: string, unixTime?: number) {
   if (network === 'Custom' && env === 'Development') {
-    console.log(`Setting slot config for ${network}... ${unixTime}`)
+    // DEBUG: console.log(`Setting slot config for ${network}... ${unixTime}`)
     SLOT_CONFIG_NETWORK[network] = {
       zeroTime: unixTime ?? 0,
       zeroSlot: 0,

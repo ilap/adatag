@@ -1,41 +1,57 @@
 import { test, expect } from 'bun:test'
-import { Data, Translucent, fromText } from 'translucent-cardano'
+import { Blaze, Data, HotWallet } from '@blaze-cardano/sdk'
+import { AssetName, TokenMap, Value, AssetId, PolicyId } from '@blaze-cardano/core'
+import { resolveMockData, fromText } from '@adatag/common/utils'
+import { cborToScript } from '@blaze-cardano/uplc'
 
-import { resolveMockData, stringifyData } from '@adatag/common/utils'
 import * as P from '@adatag/common/plutus'
 
 test('Simple Auth NFT mint', async () => {
-  const { deployerSeed, userSeed, network, provider } = await resolveMockData()
+  const { deployerMasterkey, userMasterkey, network, provider } = await resolveMockData()
 
   // Always apply network to the constructor.
-  const translucent = await Translucent.new(provider, network)
+  const wallet = await HotWallet.fromMasterkey(deployerMasterkey, provider)
+  const blaze = await Blaze.from(provider, wallet)
 
   // Select the receiving wallet.
-  const userAddress = await translucent.selectWalletFromSeed(userSeed).wallet.address()
+  const userAddress = (await HotWallet.fromMasterkey(userMasterkey, provider)).address
 
   // Select the spending wallet.
-  translucent.selectWalletFromSeed(deployerSeed)
-  const [utxo] = await translucent.wallet.getUtxos()
+  const [utxo] = await wallet.getUnspentOutputs()
 
-  const authMintingPolicy = new P.OneshotAuthToken({
-    transactionId: { hash: utxo.txHash },
-    outputIndex: BigInt(utxo.outputIndex),
-  })
+  const txId = utxo.input().transactionId().toString()
+  const idx = utxo.input().index()
 
-  const policyId = translucent.utils.mintingPolicyToId(authMintingPolicy)
+  const authMintingPolicyScript = new P.OneshotAuthToken({
+    transactionId: { hash: txId },
+    outputIndex: idx,
+  }).script
 
-  const mintVal = { [policyId + fromText('a')]: 1n }
-  const tx = await translucent
-    .newTx()
-    .collectFrom([utxo]) // with or without it
-    // TODO: Translucent does not allow paying to different address than the signer.
-    .payToAddress(userAddress, mintVal)
-    .attachMintingPolicy(authMintingPolicy)
-    .mintAssets(mintVal, Data.void())
+  const authMintingPolicy = cborToScript(authMintingPolicyScript, 'PlutusV2')
+
+  const policyId = PolicyId(authMintingPolicy.hash())
+
+  const mint: TokenMap = new Map()
+  const assetName = AssetName(fromText('a'))
+  const asset: Map<AssetName, bigint> = new Map()
+  asset.set(assetName, 1n)
+
+  mint.set(AssetId.fromParts(policyId, assetName), 1n)
+
+  const value = new Value(0n, mint)
+
+  const tx = await blaze
+    .newTransaction()
+    .payAssets(userAddress, value)
+    .addMint(policyId, asset, Data.void())
+    .provideScript(authMintingPolicy)
     .complete()
 
-  const signedTx = await tx.sign().complete()
-  const txHash = await signedTx.submit()
+  const signed = await blaze.wallet.signTransaction(tx, true)
+  const ws = tx.witnessSet()
+  ws.setVkeys(signed.vkeys()!)
+  tx.setWitnessSet(ws)
 
-  expect(translucent.awaitTx(txHash, 10000)).resolves.toBeDefined()
+  console.log(`Posting tx: ${tx.toCbor()}`)
+  expect(blaze.provider.postTransactionToChain(tx)).resolves.toBeDefined()
 })

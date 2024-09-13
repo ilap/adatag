@@ -1,30 +1,38 @@
 import { describe, test, expect } from 'bun:test'
-import { SLOT_CONFIG_NETWORK, toHex } from 'translucent-cardano'
-
-import * as P from '@adatag/common/plutus'
-
-import { Assets, Data, Emulator, Translucent } from 'translucent-cardano'
-
 import { Bootstrap } from '../../src/lib/bootstrap'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
-import { resolveMockData, setSloctConfig } from '@adatag/common/utils'
+import { Blaze, Provider, Wallet, HotWallet, Data } from '@blaze-cardano/sdk'
+import { Address, Bip32PrivateKeyHex, Ed25519KeyHashHex, Slot, TransactionInput, Value } from '@blaze-cardano/core'
+import {
+  resolveMockData,
+  stringifyData,
+  setSlotConfig,
+  unixTimeToSlot,
+  SLOT_CONFIG_NETWORK,
+} from '@adatag/common/utils'
+import { EmulatorProvider } from '@blaze-cardano/emulator'
+import * as P from '@adatag/common/plutus'
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Timelock Deposit Tests', async () => {
-  const { deployerSeed, collectorSeed, userSeed, network, provider } = await resolveMockData()
+  const { deployerMasterkey, userMasterkey, collectorMasterkey, network, provider } = await resolveMockData()
 
   // If we want to use validity ranges for transactin with private networks that use dynamic
   // startup time and slot length then we need to gather the proper parameters somehow.
   // - "Custom" assuming a private networ or Emulator.
   // - "Preview", "Preprod" and "Mainnet" assuming the well-know parameters.
-  setSloctConfig(network, Bun.env.ENVIRONMENT || '')
+  setSlotConfig(network, Bun.env.ENVIRONMENT || '')
+  console.log(`SLOT_CONFIG_NETWORK: ${JSON.stringify(SLOT_CONFIG_NETWORK[network])}`)
 
-  const translucent = await Translucent.new(provider, network)
+  const collectorWallet = await HotWallet.fromMasterkey(collectorMasterkey!, provider)
+  const collectorBlaze: Blaze<Provider, Wallet> = await Blaze.from(provider, collectorWallet)
 
   // Select the receiving wallet.
-  const collectorAddress = await translucent.selectWalletFromSeed(collectorSeed).wallet.address()
+  const collectorAddress = (await HotWallet.fromMasterkey(collectorMasterkey, provider)).address
 
   // Access the params object for the specified network
-  const params = genesisParams[network]
+  const params = await genesisParams[network]
 
   let genesisConfig: GenesisConfig
 
@@ -32,78 +40,89 @@ describe('Timelock Deposit Tests', async () => {
     // Create a newParams object by spreading the values from the original params
     const testParams = {
       ...params,
-      collectorAddress: collectorAddress,
+      collectorAddress: collectorAddress.toBech32().toString(),
       collectionTime: 0,
       deactivationTime: 0,
       lockingDays: 0,
     }
 
-    // Select spending wallet
-    translucent.selectWalletFromSeed(deployerSeed)
-    const [utxo] = await translucent.wallet.getUtxos()
+    console.log(`testParams: ${stringifyData(testParams)}`)
 
-    const result = await Bootstrap.deploy(translucent, utxo, testParams)
+    // Select spending wallet
+    const deployerWallet = await HotWallet.fromMasterkey(deployerMasterkey!, provider)
+    const [utxo] = await deployerWallet.getUnspentOutputs()
+
+    console.log(`utxos: ${stringifyData(utxo.toCore())}`)
+
+    const deployerBlaze: Blaze<Provider, Wallet> = await Blaze.from(provider, deployerWallet)
+    const result = await Bootstrap.deploy(deployerBlaze, utxo, testParams)
     expect(result).toBeDefined()
 
     genesisConfig = result
+    delay(2500)
   })
 
   test('Deposit timelock', async () => {
-    if (translucent.provider instanceof Emulator) {
-      translucent.provider.awaitBlock(30)
-    }
+    await delay(2500)
 
-    const lovelace: Assets = { lovelace: 1_500_000_000n }
+    const userWallet = await HotWallet.fromMasterkey(userMasterkey!, provider)
+    const userBlaze = await Blaze.from(provider, userWallet)
 
-    translucent.selectWalletFromSeed(userSeed)
-    const tx = await translucent
-      .newTx()
-      .payToContract(genesisConfig.timelockScript.scriptAddress, { inline: Data.void() }, lovelace)
+    const tx = await userBlaze
+      .newTransaction()
+      .lockLovelace(Address.fromBech32(genesisConfig.timelockScript.scriptAddress), 50_000_000n, Data.void())
       .complete()
 
-    const signedTx = await tx.sign().complete()
-    const txHash = await signedTx.submit()
+    const signed = await userBlaze.wallet.signTransaction(tx, true)
+    const ws = tx.witnessSet()
+    ws.setVkeys(signed.vkeys()!)
+    tx.setWitnessSet(ws)
 
-    expect(translucent.awaitTx(txHash)).resolves.toBe(true)
+    const txHash = await userBlaze.provider.postTransactionToChain(tx)
+
+    expect(userBlaze.provider.awaitTransactionConfirmation(txHash)).resolves.toBe(true)
+    expect(txHash).toBeTruthy()
   })
 
   test('Collect with all time passed', async () => {
-    if (translucent.provider instanceof Emulator) {
-      translucent.provider.awaitBlock(30)
-    }
+    await delay(2500)
 
-    const lovelace: Assets = { lovelace: 1_500_000_000n }
+    const lovelace = 1_500_000_000n
 
-    const utxoRef = await translucent.utxosByOutRef([
-      {
-        txHash: genesisConfig.genesisTransaction,
-        outputIndex: genesisConfig.timelockScript.refIndex,
-      },
-    ])
-
-    const [spendingUtxo] = await translucent.utxosAt(genesisConfig.timelockScript.scriptAddress)
-
+    const [spendingUtxo] = await provider.getUnspentOutputs(
+      Address.fromBech32(genesisConfig.timelockScript.scriptAddress)
+    )
     const timelockRedeemer = 'Collect'
 
+    const refInput = new TransactionInput(genesisConfig.genesisTransaction, genesisConfig.timelockScript.refIndex)
+    const [refUtxo] = await provider.resolveUnspentOutputs([refInput])
     const rdmr = Data.to(timelockRedeemer, P.TimeDepositTimedeposit.rdmr)
 
-    translucent.selectWalletFromSeed(collectorSeed)
-    const userAddress = await translucent.wallet.address()
+    // Set the timelock to the current time or some value for emulator for having a non-zero slot.
+    const now = provider instanceof EmulatorProvider ? 10_000 : Date.now()
 
-    const now = Date.now()
+    const slot = unixTimeToSlot(now, network)
 
-    const tx = await translucent
-      .newTx()
-      .readFrom(utxoRef)
-      .collectFrom([spendingUtxo], rdmr)
-      .addSigner(collectorAddress)
-      .payToAddress(userAddress, lovelace)
-      .validFrom(now)
+    const hash = collectorAddress.asBase()!.getPaymentCredential().hash.toString()
+    const signerHash = Ed25519KeyHashHex(hash)
+
+    const tx = await collectorBlaze
+      .newTransaction()
+      .addInput(spendingUtxo, rdmr)
+      .addReferenceInput(refUtxo)
+      .addRequiredSigner(signerHash)
+      .payLovelace(collectorAddress, lovelace)
+      .setValidFrom(slot)
       .complete()
 
-    const signedTx = await tx.sign().complete()
-    const txHash = await signedTx.submit()
+    const signed = await collectorWallet.signTransaction(tx, true)
+    const ws = tx.witnessSet()
+    ws.setVkeys(signed.vkeys()!)
+    tx.setWitnessSet(ws)
 
-    expect(translucent.awaitTx(txHash)).resolves.toBe(true)
+    const txHash = await provider.postTransactionToChain(tx)
+
+    expect(provider.awaitTransactionConfirmation(txHash)).resolves.toBe(true)
+    expect(txHash).toBeTruthy()
   })
 })

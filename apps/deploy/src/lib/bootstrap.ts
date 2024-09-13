@@ -1,6 +1,20 @@
-import { Script, Data, Assets, Translucent, UTxO, fromText } from 'translucent-cardano'
+//import { Script, Data, Assets, Blaze, UTxO, fromText, C } from 'blaze-cardano'
+
+import { Blaze, Data, Wallet, Provider, cborToScript } from '@blaze-cardano/sdk'
+import {
+  Script,
+  AssetName,
+  TokenMap,
+  Value,
+  AssetId,
+  PolicyId,
+  Address,
+  TransactionUnspentOutput,
+  addressFromValidator,
+} from '@blaze-cardano/core'
 
 import * as P from '@adatag/common/plutus'
+import { fromText, stringifyData } from '@adatag/common/utils'
 import { emptyHash, combineThreeHashes, hashVal } from '@adatag/integri-tree'
 import { GenesisConfig, GenesisParams } from '@adatag/common/config'
 
@@ -71,24 +85,24 @@ export class Bootstrap {
   // Deploys the contract, saves the result to a file, and returns the details
   public static async deployAndSave(
     file: string,
-    translucent: Translucent,
-    deployerUtxo: UTxO,
+    blaze: Blaze<Provider, Wallet>,
+    deployerUtxo: TransactionUnspentOutput,
     params: GenesisParams
   ): Promise<GenesisConfig> {
-    const result = await Bootstrap.deploy(translucent, deployerUtxo, params)
+    const result = await Bootstrap.deploy(blaze, deployerUtxo, params)
     Bun.write(Bun.file(file), JSON.stringify(result, null, '  '))
     return result
   }
 
   public static async deploy(
-    translucent: Translucent,
-    deployerUtxo: UTxO,
+    blaze: Blaze<Provider, Wallet>,
+    deployerUtxo: TransactionUnspentOutput,
     params: GenesisParams
   ): Promise<GenesisConfig> {
     const epoch = Date.now()
     const defaultDetails: GenesisConfig = {
       ...this.defaultDetails,
-      network: translucent.network,
+      network: params.networkName,
       hashAlg: params.hashAlg,
       bootstrapTime: {
         epoch: epoch,
@@ -96,16 +110,12 @@ export class Bootstrap {
       },
     }
 
-    const refDetails = this.getReferenceDetails(translucent, params, defaultDetails)
-    const { authMintingPolicy, authDetails } = this.getAuthTokenScript(translucent, deployerUtxo, refDetails)
-    const { timelockScript, timelockDetails } = this.getTimelockDetails(translucent, params, authDetails)
-    const { mintingPolicy, stateholderValidator, mintingDetails } = this.getMintingDetails(
-      translucent,
-      params,
-      timelockDetails
-    )
+    const refDetails = this.getReferenceDetails(blaze, params, defaultDetails)
+    const { authMintingPolicy, authDetails } = this.getAuthTokenScript(blaze, deployerUtxo, refDetails)
+    const { timelockScript, timelockDetails } = this.getTimelockDetails(blaze, params, authDetails)
+    const { mintingPolicy, stateholderValidator, mintingDetails } = this.getMintingDetails(params, timelockDetails)
 
-    return await this.buildTx(translucent, deployerUtxo, mintingDetails, {
+    return await this.buildTx(blaze, deployerUtxo, mintingDetails, {
       authMintingPolicy,
       timelockScript,
       stateholderValidator,
@@ -113,39 +123,48 @@ export class Bootstrap {
     })
   }
 
-  private static getReferenceDetails(translucent: Translucent, params: GenesisParams, details: GenesisConfig) {
-    const referenceScript = new P.AlwaysFailAlwaysFail()
-    const alwaysFailHash = translucent.utils.validatorToScriptHash(referenceScript)
-    const referenceAddress = translucent.utils.credentialToAddress(
-      translucent.utils.scriptHashToCredential(alwaysFailHash)
-    )
+  private static getReferenceDetails(blaze: Blaze<Provider, Wallet>, params: GenesisParams, details: GenesisConfig) {
+    const referenceScriptCbor = new P.AlwaysFailAlwaysFail().script
+
+    const referenceScript = cborToScript(referenceScriptCbor, 'PlutusV2')
+    const alwaysFailHash = referenceScript.hash()
+    const referenceAddress = addressFromValidator(params.networkName === 'Mainnet' ? 1 : 0, referenceScript)
 
     return {
       ...details,
       referenceScript: {
-        scriptAddress: referenceAddress,
-        scriptHash: alwaysFailHash,
+        scriptAddress: referenceAddress.toBech32().toString(),
+        scriptHash: alwaysFailHash.toString(),
       },
     }
   }
 
-  private static getAuthTokenScript(translucent: Translucent, deployerUtxo: UTxO, details: GenesisConfig) {
-    const authMintingPolicy = new P.OneshotAuthToken({
-      transactionId: { hash: deployerUtxo.txHash },
-      outputIndex: BigInt(deployerUtxo.outputIndex),
-    })
-    const policyId = translucent.utils.mintingPolicyToId(authMintingPolicy)
+  private static getAuthTokenScript(
+    blaze: Blaze<Provider, Wallet>,
+    deployerUtxo: TransactionUnspentOutput,
+    details: GenesisConfig
+  ) {
+    const txHash = deployerUtxo.input().transactionId().toString()
+    const outputIndex = deployerUtxo.input().index()
+    const authMintingPolicyCbor = new P.OneshotAuthToken({
+      transactionId: { hash: txHash },
+      outputIndex: outputIndex,
+    }).script
+
+    const authMintingPolicy = cborToScript(authMintingPolicyCbor, 'PlutusV2')
+
+    const policyId = PolicyId(authMintingPolicy.hash())
 
     return {
       authMintingPolicy,
       authDetails: {
         ...details,
         authTokenScript: {
-          policyId: policyId,
+          policyId: policyId.toString(),
           params: {
             genesis_utxo: {
-              txHash: deployerUtxo.txHash,
-              outputIndex: deployerUtxo.outputIndex,
+              txHash: txHash,
+              outputIndex: Number(outputIndex),
             },
           },
         },
@@ -153,27 +172,30 @@ export class Bootstrap {
     }
   }
 
-  private static getTimelockDetails(translucent: Translucent, params: GenesisParams, details: GenesisConfig) {
+  private static getTimelockDetails(blaze: Blaze<Provider, Wallet>, params: GenesisParams, details: GenesisConfig) {
     const collectionTime = details.bootstrapTime.epoch + this.days(params.collectionTime.toString())
-    const addr = translucent.utils.getAddressDetails(params.collectorAddress)
-    const timeLock = new P.TimeDepositTimedeposit({
-      collector: addr.paymentCredential!.hash,
+
+    const addr = Address.fromBech32(params.collectorAddress)
+    const cred = addr.asBase()?.getPaymentCredential().hash
+
+    const timelockCbor = new P.TimeDepositTimedeposit({
+      collector: cred!,
       collectionTime: BigInt(collectionTime),
-    })
-    const timeLockHash = translucent.utils.validatorToScriptHash(timeLock)
-    const timelockAddress = translucent.utils.credentialToAddress(
-      translucent.utils.scriptHashToCredential(timeLockHash)
-    )
+    }).script
+
+    const timelockScript = cborToScript(timelockCbor, 'PlutusV2')
+    const timelockHash = timelockScript.hash()
+    const timelockAddress = addressFromValidator(params.networkName === 'Mainnet' ? 1 : 0, timelockScript)
 
     return {
-      timelockScript: timeLock,
+      timelockScript: timelockScript,
       timelockDetails: {
         ...details,
         timelockScript: {
-          scriptHash: timeLockHash,
-          scriptAddress: timelockAddress,
+          scriptHash: timelockHash.toString(),
+          scriptAddress: timelockAddress.toBech32().toString(),
           params: {
-            collectorAddr: addr.address.bech32,
+            collectorAddr: params.collectorAddress,
             collectionTime: {
               epoch: collectionTime,
               date: new Date(collectionTime).toString(),
@@ -185,13 +207,13 @@ export class Bootstrap {
     }
   }
 
-  private static getMintingDetails(translucent: Translucent, params: GenesisParams, details: GenesisConfig) {
+  private static getMintingDetails(params: GenesisParams, details: GenesisConfig) {
     const authPolicyId = details.authTokenScript.policyId
-    const stateholderValidator = new P.StateHolderStateHolder(authPolicyId)
+    const stateholderValidatorCbor = new P.StateHolderStateHolder(authPolicyId).script
 
-    const stateholderHash = translucent.utils.validatorToScriptHash(stateholderValidator)
-    const stateholderCredential = translucent.utils.scriptHashToCredential(stateholderHash)
-    const stateholderAddress = translucent.utils.credentialToAddress(stateholderCredential)
+    const stateholderValidator = cborToScript(stateholderValidatorCbor, 'PlutusV2')
+    const stateholderHash = stateholderValidator.hash()
+    const stateholderAddress = addressFromValidator(params.networkName === 'Mainnet' ? 1 : 0, stateholderValidator)
 
     const deactivationTime = details.bootstrapTime.epoch + this.days(params.deactivationTime.toString())
     const lockingDays = this.days(params.lockingDays.toString())
@@ -206,24 +228,28 @@ export class Bootstrap {
       adahandle: params.adahandle,
     }
 
-    const mintingPolicy = new P.AdatagAdatagMinting(scriptPparams)
-    const mintingPolicyId = translucent.utils.mintingPolicyToId(mintingPolicy)
+    //console.log(`scriptPparams1: ${stringifyData(params)}`)
+    //console.log(`scriptPparams2: ${stringifyData(scriptPparams)}`)
+    const mintingPolicyCbor = new P.AdatagAdatagMinting(scriptPparams).script
+    const mintingPolicy = cborToScript(mintingPolicyCbor, 'PlutusV2')
+
+    //console.log(`mintingPolicy: ${mintingPolicy.hash().toString()}`)
 
     return {
-      mintingPolicy,
+      mintingPolicy: mintingPolicy,
       stateholderValidator,
       mintingDetails: {
         ...details,
         stateholderScript: {
-          scriptHash: stateholderHash,
-          scriptAddress: stateholderAddress,
+          scriptHash: stateholderHash.toString(),
+          scriptAddress: stateholderAddress.toBech32().toString(),
           params: {
             authToken: details.authTokenScript.policyId,
           },
           refIndex: -1,
         },
         adatagMinting: {
-          policyId: mintingPolicyId,
+          policyId: mintingPolicy.hash().toString(),
           params: {
             lockingDays: {
               days: params.lockingDays,
@@ -243,8 +269,8 @@ export class Bootstrap {
   }
 
   private static async buildTx(
-    translucent: Translucent,
-    deployerUtxO: UTxO,
+    blaze: Blaze<Provider, Wallet>,
+    deployerUtxO: TransactionUnspentOutput,
     details: GenesisConfig,
     scripts: {
       authMintingPolicy: Script
@@ -252,17 +278,19 @@ export class Bootstrap {
       stateholderValidator: Script
       mintingPolicy: Script
     }
-  ) {
+  ): Promise<GenesisConfig> {
     const refAddr = details.referenceScript.scriptAddress
-    const tx = translucent
-      .newTx()
-      .collectFrom([deployerUtxO])
-      .payToContract(refAddr, { inline: Data.void(), scriptRef: scripts.stateholderValidator }, {})
-      .payToContract(refAddr, { inline: Data.void(), scriptRef: scripts.mintingPolicy }, {})
-      .payToContract(refAddr, { inline: Data.void(), scriptRef: scripts.timelockScript }, {})
+    const tx = blaze
+      .newTransaction()
+      .addUnspentOutputs([deployerUtxO])
+      .lockLovelace(Address.fromBech32(refAddr), 0n, Data.void(), scripts.stateholderValidator)
+      .lockLovelace(Address.fromBech32(refAddr), 0n, Data.void(), scripts.mintingPolicy)
+      .lockLovelace(Address.fromBech32(refAddr), 0n, Data.void(), scripts.timelockScript)
 
-    const assets: Assets = {}
     const sateholderAddress = details.stateholderScript.scriptAddress
+
+    const policyId = PolicyId(details.authTokenScript.policyId)
+    const assets: Map<AssetName, bigint> = new Map()
 
     for (let i = 97; i <= 122; i++) {
       // const val = [48, i - 1, i + 1]
@@ -287,23 +315,31 @@ export class Bootstrap {
         mintingPolicy: details.adatagMinting.policyId,
       }
 
-      const id = Data.to(state, P.StateHolderStateHolder.oldState)
+      const newState = Data.to(state, P.StateHolderStateHolder.oldState)
+      const assetId = i.toString(16)
+      const assetName = AssetName(assetId)
 
-      const assetId = details.authTokenScript.policyId + i.toString(16)
-      assets[assetId] = 1n
-      tx.payToContract(sateholderAddress, { inline: id }, { [assetId]: 1n })
+      const mint: TokenMap = new Map()
+
+      mint.set(AssetId.fromParts(policyId, assetName), 1n)
+      assets.set(assetName, 1n)
+      const value = new Value(0n, mint)
+
+      tx.lockAssets(Address.fromBech32(sateholderAddress), value, newState)
     }
 
     const txCompleted = await tx
-      .attachMintingPolicy(scripts.authMintingPolicy)
-      .mintAssets(assets, Data.void())
+      .provideScript(scripts.authMintingPolicy)
+      .addMint(policyId, assets, Data.void())
       .complete()
 
-    const signedTx = await txCompleted.sign().complete()
+    const signed = await blaze.wallet.signTransaction(txCompleted, true)
+    const ws = txCompleted.witnessSet()
+    ws.setVkeys(signed.vkeys()!)
+    txCompleted.setWitnessSet(ws)
 
-    const txHash = await signedTx.submit()
-
-    await translucent.awaitTx(txHash)
+    const txHash = await blaze.provider.postTransactionToChain(txCompleted)
+    await blaze.provider.awaitTransactionConfirmation(txHash)
 
     const finalDetails = {
       ...details,

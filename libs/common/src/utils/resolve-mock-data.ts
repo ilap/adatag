@@ -26,7 +26,7 @@ export async function resolveMockData(): Promise<{
   const network: Network = networkStr as Network
 
   if (providerStr === 'Emulator') {
-    const generateAccount = (seed: string) => generateAccountWithSeed({ seed, amount: 100000000n })
+    const generateAccount = (seed: string) => generateAccountWithSeed({ seed, amount: 150_000_000_000n })
     const { utxo: deployer, masterkeyHex: deployerMasterkey } = await generateAccount(Seeds.deployer.seed)
     const { utxo: collector, masterkeyHex: collectorMasterkey } = await generateAccount(Seeds.collector.seed)
     const { utxo: user, masterkeyHex: userMasterkey } = await generateAccount(Seeds.user.seed)

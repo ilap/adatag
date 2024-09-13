@@ -14,7 +14,7 @@
       "env": {
         "NETWORK": "Custom",
         "ENVIRONMENT": "Integration",
-        "PROVIDER": "Kupmios",
+        "PROVIDER": "Kupmios"
       },
       "cwd": "${workspaceFolder}/apps/deploy",
       "stopOnEntry": true,
@@ -31,7 +31,7 @@
       "env": {
         "NETWORK": "Custom",
         "ENVIRONMENT": "Development",
-        "PROVIDER": "Emulator",
+        "PROVIDER": "Emulator"
       },
       "stopOnEntry": true,
       "watchMode": false

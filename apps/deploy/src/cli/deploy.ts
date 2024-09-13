@@ -1,29 +1,38 @@
-import { Translucent } from 'translucent-cardano'
 import { GenesisConfig, genesisParams } from '@adatag/common/config'
 import { Bootstrap } from '../lib/bootstrap'
-import { setSloctConfig, resolveMockData, stringifyData, mintAdahandle } from '@adatag/common/utils'
+import { setSlotConfig, stringifyData, resolveMockData, mintAdahandle } from '@adatag/common/utils'
 import { IntegriTree } from '@adatag/integri-tree'
 
-const { deployerSeed, collectorSeed, userSeed, network, provider } = await resolveMockData()
+import { Blaze, Provider, HotWallet, Wallet } from '@blaze-cardano/sdk'
+import { Address } from '@blaze-cardano/core'
 
-export async function mintMockAdahandle(translucent: Translucent, userSeed: string) {
-  const address = await translucent.selectWalletFromSeed(userSeed).wallet.address()
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-  translucent.selectWalletFromSeed(deployerSeed)
-  console.log(`Minting mock-adahandles.`)
-  mintAdahandle(translucent, ['ilap', 'pal', 'ada'], address)
+export async function mintMockAdahandle(deployerBlaze: Blaze<Provider, Wallet>, address: Address) {
+  console.log(`Minting mock-adahandles.....`)
+  delay(5000)
+  mintAdahandle(deployerBlaze, ['ilap', 'pal', 'ada'], address)
 }
+
+// The envs can be overwritten for dynamic testings, see and example below.
+// When manually set then all tests will use the owerwrittedn values.
+//Bun.env.ENVIRONMENT = "Integration" //"Development" // "Production";
+//Bun.env.NETWORK = "Custom";
+//Bun.env.PROVIDER = "KupmiosV5" //"Emulator" // "KupmiosV5";
+const { deployerMasterkey, collectorMasterkey, userMasterkey, network, provider } = await resolveMockData()
 
 // If we want tu use validity ranges for transactin with private networks that use dynamic
 // startup time and slot length then we need to gather the proper parameters somehow.
 // - "Custom" assuming a private network or Emulator.
 // - "Preview", "Preprod" and "Mainnet" assuming the well-know parameters.
-setSloctConfig(network, Bun.env.ENVIRONMENT || '')
+setSlotConfig(network, Bun.env.ENVIRONMENT || '')
 
-const translucent = await Translucent.new(provider, network)
+const collectorWallet = await HotWallet.fromMasterkey(collectorMasterkey!, provider)
+const collectorAddress = collectorWallet.address
 
-// Select the collector's address for redeem/claim
-const collectorAddress = await translucent.selectWalletFromSeed(collectorSeed).wallet.address()
+const userWallet = await HotWallet.fromMasterkey(userMasterkey!, provider)
+const userBlaze = await Blaze.from(provider as Provider, userWallet)
+const userAddress = userWallet.address
 
 interface Dictionary {
   [key: string]: IntegriTree
@@ -47,7 +56,7 @@ const params = genesisParams[network]
 
 const finalParams = {
   ...params,
-  collectorAddress: useMockCollector ? collectorAddress : params.collectorAddress,
+  collectorAddress: collectorAddress.toBech32().toString(),
   collectionTime: useTimelock ? params.collectionTime : 0.0,
   deactivationTime: useTimelock ? params.deactivationTime : 0.0,
   lockingDays: useTimelock ? params.lockingDays : 0.0,
@@ -55,20 +64,21 @@ const finalParams = {
 
 console.log(`PARAMS: ${stringifyData(finalParams)}`)
 
-// Select deployer's wallet
-translucent.selectWalletFromSeed(deployerSeed)
-const [utxo] = await translucent.wallet.getUtxos()
+const deployerWallet = await HotWallet.fromMasterkey(deployerMasterkey!, provider)
+const deployerBlaze = await Blaze.from(provider as Provider, deployerWallet)
 
-// FIXME: const result = await Bootstrap.deploy(translucent, utxo, testParams)
+// Select spending wallet
+const [utxo] = await deployerWallet.getUnspentOutputs()
+
 console.log(
-  `Genesis config (${network.toString()}) is saved to: ./config/genesis-config-${network.toString().toLowerCase()}.json`
+  `Genesis config (${network.toString()}) is being saved to: ./config/genesis-config-${network.toString().toLowerCase()}.json`
 )
 const result =
   Bun.env.ENVIRONMENT == 'Development'
-    ? await Bootstrap.deploy(translucent, utxo, finalParams)
+    ? await Bootstrap.deploy(deployerBlaze, utxo, finalParams)
     : await Bootstrap.deployAndSave(
         `./config/genesis-config-${network.toString().toLowerCase()}.json`,
-        translucent,
+        deployerBlaze,
         utxo,
         finalParams
       )
@@ -79,5 +89,5 @@ console.log(`##### BD: ${stringifyData(bd)}`)
 
 if (Bun.env.NETWORK === 'Custom') {
   // Private network: imitate adahandle
-  await mintMockAdahandle(translucent, userSeed)
+  await mintMockAdahandle(userBlaze, userAddress)
 }

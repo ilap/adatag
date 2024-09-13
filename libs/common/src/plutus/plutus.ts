@@ -3,7 +3,7 @@
 // TODO: Still need it until migrating to Blaze's blueprint.
 import { Validator } from 'translucent-cardano'
 
-import { applyParamsToScript, cborToScript } from '@blaze-cardano/uplc'
+import { applyParamsToScript } from '@blaze-cardano/uplc'
 
 import { MintRedeemer } from './types'
 
