@@ -1,9 +1,12 @@
 /// <reference types='vitest' />
 import { defineConfig, PluginOption } from 'vite'
 import react from '@vitejs/plugin-react'
-import wasm from 'vite-plugin-wasm'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
+
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import topLevelAwait from 'vite-plugin-top-level-await'
+import wasm from 'vite-plugin-wasm'
 
 export default defineConfig({
   root: __dirname,
@@ -21,9 +24,6 @@ export default defineConfig({
           // FIXME: for sqlite and proxy
           'Cross-Origin-Opener-Policy': 'same-site',
           'Cross-Origin-Embedder-Policy': 'require-corp',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         },
       },
     },
@@ -33,7 +33,16 @@ export default defineConfig({
     host: 'preview.adatag.io',
   },
 
-  plugins: [wasm(), react(), nxViteTsPaths()],
+  plugins: [
+    wasm(),
+    react(),
+    nxViteTsPaths(),
+    topLevelAwait(),
+    nodePolyfills({
+      globals: { Buffer: true, global: true },
+      protocolImports: true,
+    }),
+  ],
 
   // Uncomment this if you are using workers.
   worker: {
@@ -78,25 +87,14 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    exclude: [
-      '@sqlite.org/sqlite-wasm',
-      '@emurgo/cardano-message-signing-browser',
-      '@dcspark/cardano-multiplatform-lib-browser',
-    ],
-    esbuildOptions: {
-      define: {
-        global: 'globalThis',
-        process: 'process',
-        Buffer: 'Buffer',
-      },
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-        }),
-      ],
-    },
+    include: ['uplc-node', , '@stricahq/cbors', '@meshsdk/react', 'isomorphic-ws'],
+    exclude: ['@sqlite.org/sqlite-wasm', '@emurgo/cardano-message-signing-browser'],
   },
   resolve: {
     dedupe: ['buffer', 'Buffer'],
+    alias: {
+      ws: 'isomorphic-ws',
+      'uplc-node': 'uplc-web',
+    },
   },
 })

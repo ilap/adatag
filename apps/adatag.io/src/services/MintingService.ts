@@ -1,18 +1,33 @@
-import { UTxO, Tx, Translucent, toUnit, fromText, Data, AddressDetails } from 'translucent-cardano'
+import { Blaze, Data, Wallet, Provider, TxBuilder } from '@blaze-cardano/sdk'
 import { MintingService } from './types'
 import { calculateDeposit, stringifyData } from '../utils'
 import { MAXDEPOSITLENGTH, MINDEPOSIT } from '../configs/settings'
 import { genesisConfig } from '../utils/config'
 import { TimeDepositDatum } from '@adatag/common/plutus'
+import { fromText, unixTimeToSlot } from '@adatag/common/utils'
+
+import {
+  AssetId,
+  Address,
+  TransactionUnspentOutput,
+  TokenMap,
+  TransactionInput,
+  TransactionId,
+  Value,
+  PlutusData,
+  Datum,
+  PolicyId,
+  HexBlob,
+} from '@blaze-cardano/core'
 
 /**
  * Implementation of the MintingService interface for Adatag minting.
  */
 export class AdatagMintingService implements MintingService {
   /**
-   * The Translucent instance used for building and finalizing transactions.
+   * The Blaze instance used for building and finalizing transactions.
    */
-  constructor(private translucent: Translucent) {}
+  constructor(private blaze: Blaze<Provider, Wallet>) {}
 
   /**
    * Calculates the minimum deposit required for minting an Adatag.
@@ -29,9 +44,9 @@ export class AdatagMintingService implements MintingService {
    * @param assetName The name of the asset.
    * @returns The UTxO containing the specified asset, or undefined if not found.
    */
-  async getAssetUTxo(pid: string, assetName: string): Promise<UTxO | undefined> {
-    const unit = toUnit(pid, fromText(assetName))
-    return await this.translucent!.utxoByUnit(unit)
+  async getAssetUTxo(pid: string, assetName: string): Promise<TransactionUnspentOutput | undefined> {
+    const assetId = AssetId(pid + fromText(assetName))
+    return await this.blaze!.provider.getUnspentOutputByNFT(assetId)
   }
 
   /**
@@ -47,25 +62,25 @@ export class AdatagMintingService implements MintingService {
     useAdaHandle: boolean,
     userAddress: string | undefined,
     deposit: bigint
-  ): Promise<Tx> {
+  ): Promise<TxBuilder> {
     // Set the default values for the transaction
     const adatagHex = fromText(adatag)
 
     // 1. Create a new transaction
-    let tx = this.translucent!.newTx()
+    let tx = this.blaze!.newTransaction()
 
     // Set the minting- and state-holder policies' reference UTxOs
     // TODO: Find some better method to fetch these static references from chain.
-    const refUtxos = await this.translucent!.utxosByOutRef([
-      {
-        txHash: genesisConfig!.genesisTransaction,
-        outputIndex: genesisConfig!.stateholderScript.refIndex,
-      },
-      {
-        txHash: genesisConfig!.genesisTransaction,
-        outputIndex: genesisConfig!.adatagMinting.refIndex,
-      },
-    ])
+    const refInputs = [
+      new TransactionInput(
+        TransactionId(genesisConfig!.genesisTransaction),
+        BigInt(genesisConfig!.stateholderScript.refIndex)
+      ),
+      new TransactionInput(
+        TransactionId(genesisConfig!.genesisTransaction),
+        BigInt(genesisConfig!.adatagMinting.refIndex)
+      ),
+    ]
 
     // required for deactivation checking
     const currTime = Math.floor(Date.now() / 1000) * 1000
@@ -85,16 +100,19 @@ export class AdatagMintingService implements MintingService {
       } ${timelockActive} .... Using handle ${useAdaHandle}`
     )
 
+    const address = Address.fromBech32(userAddress!)
     // When time lock deposits is active
     if (timelockActive) {
       // If user has the same ada handle as the minting adatag and decided to use it for avoiding
       // time lock teposits.
       if (useAdaHandle) {
         console.warn(`##### USING ADAHANDLE`)
-        const handleAsset = {
-          [genesisConfig!.adatagMinting.params.adahandle + adatagHex]: 1n,
-        }
-        tx = tx.payToAddress(userAddress!, handleAsset)
+
+        const handleAssetId = AssetId(genesisConfig!.adatagMinting.policyId + fromText(adatag))
+
+        const handleToken: TokenMap = new Map<AssetId, bigint>([[handleAssetId, 1n]])
+
+        tx = tx.payAssets(address, new Value(0n, handleToken))
       } else {
         // Times are in milliseconds in Plutus Core
         // IMPORTANT: to + bd.adatagMinting.params.lockingDays.ms < deadLine
@@ -103,10 +121,10 @@ export class AdatagMintingService implements MintingService {
         // TODO: use proper time buffer instead of 10secs
         const deadLine = BigInt(validTo + genesisConfig!.adatagMinting.params.lockingDays.ms + 10000)
 
-        console.log(`### DEADLINE ${deadLine}`)
-
+        console.warn(`### DEADLINE ${deadLine}`)
         // Beneficiary is always the user!
-        const { paymentCredential } = this.translucent.utils.getAddressDetails(userAddress!) as AddressDetails
+        const paymentCredential = address.asBase()!.getPaymentCredential()
+        //const { paymentCredential } = this.blaze.utils.getAddressDetails(userAddress!) as AddressDetails
 
         // Create the Timelock deposit datum
         const datum: TimeDepositDatum['datum'] = {
@@ -114,31 +132,41 @@ export class AdatagMintingService implements MintingService {
           deadLine: deadLine,
         }
 
-        console.warn(`# TL: DATUM: ${stringifyData(datum)}`)
-        const datumCbor = Data.to(datum, TimeDepositDatum.datum)
+        const timelockRefInput = new TransactionInput(
+          TransactionId(genesisConfig!.genesisTransaction),
+          BigInt(genesisConfig!.timelockScript.refIndex)
+        )
 
         // Retrieve the TielockDeposit's UTxO
-        const timelockRefUtxo = await this.translucent!.utxosByOutRef([
-          {
-            txHash: genesisConfig!.genesisTransaction,
-            outputIndex: genesisConfig!.timelockScript.refIndex,
-          },
-        ])
-        refUtxos.concat(timelockRefUtxo)
 
-        console.log(`#### DEPOSIT PAID TO CONTRACT ${deposit * 1_000_000n}`)
+        refInputs.push(timelockRefInput)
+
+        console.warn(`#### DEPOSIT PAID TO CONTRACT ${deposit * 1_000_000n}`)
+
+        console.warn(`# TL: DATUM: ${stringifyData(datum)}`)
+        const datumData = Data.to(datum, TimeDepositDatum.datum)
+
+        const slot = unixTimeToSlot(validTo, genesisConfig!.network)
+        console.warn(`SLOT: ${slot} ... ${genesisConfig!.network}`)
+
         tx = tx
-          .payToContract(
-            genesisConfig!.timelockScript.scriptAddress,
-            { inline: datumCbor },
-            { lovelace: deposit * 1_000_000n }
+          .lockLovelace(
+            Address.fromBech32(genesisConfig!.timelockScript.scriptAddress),
+            deposit * 1_000_000n,
+            datumData
           )
-          .validTo(validTo)
+          .setValidUntil(slot)
       }
     }
 
+    const refUtxos = await this.blaze!.provider.resolveUnspentOutputs(refInputs)
     // 3. .readFrom(mpRefUtxo.concat(shRefUtxo))
-    return tx.readFrom(refUtxos).validFrom(validFrom)
+    tx = tx.addReferenceInput(refUtxos[0]).addReferenceInput(refUtxos[1])
+
+    if (refUtxos.length > 2) {
+      tx = tx.addReferenceInput(refUtxos[2])
+    }
+    return tx.setValidFrom(unixTimeToSlot(validFrom, genesisConfig!.network))
   }
 
   /**
@@ -151,32 +179,35 @@ export class AdatagMintingService implements MintingService {
    * @returns The finalized transaction ready for submission.
    */
   async finaliseTx(
-    tx: Tx,
+    builder: TxBuilder,
     adatag: string,
     userAddress: string | undefined,
-    datum: string,
-    redeemer: string
-  ): Promise<Tx> {
+    datum: Datum,
+    redeemer: PlutusData
+  ): Promise<TxBuilder> {
     const mintAmount = 1n
 
-    const authUnit = genesisConfig!.authTokenScript.policyId + fromText(adatag[0])
-    const authAsset = { [authUnit]: mintAmount }
-    const authUtxo = await this.translucent!.utxoByUnit(authUnit)
-    console.log(`##### AUTHUTXO: ${stringifyData(authUtxo)}`)
+    /// addMint
+    const mintPolid = PolicyId(genesisConfig!.adatagMinting.policyId)
+    const mintAssetId = AssetId(genesisConfig!.adatagMinting.policyId + fromText(adatag))
 
-    const mintValue = {
-      [genesisConfig!.adatagMinting.policyId + fromText(adatag)]: mintAmount,
-    }
+    /// lockAssets
+    const authAssetId = AssetId(genesisConfig!.authTokenScript.policyId + fromText(adatag[0]))
+    const authToken: TokenMap = new Map<AssetId, bigint>([[authAssetId, mintAmount]])
+    const authAddress = Address.fromBech32(genesisConfig!.stateholderScript.scriptAddress)
 
-    // 5. .payToContract( bd.stateholderScript.scriptAddress, { inline: state }, authToken,)
-    const finalisedTx = tx
-      .payToContract(genesisConfig!.stateholderScript.scriptAddress, { inline: datum }, authAsset)
-      // 2. .collectFrom([authUtxo], Data.void())
-      .collectFrom([authUtxo], Data.void())
-      // 6. .mintAssets(mintValue, rdmr)
-      .mintAssets(mintValue, redeemer)
-      // FIXME: user address...
-      .payToAddress(userAddress!, mintValue)
+    /// payAssets
+    const address = Address.fromBech32(userAddress!)
+    const mintToken: TokenMap = new Map<AssetId, bigint>([[mintAssetId, mintAmount]])
+
+    /// addInput
+    const authUtxo = await this.blaze!.provider.getUnspentOutputByNFT(authAssetId)
+
+    const finalisedTx = builder
+      .addMint(mintPolid, new Map([[AssetId.getAssetName(mintAssetId), 1n]]), redeemer)
+      .lockAssets(authAddress, new Value(0n, authToken), datum)
+      .payAssets(address, new Value(0n, mintToken))
+      .addInput(authUtxo, Data.void())
 
     return finalisedTx
   }

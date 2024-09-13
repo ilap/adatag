@@ -1,7 +1,6 @@
 import sqlite3InitModule, { OpfsDatabase, SqlValue, BindingSpec } from '@sqlite.org/sqlite-wasm'
 import { Val, ChainData, DataStoreService } from './types'
 import { DBNAME, SCHEMA, appendUpdateQuery, slotQuery } from './schema'
-import { debugMessage } from '../utils'
 import { DEBUG } from '../configs/settings'
 
 //const DEBUG = null
@@ -21,9 +20,9 @@ export class SQLiteDataStore implements DataStoreService {
 
   public async initialise(): Promise<void> {
     try {
-      debugMessage(`Initializing SQLite module.`)
+      console.log(`Initializing SQLite module.`)
       const sqlite3 = await sqlite3InitModule({
-        print: debugMessage,
+        print: console.log,
         printErr: console.error,
       })
 
@@ -32,37 +31,37 @@ export class SQLiteDataStore implements DataStoreService {
           const opfsRoot = await navigator.storage.getDirectory()
           await opfsRoot.getFileHandle(DBNAME, { create: false })
           this.db = new sqlite3.oo1.OpfsDb(DBNAME, DEBUG ? 'ct' : 'c')
-          debugMessage(`OPFS is available, existing persisted database at: ${this.db?.filename}`)
+          console.log(`OPFS is available, existing persisted database at: ${this.db?.filename}`)
         } catch (e) {
           this.db = new sqlite3.oo1.OpfsDb(DBNAME, DEBUG ? 'ct' : 'c')
           await this.query(SCHEMA, [])
-          debugMessage(`OPFS is available, created persisted database at: ${this.db?.filename}`)
+          console.log(`OPFS is available, created persisted database at: ${this.db?.filename}`)
         }
       } else if (typeof window === 'undefined') {
         this.db = new sqlite3.oo1.DB(DBNAME, DEBUG ? 'ct' : 'c')
-        debugMessage(`Transient DB created at: ${this.db.filename}`)
+        console.log(`Transient DB created at: ${this.db.filename}`)
         await this.query(SCHEMA, [])
-        debugMessage(`Initialization SQL is done.`)
+        console.log(`Initialization SQL is done.`)
       }
     } catch (err) {
-      debugMessage(`Initialization failed: ${err}`)
+      console.log(`Initialization failed: ${err}`)
       throw Error('SQLite Initialization failed')
     } finally {
-      debugMessage('Initialization done...')
+      console.log('Initialization done...')
     }
   }
 
   public async cleanup(): Promise<void> {
     try {
       console.log(`Removing ${DBNAME}`)
-      debugMessage(`Removing ${DBNAME}`)
+      console.log(`Removing ${DBNAME}`)
       this.db?.close()
       const opfsRoot = await navigator.storage.getDirectory()
       await opfsRoot.removeEntry(DBNAME, { recursive: true })
     } catch (e) {
       console.log(`CLEANING: ${e}`)
     } finally {
-      debugMessage(`DB Cleaning is done`)
+      console.log(`DB Cleaning is done`)
     }
   }
 
@@ -73,7 +72,7 @@ export class SQLiteDataStore implements DataStoreService {
           const slot = this.db?.selectValue(`SELECT MAX(tip) FROM config;`) as number
           const rows = this.db?.selectArrays(`SELECT xi, xa, xb FROM ${tableName};`)
           const vals: Val[] = rows!.map(this.transformRow)
-          //debugMessage(`#########  ${slot} \n ${JSON.stringify(vals)}`);
+          //console.log(`#########  ${slot} \n ${JSON.stringify(vals)}`);
           resolve([slot, vals])
         } catch (error) {
           reject(error)

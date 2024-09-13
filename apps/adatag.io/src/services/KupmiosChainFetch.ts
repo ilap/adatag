@@ -9,8 +9,8 @@ import {
   TreeDetails,
   TransactionOutput,
 } from './types'
-import { debugMessage, hexToASCII } from '../utils'
-import { fromText } from 'translucent-cardano'
+import { hexToASCII } from '../utils'
+import { fromText } from '@adatag/common/utils'
 import { Asset } from '@meshsdk/core'
 
 import { genesisConfig } from '../utils/config'
@@ -113,17 +113,17 @@ export class KupmiosChainFetch implements ChainFetchService {
    */
   async fetchAndSaveElements(): Promise<void> {
     if (this.isFetching) {
-      console.log(`fetchAndSaveElements is still fetching`)
+      console.warn(`fetchAndSaveElements is still fetching`)
       return // If already fetching, do nothing
     }
     this.isFetching = true
 
     try {
-      console.warn(`#### BEFORE change`)
+      console.log(`#### BEFORE change`)
       this.onStatusChange?.({ state: 'syncing', message: 'Started fetching.' })
       let from = (await this.dataStore.getLastSlot()) + 1
       const tip = await this.fetchTip()
-      console.warn(`### FROM ${from} ... TIP ${tip}`)
+      console.log(`### FROM ${from} ... TIP ${tip}`)
       const to = tip - SAFETY_SLOTS
       const queryParams = [`order=oldest_first`, `created_after=${from}`, `created_before=${to}`].join('&')
       // TODO: remove const policyId = config.adatagMinting.policyId
@@ -155,7 +155,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     } catch (error) {
       this.onStatusChange?.({ state: 'error', message: `${error}` })
     } finally {
-      console.log(`fetchAndSaveElements is done`)
+      console.warn(`fetchAndSaveElements is done`)
       this.isFetching = false
     }
   }
@@ -175,7 +175,7 @@ export class KupmiosChainFetch implements ChainFetchService {
     const url = `${KUPO_URL}/matches/${policyId}.*?${queryParams}`
 
     const adatags: string[] = []
-    debugMessage(`#### URL: ${url}`)
+    console.log(`#### URL: ${url}`)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await this.fetchFromUrl(url, (chunk: any) => {
       const { value } = chunk.value
@@ -249,10 +249,10 @@ export class KupmiosChainFetch implements ChainFetchService {
     // It must be an NFT.
     try {
       const transactions = await this.fetchData(url)
-      debugMessage(`fetchTxUtxos tx: ${JSON.stringify(transactions)} ... ${url}`)
+      console.warn(`fetchTxUtxos tx: ${JSON.stringify(transactions)} ... ${url}`)
       return transactions
     } catch (e) {
-      debugMessage(`fetchTxUtxos Error: ${(e as Error).message} ...`)
+      console.warn(`fetchTxUtxos Error: ${(e as Error).message} ...`)
       throw e
     }
   }
@@ -270,10 +270,10 @@ export class KupmiosChainFetch implements ChainFetchService {
     // It must be an NFT.
     try {
       const [asset] = await this.fetchData(url)
-      debugMessage(`fetchAsset Asset: ${JSON.stringify(asset)} ... ${url}`)
+      console.warn(`fetchAsset Asset: ${JSON.stringify(asset)} ... ${url}`)
       return asset
     } catch (e) {
-      debugMessage(`fetchAsset Error: ${(e as Error).message} ...`)
+      console.warn(`fetchAsset Error: ${(e as Error).message} ...`)
       throw e
     }
   }

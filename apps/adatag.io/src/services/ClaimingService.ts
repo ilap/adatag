@@ -1,4 +1,4 @@
-import { Tx, Translucent, Data, UTxO } from 'translucent-cardano'
+import { Tx, Blaze, Data, UTxO } from '@blaze-cardano/sdk'
 import { ClaimingService } from './types'
 import { TimeDepositTimedeposit } from '@adatag/common/plutus'
 
@@ -6,7 +6,7 @@ import { stringifyData } from '../utils'
 import { genesisConfig } from '../utils/config'
 
 export class AdatagClaimingService implements ClaimingService {
-  constructor(private translucent: Translucent) {}
+  constructor(private blaze: Blaze) {}
 
   /**
    * When collecting the
@@ -23,9 +23,9 @@ export class AdatagClaimingService implements ClaimingService {
     donation: bigint,
     depositUtxos: UTxO[]
   ): Promise<Tx> {
-    let tx = this.translucent!.newTx().addSignerKey(beneficiary)
+    let tx = this.blaze!.newTransaction().addSignerKey(beneficiary)
 
-    const timelockRefUtxo = await this.translucent!.utxosByOutRef([
+    const timelockRefUtxo = await this.blaze!.utxosByOutRef([
       {
         txHash: genesisConfig!.genesisTransaction,
         outputIndex: genesisConfig!.timelockScript.refIndex,

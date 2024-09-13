@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Network, SLOT_CONFIG_NETWORK } from 'translucent-cardano'
+
+import { Network, SLOT_CONFIG_NETWORK } from '@adatag/common/utils'
+import { SlotConfig } from '@blaze-cardano/core'
 import { DEBUG } from './configs/settings'
 
 export const hexToASCII = (hex: string) => {
@@ -15,7 +17,7 @@ export function stringifyData(data: unknown) {
 
 export function debugMessage(message: string) {
   if (DEBUG) {
-    console.warn(message)
+    console.log(message)
   }
 }
 
@@ -107,32 +109,30 @@ interface YaciInfo {
   blockProducer: boolean
 }
 
-export async function setSlotConfig(network: Network, env: string) {
-  // Only for
-  if (!(network == 'Custom' && env == 'Integration')) {
-    return
-  }
-  try {
-    console.warn(`SETTINGS: ${network} ... ${env}`)
-    // FIXME: it's using cors proxy atm for custom (Yaci) build
-    const response = await fetch(`http://localhost:3000/local-cluster/api/admin/clusters/default`)
-
+// FIXME: Set slotconfig initially
+export async function setSlotConfig(network: Network, env: string, unixTime?: number) {
+  if (network === 'Custom' && env === 'Development') {
+    SLOT_CONFIG_NETWORK[network] = {
+      zeroTime: unixTime ?? Date.now(),
+      zeroSlot: 0,
+      slotLength: 1000,
+    }
+  } else if (network === 'Custom' && env === 'Integration') {
+    const response = await fetch(`http://localhost:3000/local-cluster/api/admin/devnet`)
     if (response.ok) {
-      const res = await response.json()
-      console.warn(`############### $$$$$$$$$$$$  SETSLOTCONFIG RESULT: ${stringifyData(res)}`)
-      const serverInfo: YaciInfo = res
+      const serverInfo: YaciInfo = await response.json()
       if (serverInfo.startTime !== 0) {
         SLOT_CONFIG_NETWORK[network] = {
           zeroTime: serverInfo.startTime * 1000,
           zeroSlot: 0,
           slotLength: serverInfo.slotLength * 1000,
         }
+      } else {
+        throw Error(`Could not set the slot config`)
       }
     } else {
-      throw Error(`Could not set the slot config ${response.json()}`)
+      throw Error(`Could not set the slot config`)
     }
-  } catch (error) {
-    throw Error(`Could not set the slot config ${(error as Error)?.message}`)
   }
 }
 

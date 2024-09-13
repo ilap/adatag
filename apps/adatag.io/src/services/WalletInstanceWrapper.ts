@@ -1,5 +1,5 @@
 import { DataSignature } from '@meshsdk/core'
-import { WalletApi } from 'translucent-cardano'
+import { Wallet, CIP30Interface } from '@blaze-cardano/sdk'
 
 declare type WalletInstance = {
   getNetworkId(): Promise<number>
@@ -29,7 +29,7 @@ declare type ExperimentalFeatures = {
  * Using the `Adapter` design pattern that allows two incompatible interfaces to work
  * together by creating an intermediate class that conforms to one interface and adapts it to the other interface.
  */
-export class WalletInstanceWrapper implements WalletApi {
+export class WalletInstanceWrapper implements CIP30Interface {
   private readonly walletInstance: WalletInstance
 
   constructor(walletInstance: WalletInstance) {
@@ -70,7 +70,7 @@ export class WalletInstanceWrapper implements WalletApi {
 
   async signData(address: string, payload: string): Promise<{ signature: string; key: string }> {
     const dataSignature = await this.walletInstance.signData(address, payload)
-    // TODO: Check in translucent what is the key.
+    // TODO: Check in blaze what is the key.
     return { signature: dataSignature.signature, key: address }
   }
 
@@ -80,17 +80,5 @@ export class WalletInstanceWrapper implements WalletApi {
 
   async getCollateral(): Promise<string[]> {
     return (await this.walletInstance.experimental.getCollateral()) || []
-  }
-
-  experimental = {
-    getCollateral: async (): Promise<string[]> => {
-      return (await this.walletInstance.experimental.getCollateral()) || []
-    },
-    on: (eventName: string, callback: (...args: unknown[]) => void) => {
-      return this.walletInstance.experimental.on(eventName, callback)
-    },
-    off: (eventName: string, callback: (...args: unknown[]) => void) => {
-      return this.walletInstance.experimental.off(eventName, callback)
-    },
   }
 }

@@ -7,6 +7,18 @@ git clone https://github.com/ilap/adatag && cd adatag
 nx run @adatag/adatag.io:serve:custom
 ```
 
+> Warning: This solution uses public endpoints from ***demeter.run***, which could potentially be misused by an adversary. Please be cautious when using this method.
+
+To deploy an update, modify the `apps/adatag.io/src/configs/settings.ts` file with the appropriate plublic endpoints from `demeter.run`. For example:
+
+```typescript
+export const KUPO_URL = 'http://localhost:1442'
+export const OGMIOS_URL = 'ws://localhost:1337'
+export const ENV = 'Integration'
+```
+
+> Note: Ensure that the configuration settings are consistent with the generated `genesis-config.json` file.
+
 # Issues
 
 ## blaze-cardano

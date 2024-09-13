@@ -1,10 +1,11 @@
 import * as Comlink from 'comlink'
-import { Data, fromText, toText } from 'translucent-cardano'
+import { Data } from '@blaze-cardano/sdk'
+import { fromText, toText } from '@adatag/common/utils'
 
 import { KupmiosChainFetch } from '../services/KupmiosChainFetch'
 import { SQLiteDataStore } from '../services/SQLiteDataStore'
 import { ChainFetchService, DataStoreService, TreeState } from '../services/types'
-import { debugMessage, hexToASCII, stringifyData } from '../utils'
+import { hexToASCII, stringifyData } from '../utils'
 
 import { IntegriTree } from '@adatag/integri-tree'
 
@@ -16,11 +17,16 @@ import {
   AdatagAdatagMinting,
   Val,
 } from '@adatag/common/plutus'
+
 import { TreeWorkerService } from './types'
 import { genesisConfig } from '../utils/config'
+import { HexBlob, PlutusData, toHex } from '@blaze-cardano/core'
 
 class TreeWorker implements TreeWorkerService {
-  constructor(private dataStore: DataStoreService, private chainFetch: ChainFetchService) {}
+  constructor(
+    private dataStore: DataStoreService,
+    private chainFetch: ChainFetchService
+  ) {}
 
   async initialise(): Promise<void> {
     // Initialise the database
@@ -31,7 +37,7 @@ class TreeWorker implements TreeWorkerService {
 
   async checkIfAdatagMinted(adatag: string): Promise<boolean> {
     //const a = await this.getDepositDetails(adatag)
-    //debugMessage(`@@@@@###### DATUM ${JSON.stringify(a)}`)
+    //console.log(`@@@@@###### DATUM ${JSON.stringify(a)}`)
     return (await this.chainFetch.fetchAsset(adatag)) !== undefined
   }
 
@@ -62,9 +68,11 @@ class TreeWorker implements TreeWorkerService {
       return undefined
     }
 
+    const datumCbor = PlutusData.fromCbor(HexBlob(result.datum))
+
     //const datum = Data.from(result.datum, P.TimeDepositTimedeposit.datum as  unknown as TreeState)
-    const datum: TimeDepositDatum['datum'] = Data.from(result.datum, TimeDepositDatum.datum)
-    debugMessage(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
+    const datum: TimeDepositDatum['datum'] = Data.from(datumCbor, TimeDepositDatum.datum)
+    console.log(`@@@@@@@ ${stringifyData(datum)} ... from ${result.datum}`)
     // 3. Return the transaction ID, output index, and datum
     return {
       txId: asset.transaction_id,
@@ -83,16 +91,20 @@ class TreeWorker implements TreeWorkerService {
   }
 
   async createMintingDetails(adatag: string): Promise<{
-    datum: string
-    redeemer: string
+    datum: PlutusData
+    redeemer: MintRedeemer
   }> {
-    debugMessage(`###### 1. Fetching Chain `)
+    console.log(`###### 1. Fetching Chain `)
     await this.chainFetch.fetchAndSaveElements()
-    debugMessage(`###### 2. Building Tree `)
+    console.log(`###### 2. Building Tree `)
     const { tree, state } = await this.buildTreeFromChain(adatag)
 
-    debugMessage(`###### 3. Constructing Datum and Redeemer`)
-    return await this.createTxInputs(adatag, tree, state)
+    console.log(`###### 3. Constructing Datum and Redeemer`)
+    console.log(`###### 4. Tree type: ${typeof tree}`)
+    console.log(`###### 5. State type: ${typeof state}`)
+    const { datum, redeemer } = await this.createTxInputs(adatag, tree, state)
+
+    return { datum, redeemer }
   }
 
   private async buildTreeFromChain(adatag: string): Promise<{ tree: IntegriTree; state: TreeState }> {
@@ -116,7 +128,7 @@ class TreeWorker implements TreeWorkerService {
       const filteredElems = elems.filter((elem: string) => elem[0] === authToken)
 
       filteredElems.forEach(elem => {
-        debugMessage(`Append elem: ${elem}`)
+        console.log(`Append elem: ${elem}`)
         tree.append(elem)
       })
 
@@ -127,7 +139,9 @@ class TreeWorker implements TreeWorkerService {
         throw Error(`Could not fetch datum for auth token "${authToken}".`)
       }
 
-      const { datum } = fetchedDatum
+      const { datum: datumCbor } = fetchedDatum
+
+      const datum = PlutusData.fromCbor(HexBlob(datumCbor))
 
       state = (Data.from(datum, StateHolderStateHolder.oldState) as TreeState) || undefined
 
@@ -143,7 +157,7 @@ class TreeWorker implements TreeWorkerService {
           : true
 
       if (validTree) {
-        debugMessage(`The tree is consistent with state in the datum`)
+        console.log(`The tree is consistent with state in the datum`)
         done = true
       } else {
         throw new Error(
@@ -170,7 +184,7 @@ class TreeWorker implements TreeWorkerService {
     adatag: string,
     tree: IntegriTree,
     oldState: TreeState
-  ): Promise<{ datum: string; redeemer: string }> {
+  ): Promise<{ datum: PlutusData; redeemer: MintRedeemer }> {
     const minTree = tree.generateMinimalSubtree(adatag, this.serialiseVal)
 
     if (!minTree) {
@@ -184,11 +198,11 @@ class TreeWorker implements TreeWorkerService {
     // generate the root hash of the appended tree.
     const rootHash = tree.rootHash()
 
-    debugMessage(`Update VAL: ${JSON.stringify(updateVal)}`)
-    debugMessage(`Append VAL: ${JSON.stringify(appendVal)}`)
-    debugMessage(`Proof     : ${JSON.stringify(proof)}`)
-    debugMessage(`New Root  : ${JSON.stringify(rootHash)}`)
-    debugMessage(`Old root  : ${JSON.stringify(oldState.rootHash)}  `)
+    console.log(`Update VAL: ${JSON.stringify(updateVal)}`)
+    console.log(`Append VAL: ${JSON.stringify(appendVal)}`)
+    console.log(`Proof     : ${JSON.stringify(proof)}`)
+    console.log(`New Root  : ${JSON.stringify(rootHash)}`)
+    console.log(`Old root  : ${JSON.stringify(oldState.rootHash)}  `)
 
     // Construct the new tree state
     const action: Operation = 'AdatagAdded'
@@ -203,14 +217,14 @@ class TreeWorker implements TreeWorkerService {
       mintingPolicy: genesisConfig!.adatagMinting.policyId,
     }
 
-    debugMessage(`Old State: ${stringifyData(oldState)}`)
-    debugMessage(`New State: ${stringifyData(newState)}`)
+    console.log(`Old State: ${stringifyData(oldState)}`)
+    console.log(`New State: ${stringifyData(newState)}`)
 
     // Construct datum
-    const datum = Data.to(newState, StateHolderStateHolder.oldState)
+    const datum = newState // Data.to(newState, StateHolderStateHolder.oldState)
 
     // Construct redeemer
-    const mintRedeemer: MintRedeemer = {
+    const redeemer: MintRedeemer = {
       Minting: [
         {
           updateVal: updateVal,
@@ -220,8 +234,8 @@ class TreeWorker implements TreeWorkerService {
       ], // Use 'as const' to assert that Minting is a tuple with a single element
     }
 
-    const redeemer = Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof')
-
+    //const redeemer = Data.to(mintRedeemer, AdatagAdatagMinting.rdmr, 'proof')
+    //console.log(`Redeemer AAAAAAAA ${typeof redeemer} : ${stringifyData(redeemer.toCore())}`)
     return { datum, redeemer }
   }
 }
@@ -238,7 +252,7 @@ export async function createWorker(): Promise<TreeWorkerService> {
       // await dataStore.cleanup()
       _workerInstance = new TreeWorker(dataStore, fetch)
       await _workerInstance.initialise()
-      debugMessage(`TreeWorker is initialised.`)
+      console.log(`TreeWorker is initialised.`)
     } catch (error) {
       throw new Error(`Error initializing tree worker: ${error}`)
     }

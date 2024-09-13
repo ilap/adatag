@@ -1,14 +1,16 @@
 import { useContext, useState } from 'react'
 import { WorkerContext } from '../context/WorkerContextProvider'
-import { Kupmios, Network, Translucent } from 'translucent-cardano'
+import { Kupmios, Network, Blaze, WebWallet } from '@blaze-cardano/sdk'
 
-import { delay, setSlotConfig, stringifyData } from '../utils'
+import { setSlotConfig, stringifyData } from '../utils'
 import { KUPO_URL, OGMIOS_URL, ENV } from '../configs/settings'
 import { AdatagClaimingService } from '../services/ClaimingService'
 
 import { useWallet } from '@meshsdk/react'
 import { WalletInstanceWrapper } from '../services/WalletInstanceWrapper'
 import { useConfig } from './useConfig'
+import { Unwrapped } from '@blaze-cardano/ogmios'
+import { TransactionId, TransactionInput } from '@blaze-cardano/core'
 
 interface UseClaimingResult {
   isClaiming: boolean
@@ -39,25 +41,21 @@ export const useClaiming = (): UseClaimingResult => {
       setClaimError(undefined)
       setProgress(`Started building transaction`)
 
-      const provider = new Kupmios(KUPO_URL, OGMIOS_URL)
-      const network = config && (config.network as Network)
-      setSlotConfig(network || 'Custom', ENV)
+      const ogmios = await Unwrapped.Ogmios.new(OGMIOS_URL)
+      const provider = new Kupmios(KUPO_URL, ogmios)
 
-      const translucent = await Translucent.new(provider, network || 'Custom')
+      await setSlotConfig(config?.network, ENV)
 
-      // WallettConnect wrapper
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore Using private property
       const wi = wallet._walletInstance
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore Using private property
       const walletWrapper = new WalletInstanceWrapper(wi)
-      translucent.selectWallet(walletWrapper)
-      //translucent.selectWalletFromSeed(userSeed.seed)
+      const webWallet = new WebWallet(walletWrapper)
+      const blaze = await Blaze.from(provider, webWallet)
 
       setProgress(`Getting deposit details`)
 
-      const claimingService = new AdatagClaimingService(translucent)
+      const claimingService = new AdatagClaimingService(blaze)
 
       const details = await getDepositDetails(adatag)
 
@@ -65,11 +63,11 @@ export const useClaiming = (): UseClaimingResult => {
         throw Error(`No deposit was found for the specified adatag: '${adatag}'.`)
       }
 
-      console.log(`## DEPOSIT DETAILS: ${stringifyData(details)}`)
+      console.warn(`## DEPOSIT DETAILS: ${stringifyData(details)}`)
 
       const now = Math.floor(Date.now() / 1000) * 1000
 
-      console.log(`###### DEADLINE: ${now} ${details?.deadline}`)
+      console.warn(`###### DEADLINE: ${now} ${details?.deadline}`)
       if (details && now < details?.deadline) {
         throw Error(`Deadline has not passed.
         ${new Date(details?.deadline).toLocaleDateString('en-US', {
@@ -82,13 +80,11 @@ export const useClaiming = (): UseClaimingResult => {
         })}`)
       }
 
-      const depositUtxos = await translucent!.utxosByOutRef([
-        {
-          // Deposit UTxOs
-          txHash: details!.txId,
-          outputIndex: details!.outputIndex,
-        },
-      ])
+      const inputs: TransactionInput[] = [
+        new TransactionInput(TransactionId(details!.txId), BigInt(details!.outputIndex)),
+      ]
+
+      const depositUtxos = await blaze!.provider.resolveUnspentOutputs(inputs)
 
       if (depositUtxos.length === 0) {
         throw Error(`Deposit is already claimed: ${details!.txId}#${details!.outputIndex}.`)
@@ -96,31 +92,30 @@ export const useClaiming = (): UseClaimingResult => {
 
       // Step 1. Creating the base transaction based on the handleUtxo and deposit
       /////////////////////////////////////////////////////////////////////////////
-      await delay(2000)
+
       const baseTx = await claimingService.buildClaimTx('Redeem', details!.beneficiary, donation, depositUtxos)
 
       /////////////////////////////////////////////////////////////////////////////
       setProgress('Completing transaction')
-      await delay(2000)
+
       const completedTx = await baseTx.complete()
 
       // Step 5. Signing and submitting the validated transaction
       /////////////////////////////////////////////////////////////////////////////
       setProgress('Signing transaction')
-      await delay(2000)
+
       const signedTx = await completedTx.sign().complete()
 
       setProgress('Submitting transaction')
-      await delay(2000)
-      ///console.log(toHex(signedTx.txSigned.to_bytes()))
+
+      ///console.warn(toHex(signedTx.txSigned.to_bytes()))
 
       const txHash = await signedTx.submit()
 
-      console.log(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
-      await delay(1000)
+      console.warn(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
 
       setProgress('Transaction submitted successfully!')
-      await delay(2000)
+
       setClaimResult(txHash)
     } catch (error) {
       console.warn(

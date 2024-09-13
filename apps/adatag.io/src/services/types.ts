@@ -1,5 +1,6 @@
-import { Tx, UTxO } from 'translucent-cardano'
+import { Datum, PlutusData, Transaction, TransactionUnspentOutput } from '@blaze-cardano/core'
 import { StateHolderStateHolder, Val } from '@adatag/common/plutus'
+import { TxBuilder } from '@blaze-cardano/sdk'
 export type { Val }
 
 export type State = 'idle' | 'syncing' | 'synced' | 'error'
@@ -54,12 +55,28 @@ export interface ChainFetchService extends Initialisable {
 export type TreeState = StateHolderStateHolder['oldState']
 
 export interface MintingService {
-  buildBaseTx(adatag: string, useAdaHandle: boolean, userAddress: string | undefined, deposit: bigint): Promise<Tx>
-  finaliseTx(tx: Tx, adatag: string, userAddress: string | undefined, datum: string, redeemer: string): Promise<Tx>
+  buildBaseTx(
+    adatag: string,
+    useAdaHandle: boolean,
+    userAddress: string | undefined,
+    deposit: bigint
+  ): Promise<TxBuilder>
+  finaliseTx(
+    builder: TxBuilder,
+    adatag: string,
+    userAddress: string | undefined,
+    datum: Datum,
+    redeemer: PlutusData
+  ): Promise<TxBuilder>
 }
 
 export interface ClaimingService {
-  buildClaimTx(action: 'Collect' | 'Redeem', beneficiary: string, donation: bigint, depositUtxos: UTxO[]): Promise<Tx>
+  buildClaimTx(
+    action: 'Collect' | 'Redeem',
+    beneficiary: string,
+    donation: bigint,
+    depositUtxos: TransactionUnspentOutput[]
+  ): Promise<Transaction>
 }
 
 export type TransactionDetails = {
