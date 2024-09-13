@@ -57,7 +57,7 @@
           "command": "echo 'No CORS Proxy server is required'"
         },
         "preview": {
-           "command": "echo 'No CORS Proxy server is required'"
+          "command": "echo 'No CORS Proxy server is required'"
         },
         "preprod": {},
         "mainnet": {}

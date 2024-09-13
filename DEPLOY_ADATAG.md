@@ -1,16 +1,15 @@
-
 ## Deploy @adatag contract
 
 0. Clone the repository and change directory to the workspce root
 
-``` bash
+```bash
   $ git clone https://github.com/ilap/adatag
   $ cd adatag
 ```
 
 1. If the aiken contract is changed create a commit and bump [its version](contracts/aiken/aiken.toml) and create a new tag. Example:
 
-``` bash
+```bash
 $ grep version contracts/aiken/{project.json,aiken.toml} | head -2
 contracts/aiken/project.json:  "version": "0.2.0",
 contracts/aiken/aiken.toml:version = "0.2.0"
@@ -20,8 +19,9 @@ $ git tag aiken/v0.2.0
 $ git push origin aiken/v0.2.0
 ```
 
-2. Create a new `.env`   file
-``` bash
+2. Create a new `.env` file
+
+```bash
 $ echo '
 NETWORK=Preview
 ENVIRONMENT=Integration
@@ -35,13 +35,13 @@ PROVIDER=Kupmios
 
 This PoC is a PWA that uses some public backends' endpoints, therefore it can be abused by any adversarial parties. If the community decides to develop further some mitigations are rquired for prevent any abuse of the system.
 
-4. Optional: Manually configure the [genesis-params.json](./libs/common/src/config/genesis-params.json). 
+4. Optional: Manually configure the [genesis-params.json](./libs/common/src/config/genesis-params.json).
 
 Especially, the collector address for collecting the donations.
 
 5. Configure the [Test user's seed](./libs/common/src/config/keys/test-users-seed.json)
 
-``` bash
+```bash
 # Example
 $ cat << EOF > ./libs/common/src/config/keys/test-users-seed.json
 {
@@ -59,13 +59,11 @@ EOF
 
 > **Note: this is for only preview or preprod deployments. For mainnet a very dumb web based deploy page should be developed that use hardware wallets, or add HW wallett support for CLI based deployment.**
 
-
-
 6. Run the deploy script
 
 This deploys and rebuilds (if necessary) the plutus scripts, and create the [genesis-config-preview.json]](./apps/deploy/config/genesis-config-preview.json) file, that the PWA can use.
 
-``` bash
+```bash
 $ cd adatag
 $ nx run @adatag/deploy:deploy:preview
    ✔  4/4 dependent project tasks succeeded [3 read from cache]
