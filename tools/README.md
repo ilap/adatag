@@ -30,7 +30,8 @@ sudo apt install apt-transport-https ca-certificates curl software-properties-co
 # Aiken
 curl -sSfL https://install.aiken-lang.org | bash
 source ~/.bashrc
-aikup
+# Aiken v1.1.0 is not supported yet.
+aikup install v1.0.29-alpha
 
 # Bun
 curl -fsSL https://bun.sh/install | bash
@@ -64,7 +65,7 @@ git clone https://github.com/bloxbean/yaci-devkit
 ### Repository structure:
 
 - The project, `@Adatag`, is hosted on GitHub as a monorepo.
-- It utilises `NX` for effective management of a package-based monorepo structure with diverse packages such as TypeScript, Aiken, Plutus, Dart, etc., located under the `./package` directory.
+- It utilises `NX` for effective management of a package-based monorepo structure with diverse packages such as TypeScript, Aiken, Plutus, Dart, etc., located under the `./apps`, `./lib` and `./contracts` directories.
 
 ### Development Workflow:
 
@@ -93,8 +94,8 @@ See the table below for the current configuration:
 | Environment | Network | API Provider | Av. | Comment |
 |------------- |---------- |--------------------- |----- |--------- |
 | Development | Emulator | Emulator | Yes | |
-| Integration | Custom | KupmiosV5 | Yes | |
-| Integration | Preview | Blockfrost | Yes | |
+| Integration | Custom | Kupmios | Yes | |
+| Integration | Preview | Kupmios | Yes | using demeter.run |
 | Integration | Preprod | Private Ogmios/Kupo | Yes | |
 | Production | Mainnet | Private Ogmios/Kupo | Yes | |
 
@@ -155,8 +156,10 @@ $ cat << EOF > signed.tx
     "cborHex":  "84..."
 }
 EOF
-$ root@2e729ab2a6cf:/app# cardano-cli transaction submit  --testnet-magic 42 --socket-path /clusters/default/node-spo1/node.sock --tx-file tx.tx
-Command failed: transaction submit  Error: Error while submitting tx: ShelleyTxValidationError ShelleyBasedEraBabbage (ApplyTxError [UtxowFailure ...
+# Or Unwitnessed for non signed transaction
+$ root@2e729ab2a6cf:/app# cardano-cli transaction view --output-json --tx-file signed.tx
+$ root@2e729ab2a6cf:/app# cardano-cli transaction submit --testnet-magic 42 --socket-path /clusters/default/node-spo1/node.sock --tx-file signed.tx
+...
 
 ```
 
@@ -165,6 +168,7 @@ Command failed: transaction submit  Error: Error while submitting tx: ShelleyTxV
 ### Ogmios/Kupo does not work anymore with Yaci-Devkit in the latest Docker Deckstop on macOS (v4.29.0 (145265))
 
 ```bash
+# Probably fixed by now.
 cd /app
 mkdir tmp && cd tmp
 cp -pr ../yaci-cli.jar .
@@ -177,4 +181,19 @@ sed -i 's/localhost/0.0.0.0/g' localcluster/templates/babbage/kupo.sh
 jar uf BOOT-INF/classes/localcluster.zip localcluster/templates/babbage/kupo.sh
 jar uf ../yaci-cli.jar BOOT-INF/classes/localcluster.zip
 cd .. && rm -rf ./tmp
+```
+
+### Troubleshooting transaction
+
+``` bash
+~./tools/chain/script/ssh.sh
+
+# Or Unvitnessed...
+echo '{
+    "type": "Witnessed Tx ConwayEra",
+    "description": "Ledger Cddl Format",
+    "cborHex": "REPLACE ME WITH TX CBOR"
+}' > test.tx
+
+cardano-cli transaction view --output-json --tx-file test.tx
 ```

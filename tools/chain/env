@@ -7,6 +7,9 @@ yaci_store_enabled=true
 ogmios_enabled=true
 kupo_enabled=true
 
+node=node1
+yaci_cli_mode=native
+
 #######################################################
 # Ports
 #######################################################
@@ -42,4 +45,4 @@ IS_DOCKER=true
 # User's Address: addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex
 #
 # Teh test ... sauce is used by default in Yaci-Devkit
-topup_addresses=addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex:100000,addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk:100000,addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk:100000,addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw:100000
+topup_addresses=addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex:100000,addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk:100000,addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk:100000,addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw:100000,addr_test1qryvgass5dsrf2kxl3vgfz76uhp83kv5lagzcp29tcana68ca5aqa6swlq6llfamln09tal7n5kvt4275ckwedpt4v7q48uhex:50,addr_test1qrp6j8zuzqazju9x9kqksrmlqguypd6ku6xqu75m99zf76c2g9x9fz9yhe8n5h9k2x6uvws7s5aqqwdmkk3clt93tjcqc2ljnk:50,addr_test1qzsk7aegh5rre3yhh5xl8r4k6vvkuqmf90fmfe9gkctu8tnpqamphkkru3r3p7va0yn0ws606fytvgq8gv4vaxekw3qs4r7hkk:50,addr_test1qr2unerpwgg79lmu0lgp6r0f4jpwtwupm3d9u944nygcv630tqj8uphr57f2xeylny36dy6d2mh32z44hww3tkeg0ljsjlzakw:50
