@@ -185,7 +185,7 @@ cd .. && rm -rf ./tmp
 
 ### Troubleshooting transaction
 
-``` bash
+```bash
 ~./tools/chain/script/ssh.sh
 
 # Or Unvitnessed...

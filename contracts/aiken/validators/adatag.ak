@@ -27,28 +27,36 @@ validator(params: MintParams) {
 
     // Retrieve the state
     // Only one input is allowed
+    trace @"find_script_inputs"
     expect [validator_input] =
       find_script_inputs(inputs: inputs, script_hash: params.state_holder)
+    trace @"expect InlineDatum(old_state) = validator_input.output.datum"
     expect InlineDatum(old_state) = validator_input.output.datum
+    trace @"expect old_state: State = old_state"
     expect old_state: State = old_state
 
     // Retrieve the state'
     // only one output is allowed
+    trace @"find_script_outputs"
     expect [validator_output] =
       find_script_outputs(outputs, params.state_holder)
+    trace @"expect InlineDatum(new_state) = validator_output.datum"
     expect InlineDatum(new_state) = validator_output.datum
+    trace @"New state"
     expect new_state: State = new_state
 
+    trace @"mint_amount"
     // Retrive the mint amount, keep in mind state holder validator did all the sanity check.
     let mint_amount =
       quantity_of(from_minted_value(mint), own_policy, new_state.adatag)
 
-    is_valid_tag(new_state.adatag) && check_timedeposit(
+    trace @"complex validation"
+    is_valid_tag(new_state.adatag)? && check_timedeposit(
       new_state.adatag,
       outputs,
       params,
       validity_range,
-    ) && when rdmr is {
+    )? && when rdmr is {
       Minting(redeemer) -> and {
           mint_amount == 1,
           append_check(
@@ -59,7 +67,7 @@ validator(params: MintParams) {
             redeemer.update_val,
             redeemer.append_val,
             redeemer.proof,
-          ),
+          )?,
         }
       Burning(_redeemer) -> and {
           mint_amount == -1,
