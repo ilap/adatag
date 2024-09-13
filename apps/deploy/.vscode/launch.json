@@ -8,32 +8,15 @@
       "type": "bun",
       "internalConsoleOptions": "neverOpen",
       "request": "launch",
-      "name": "Custom network Test Debug File",
+      "name": "Debug File",
       "program": "${file}",
-      "args": ["--env-file", "${workspaceFolder}/.env.custom", "--timeout", "45000"],
-      "env": {
-        "NETWORK": "Custom",
-        "ENVIRONMENT": "Integration",
-        "PROVIDER": "Kupmios",
-      },
-      "cwd": "${workspaceFolder}/apps/deploy",
-      "stopOnEntry": true,
-      "watchMode": false
-    },
-    {
-      "type": "bun",
-      "internalConsoleOptions": "neverOpen",
-      "request": "launch",
-      "name": "Dev Test Debug File",
-      "program": "${file}",
-      "args": ["--env-file", "${workspaceFolder}/.env.test.dev", "--timeout", "45000"],
-      "cwd": "${workspaceFolder}/apps/deploy",
       "env": {
         "NETWORK": "Custom",
         "ENVIRONMENT": "Development",
-        "PROVIDER": "Emulator",
+        "PROVIDER": "Emulator"
       },
-      "stopOnEntry": true,
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false,
       "watchMode": false
     },
     {
@@ -42,6 +25,11 @@
       "request": "launch",
       "name": "Run File",
       "program": "${file}",
+      "env": {
+        "NETWORK": "Custom",
+        "ENVIRONMENT": "Development",
+        "PROVIDER": "Emulator"
+      },
       "cwd": "${workspaceFolder}",
       "noDebug": true,
       "watchMode": false
