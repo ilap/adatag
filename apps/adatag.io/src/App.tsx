@@ -1,13 +1,14 @@
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { NextUIProvider } from '@nextui-org/react'
 import { useWallet } from '@meshsdk/react'
+import { WarningDialog } from './components/organisms/WarningDialog/WarningDialog'
 
 import { Hero } from './components/organisms/Hero/Hero'
 import { FAQ } from './components/organisms/FAQ/Faq'
 import { Layout } from './components/organisms/Layout/Layout'
 
 import { LegalPage } from './components/organisms/Legal/LegalPage'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 
 // FIXME: Dirty hack to avoid Buffer undefined in 3rd party tools
 import { Buffer } from 'buffer'
@@ -17,10 +18,17 @@ export const App: React.FC = () => {
   const navigate = useNavigate()
   const { connected } = useWallet()
   const location = useLocation()
+  const [showWarningDialog, setShowWarningDialog] = useState(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    const showDialog = localStorage.getItem('showWarningDialog')
+    setShowWarningDialog(showDialog === 'true')
   }, [location])
+
+  const handleWarningDialogClose = () => {
+    setShowWarningDialog(false)
+  }
 
   return (
     <NextUIProvider
@@ -78,6 +86,9 @@ export const App: React.FC = () => {
           }
         />
       </Routes>
+      {showWarningDialog && (
+        <WarningDialog title="Warning" subtitle="" isOpen={showWarningDialog} onClose={handleWarningDialogClose} />
+      )}
     </NextUIProvider>
   )
 }

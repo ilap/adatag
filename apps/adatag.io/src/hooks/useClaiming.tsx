@@ -104,19 +104,21 @@ export const useClaiming = (): UseClaimingResult => {
       /////////////////////////////////////////////////////////////////////////////
       setProgress('Signing transaction')
 
-      const signedTx = await completedTx.sign().complete()
+      // DEBUG: console.warn(`### TX: ${completedTx.toCbor().toString()}`)
+      const signedTx = await webWallet.signTransaction(completedTx, true)
+      const ws = completedTx.witnessSet()
+      ws.setVkeys(signedTx.vkeys()!)
+
+      completedTx.setWitnessSet(ws)
 
       setProgress('Submitting transaction')
+      const txHash = await provider.postTransactionToChain(completedTx)
 
-      ///console.warn(toHex(signedTx.txSigned.to_bytes()))
+      console.warn(`@@ Submitted TX Hash: ${txHash}\n ... `)
+      const isConfirmed = await provider.awaitTransactionConfirmation(txHash)
 
-      const txHash = await signedTx.submit()
-
-      console.warn(`@@ Submitted TX Hash: ${txHash}...`) // ${stringifyData(signedTx)}`)
-
-      setProgress('Transaction submitted successfully!')
-
-      setClaimResult(txHash)
+      setProgress(`Transaction ${isConfirmed ? 'submitted successfully' : 'submission failed'}!`)
+      setClaimResult(isConfirmed ? txHash : undefined)
     } catch (error) {
       console.warn(
         `@@@ ERROR: ${(error as Error)?.name} ... ${typeof error} ${(error as object).toString()} ${stringifyData(

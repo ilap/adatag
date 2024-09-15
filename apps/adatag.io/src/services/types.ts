@@ -76,7 +76,7 @@ export interface ClaimingService {
     beneficiary: string,
     donation: bigint,
     depositUtxos: TransactionUnspentOutput[]
-  ): Promise<Transaction>
+  ): Promise<TxBuilder>
 }
 
 export type TransactionDetails = {

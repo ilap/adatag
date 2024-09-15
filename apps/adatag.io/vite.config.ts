@@ -1,7 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig, PluginOption } from 'vite'
 import react from '@vitejs/plugin-react'
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
@@ -87,7 +86,7 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ['uplc-node', , '@stricahq/cbors', '@meshsdk/react', 'isomorphic-ws'],
+    //include: ['uplc-node', , '@stricahq/cbors', '@meshsdk/react', 'isomorphic-ws'],
     exclude: ['@sqlite.org/sqlite-wasm', '@emurgo/cardano-message-signing-browser'],
   },
   resolve: {

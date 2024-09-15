@@ -62,6 +62,7 @@ class TreeWorker implements TreeWorkerService {
     }
 
     // 2. Retrieve the datum for the transaction output
+    // Adatag minting scripts only allows max 1 locking output.
     const result = await this.chainFetch.fetchDatum(asset.transaction_id, genesisConfig!.timelockScript.scriptAddress)
 
     if (!result) {
