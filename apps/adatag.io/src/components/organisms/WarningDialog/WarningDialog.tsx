@@ -76,13 +76,9 @@ export const WarningDialog: React.FC<Props> = ({ title, subtitle, isOpen, onClos
     )
   }
 
-  if (!showDialog && !isOpen) {
-    return null
-  }
-
-  return (
+  return isOpen ? (
     <CustomModal isOpen={isOpen} onClose={handleClose} title="Warning!" footer={renderFooter()}>
       {renderContent()}
     </CustomModal>
-  )
+  ) : null
 }

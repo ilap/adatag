@@ -23,7 +23,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0)
     const showDialog = localStorage.getItem('showWarningDialog')
-    setShowWarningDialog(showDialog === 'true')
+    setShowWarningDialog(showDialog === 'true' || showDialog === null)
   }, [location])
 
   const handleWarningDialogClose = () => {

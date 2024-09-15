@@ -15,6 +15,8 @@ It utilizes [IntegriTree](#integritree) to ensure the uniqueness and integrity o
 
 To our knowledge, @Adatag is the first decentralised application (dApp) on the Cardano blockchain to enable dynamic minting of non-fungible tokens (NFTs) using the same policy ID, without requiring any third-party involvement.
 
+Note: This project has been updated to work with the **Conway** era by migrating from the `@translucent` library to the `@blaze-cardano` library.
+
 **Before We Begin, Please Review Our Core Values Below**:
 
 # Our Core Values
