@@ -3,6 +3,7 @@
     <h2 align="center" style="border-bottom: none">A unique username for everyone.</h2>
 
 [![Demo](https://img.shields.io/badge/demo-online-brightgreen.svg?style=for-the-badge)](https://adatag.io)
+[![Conway Era Compatible](https://img.shields.io/badge/Conway%20Era-Compatible-brightgreen?style=for-the-badge)](https://docs.cardano.org/about-cardano/evolution/upgrades/chang/)
 [![Licence](https://img.shields.io/github/license/aiken-lang/stdlib?style=for-the-badge)](https://github.com/ilap/bls/blob/main/LICENSE)
 [![Code size](https://img.shields.io/github/languages/code-size/ilap/adatag.svg?style=for-the-badge)](https://github.com/ilap/adatag)
 
