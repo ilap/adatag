@@ -1,8 +1,8 @@
-use aiken/hash
+use aiken/crypto
 
 // FIXME: blake2b_224 will be used when Plutus V3 is available.
 pub type Hash =
-  hash.Hash<hash.Sha2_256, ByteArray>
+  crypto.Hash<crypto.Blake2b_224, ByteArray>
 
 pub type Val {
   xi: ByteArray,

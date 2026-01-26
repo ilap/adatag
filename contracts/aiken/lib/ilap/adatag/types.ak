@@ -1,19 +1,28 @@
-use aiken/hash
-use aiken/time.{PosixTime}
-use aiken/transaction/credential.{Script, VerificationKey}
+use aiken/crypto
+//use cardano/transaction/credential.{Script, VerificationKey, VerificationKey}
+
 use ilap/integri_tree/types.{Proof, Val}
+
+pub type PosixTime =
+  Int
 
 pub type TokenName =
   ByteArray
 
 pub type ScriptHash =
-  hash.Hash<hash.Sha2_256, Script>
+  crypto.ScriptHash
+
+//  crypto.Hash<crypto.Sha2_256, Script>
 
 pub type Credential =
-  hash.Hash<hash.Sha2_256, VerificationKey>
+  crypto.VerificationKeyHash
+
+//crypto.Hash<crypto.Sha2_256, VerificationKey>
 
 pub type Hash =
-  hash.Hash<hash.Sha2_256, ByteArray>
+  crypto.DataHash
+
+// crypto.Hash<crypto.Sha2_256, ByteArray>
 
 //-----------------------------------------------------------------------------
 //-------------------------- 2. TimeDeposit types -----------------------------

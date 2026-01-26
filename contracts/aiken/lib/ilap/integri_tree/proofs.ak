@@ -1,4 +1,4 @@
-use aiken/bytearray
+use aiken/primitive/bytearray
 use ilap/integri_tree/hash.{combine_three_hashes, empty_hash, hash_val}
 use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
 
@@ -17,9 +17,7 @@ fn append_values(
   nuv: Val,
   nav: Val,
 ) -> (Val, Val, Val) {
-  if
-  bytearray.compare(nuv.xa, x) == Less && bytearray.compare(x, nuv.xb) == Less{
-  
+  if bytearray.compare(nuv.xa, x) == Less && bytearray.compare(x, nuv.xb) == Less {
     let u = Val { xi: nuv.xi, xa: nuv.xa, xb: x }
     let l = Val { xi: idx, xa: x, xb: nuv.xb }
     let a =

@@ -288,6 +288,8 @@ describe(`Adatag minting (${elemsNumber})`, async () => {
         ws.setVkeys(signed.vkeys()!)
         completedTx.setWitnessSet(ws)
 
+        console.log(`SUBMITTIG: TX: ${completedTx.toCbor()}`)
+
         const txHash = await provider.postTransactionToChain(completedTx)
         const isConfirmed = await provider.awaitTransactionConfirmation(txHash)
 

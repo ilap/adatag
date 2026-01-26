@@ -1,14 +1,13 @@
-use aiken/bytearray
 use aiken/interval.{Finite}
-use aiken/time.{PosixTime}
-use aiken/transaction.{
-  InlineDatum, Input, Mint, Output, OutputReference, ScriptContext, Transaction,
-  TransactionId, ValidityRange, find_script_outputs,
+use aiken/primitive/bytearray
+use cardano/assets.{PolicyId, quantity_of}
+use cardano/transaction.{
+  InlineDatum, Input, Output, OutputReference, Transaction, ValidityRange,
+  find_script_outputs,
 }
-use aiken/transaction/value.{from_minted_value, quantity_of}
 use ilap/adatag/tests/fixture as tag_fixture
 use ilap/adatag/types.{
-  AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting,
+  AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting, PosixTime,
   ScriptHash, State, TimeDepositDatum,
 }
 use ilap/adatag/utils.{
@@ -18,12 +17,9 @@ use ilap/adatag/utils.{
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture as tree_fixture
 
-validator(params: MintParams) {
-  fn adatag_minting(rdmr: MintAction, ctx: ScriptContext) -> Bool {
-    let ScriptContext { transaction, purpose } = ctx
-    expect Mint(own_policy) = purpose
-
-    let Transaction { inputs, outputs, mint, validity_range, .. } = transaction
+validator adatag_minting(params: MintParams) {
+  mint(rdmr: MintAction, policy_id: PolicyId, self: Transaction) {
+    let Transaction { inputs, outputs, mint, validity_range, .. } = self
 
     // Retrieve the state
     // Only one input is allowed
@@ -47,8 +43,7 @@ validator(params: MintParams) {
 
     trace @"mint_amount"
     // Retrive the mint amount, keep in mind state holder validator did all the sanity check.
-    let mint_amount =
-      quantity_of(from_minted_value(mint), own_policy, new_state.adatag)
+    let mint_amount = quantity_of(mint, policy_id, new_state.adatag)
 
     trace @"complex validation"
     is_valid_tag(new_state.adatag)? && check_timedeposit(
@@ -76,6 +71,10 @@ validator(params: MintParams) {
         }
     }
     // FIXME: Implement
+  }
+
+  else(_) {
+    fail
   }
 }
 
@@ -200,12 +199,12 @@ test test_adatag_minting_2_20() {
     }
 
   let mv =
-    value.zero()
-      |> value.add(mpv, adatag, 1)
+    assets.zero
+      |> assets.add(mpv, adatag, 1)
   let vv =
-    value.zero()
-      |> value.add("", "", 100)
-      |> value.add(auth_token, bytearray.take(adatag, 1), 1)
+    assets.zero
+      |> assets.add("", "", 100)
+      |> assets.add(auth_token, bytearray.take(adatag, 1), 1)
   let output =
     Output {
       address: tag_fixture.own_address(),
@@ -223,8 +222,8 @@ test test_adatag_minting_2_20() {
     }
 
   let tv =
-    value.zero()
-      |> value.add("", "", 218)
+    assets.zero
+      |> assets.add("", "", 218)
 
   let timedeposit_datum =
     TimeDepositDatum { beneficiary: "", deadline: twenty_days }
@@ -239,9 +238,9 @@ test test_adatag_minting_2_20() {
   let ahs =
     #"4876543210987654321098765432109876543210987654321098765432109876543210"
   let av =
-    value.zero()
-      |> value.add("", "", 100)
-      |> value.add(ahs, adatag, 1)
+    assets.zero
+      |> assets.add("", "", 100)
+      |> assets.add(ahs, adatag, 1)
   let adahandle_output =
     Output {
       address: tag_fixture.scripthash_address(
@@ -253,7 +252,10 @@ test test_adatag_minting_2_20() {
     }
 
   let utxo =
-    OutputReference { transaction_id: TransactionId(""), output_index: 0 }
+    OutputReference {
+      transaction_id: transaction.placeholder.id,
+      output_index: 0,
+    }
 
   let input = Input { output_reference: utxo, output }
 
@@ -261,15 +263,15 @@ test test_adatag_minting_2_20() {
 
   let tx =
     Transaction {
-      ..transaction.placeholder(),
-      mint: value.to_minted_value(mv),
+      ..transaction.placeholder,
+      mint: mv,
       extra_signatories: [tag_fixture.other_hash],
       inputs: [input],
       outputs: [state_output, timedeposit_output, adahandle_output],
       validity_range: iv,
     }
-  let ctx = ScriptContext { purpose: Mint(mpv), transaction: tx }
 
+  //let ctx = ScriptContext { purpose: Mint(mpv), transaction: tx }
   let rdmr = Minting(MintRedeemer { update_val: nun, append_val: nun1, proof })
 
   let params =
@@ -289,7 +291,7 @@ test test_adatag_minting_2_20() {
     }
 
   // ahs,
-  adatag_minting(params: params, rdmr: rdmr, ctx: ctx)
+  adatag_minting.mint(params: params, rdmr: rdmr, policy_id: mpv, self: tx)?
 }
 
 test test_append_check_2_24() {

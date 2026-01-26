@@ -25,14 +25,13 @@ describe('Deployment test', async () => {
       lockingDays: 0,
     }
 
+    const deployerWallet = await HotWallet.fromMasterkey(deployerMasterkey, provider)
+    const deployerBlaze = await Blaze.from(provider as Provider, deployerWallet)
+  
     // Select spending wallet
-    const deployerWallet = await HotWallet.fromMasterkey(deployerMasterkey!, provider)
     const [utxo] = await deployerWallet.getUnspentOutputs()
-
-    console.log(`utxos: ${stringifyData(utxo.toCore())}`)
-
-    const deployerBlaze: Blaze<Provider, Wallet> = await Blaze.from(provider, deployerWallet)
-    const result = await Bootstrap.deploy(deployerBlaze, utxo, testParams)
+  
+    const result: GenesisConfig = await Bootstrap.deploy(deployerBlaze, utxo, testParams)
     expect(result).toBeDefined()
   })
 })
