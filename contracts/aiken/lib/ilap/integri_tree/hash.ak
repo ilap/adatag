@@ -1,5 +1,5 @@
 use aiken/builtin.{append_bytearray, blake2b_224}
-use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
+use ilap/integri_tree/types.{HashNode, Node, NodeHash, Proof, Val}
 
 //use aiken/cbor
 //
@@ -73,28 +73,32 @@ pub const empty_hash =
 //  ]
 
 /// 0x4c,
-pub fn combine_hashes(h1: Hash, h2: Hash) -> Hash {
+pub fn combine_hashes(h1: NodeHash, h2: NodeHash) -> NodeHash {
   hash(append_bytearray(h1, h2))
 }
 
-pub fn combine_three_hashes(h1: Hash, h2: Hash, h3: Hash) -> Hash {
+pub fn combine_three_hashes(
+  h1: NodeHash,
+  h2: NodeHash,
+  h3: NodeHash,
+) -> NodeHash {
   hash(append_bytearray(h1, append_bytearray(h2, h3)))
 }
 
-pub fn hash_val(val: Val) -> Hash {
+pub fn hash_val(val: Val) -> NodeHash {
   hash(append_bytearray(val.xi, append_bytearray(val.xa, val.xb)))
 }
 
-pub fn hash(array: ByteArray) -> Hash {
+pub fn hash(array: ByteArray) -> NodeHash {
   // FOXME: switched to Blake2b_224
   //sha2_256(array)
   blake2b_224(array)
 }
 
-pub fn root_hash(root: Proof) -> Hash {
+pub fn root_hash(root: Proof) -> NodeHash {
   when root is {
-    NodeHash { hash } -> hash
-    HashNode { hash, left, right } ->
+    HashNode { hash } -> hash
+    Node { hash, left, right } ->
       combine_three_hashes(hash, root_hash(left), root_hash(right))
   }
 }

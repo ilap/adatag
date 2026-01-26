@@ -1,7 +1,7 @@
 use ilap/integri_tree/hash.{empty_hash, hash_val, root_hash}
 use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture.{generate_proof}
-use ilap/integri_tree/types.{HashNode, NodeHash, Val}
+use ilap/integri_tree/types.{HashNode, Node, Val}
 
 test test_append_check_2_1() {
   let (adatag, tree_size, root, root1, nun, nun1, proof, _) = generate_proof(2)
@@ -43,15 +43,11 @@ test test_initial_added_state() {
   let hr = hash_val(rootVal)
   let hr1 = hash_val(rootVal1)
   let hn = hash_val(nodeVal)
-  let e = NodeHash { hash: empty_hash }
+  let e = HashNode { hash: empty_hash }
 
-  let tree = HashNode { hash: hr, left: e, right: e }
+  let tree = Node { hash: hr, left: e, right: e }
   let tree1 =
-    HashNode {
-      hash: hr1,
-      left: HashNode { hash: hn, left: e, right: e },
-      right: e,
-    }
+    Node { hash: hr1, left: Node { hash: hn, left: e, right: e }, right: e }
 
   append_check(
     adatag,

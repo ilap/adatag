@@ -1,3 +1,4 @@
+use aiken/crypto.{ScriptHash}
 use aiken/interval.{Finite}
 use aiken/primitive/bytearray
 use cardano/assets.{PolicyId, quantity_of}
@@ -8,7 +9,7 @@ use cardano/transaction.{
 use ilap/adatag/tests/fixture as tag_fixture
 use ilap/adatag/types.{
   AdatagAdded, Burning, MintAction, MintParams, MintRedeemer, Minting, PosixTime,
-  ScriptHash, State, TimeDepositDatum,
+  State, TimeDepositDatum,
 }
 use ilap/adatag/utils.{
   find_script_inputs, is_valid_tag, output_has_token, time_elapsed,

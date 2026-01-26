@@ -1,12 +1,13 @@
 ////    transaction_id: transaction.placeholder.id,
 
 use aiken/collection/list
+use aiken/crypto.{VerificationKeyHash}
 use aiken/interval
 use cardano/script_context.{ScriptContext}
 use cardano/transaction.{Transaction}
 use ilap/adatag/tests/fixture.{collector_keyhash}
 use ilap/adatag/types.{
-  Collect, Credential, PosixTime, Redeem, TimeDepositDatum, TimeDepositParams,
+  Collect, PosixTime, Redeem, TimeDepositDatum, TimeDepositParams,
   TimeDepositRedeemer,
 }
 use ilap/adatag/utils.{time_elapsed}
@@ -14,7 +15,7 @@ use ilap/adatag/utils.{time_elapsed}
 fn valid_claim(
   is_coll: Bool,
   datum: Data,
-  cred: Credential,
+  cred: VerificationKeyHash,
   time: PosixTime,
   transaction: Transaction,
 ) -> Bool {

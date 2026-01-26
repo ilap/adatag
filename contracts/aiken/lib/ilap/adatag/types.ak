@@ -1,28 +1,11 @@
-use aiken/crypto
-//use cardano/transaction/credential.{Script, VerificationKey, VerificationKey}
-
-use ilap/integri_tree/types.{Proof, Val}
+use aiken/crypto.{ScriptHash, VerificationKeyHash}
+use ilap/integri_tree/types.{NodeHash, Proof, Val}
 
 pub type PosixTime =
   Int
 
 pub type TokenName =
   ByteArray
-
-pub type ScriptHash =
-  crypto.ScriptHash
-
-//  crypto.Hash<crypto.Sha2_256, Script>
-
-pub type Credential =
-  crypto.VerificationKeyHash
-
-//crypto.Hash<crypto.Sha2_256, VerificationKey>
-
-pub type Hash =
-  crypto.DataHash
-
-// crypto.Hash<crypto.Sha2_256, ByteArray>
 
 //-----------------------------------------------------------------------------
 //-------------------------- 2. TimeDeposit types -----------------------------
@@ -38,7 +21,7 @@ pub type TimeDepositRedeemer {
 ///
 pub type TimeDepositDatum {
   // Beneficiary of the locked time deposit. It can be any payment credential
-  beneficiary: Credential,
+  beneficiary: VerificationKeyHash,
   // Deadline to claim deposits. 
   // Preferably ~20 days (minting policy's parameter) from the time of the 
   // submitted adatag minting transaction
@@ -47,7 +30,7 @@ pub type TimeDepositDatum {
 
 pub type TimeDepositParams {
   // Collecting donations (void datum is used) and unclaimed deposits (after a year or two)
-  collector: Credential,
+  collector: VerificationKeyHash,
   // The time the collector can collect the donations and the unclaimed time-lock deposits. 
   // It should be twice as deactivation time. ~1-2yrs
   collection_time: PosixTime,
@@ -75,7 +58,7 @@ pub type State {
   // it represented as ByteArray for comparing with Val's index (which is a ByteArray)
   size: ByteArray,
   // The root hash of the tree
-  root_hash: Hash,
+  root_hash: NodeHash,
   // Corresponding adatag minting policy. It is used to avoid circular dependency
   // between the StateHolder and Minting policy.
   minting_policy: ScriptHash,

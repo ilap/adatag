@@ -1,6 +1,6 @@
 use aiken/primitive/bytearray
 use ilap/integri_tree/hash.{combine_three_hashes, empty_hash, hash_val}
-use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
+use ilap/integri_tree/types.{HashNode, Node, NodeHash, Proof, Val}
 
 ///
 /// The `delete_values` function creates the required 2 updated values from the nodes that will be 
@@ -46,11 +46,11 @@ fn delete_values(x: ByteArray, nuv1: Val, nuv2: Val, ndv: Val) -> (Val, Val) {
 ///
 fn check_delete_proof(
   is_new_state: Bool,
-  root: Hash,
+  root: NodeHash,
   proof: Proof,
-  nuh1: Hash,
-  nuh2: Hash,
-  ndh: Hash,
+  nuh1: NodeHash,
+  nuh2: NodeHash,
+  ndh: NodeHash,
   nodes: (Val, Val),
 ) -> Bool {
   let (has_nuh1, has_nuh2, has_ndh, calculated_root) =
@@ -74,14 +74,14 @@ pub fn validate_delete_proof(
   has_nu2: Bool,
   has_nd: Bool,
   node: Proof,
-  nuh1: Hash,
-  nuh2: Hash,
-  ndh: Hash,
+  nuh1: NodeHash,
+  nuh2: NodeHash,
+  ndh: NodeHash,
   nodes: (Val, Val),
-) -> (Bool, Bool, Bool, Hash) {
+) -> (Bool, Bool, Bool, NodeHash) {
   when node is {
-    NodeHash { hash } -> (has_nu1, has_nu2, has_nd, hash)
-    HashNode { hash, left, right } -> {
+    HashNode { hash } -> (has_nu1, has_nu2, has_nd, hash)
+    Node { hash, left, right } -> {
       let enu1 = hash == nuh1
       let enu2 = hash == nuh2
       let end = hash == ndh
@@ -172,8 +172,8 @@ pub fn validate_delete_proof(
 
 pub fn delete_check(
   e: ByteArray,
-  root: Hash,
-  _updated_root: Hash,
+  root: NodeHash,
+  _updated_root: NodeHash,
   nuv1: Val,
   nuv2: Val,
   ndv: Val,
@@ -191,8 +191,8 @@ pub fn delete_check(
 
 pub fn delete_check2(
   e: ByteArray,
-  root: Hash,
-  updated_root: Hash,
+  root: NodeHash,
+  updated_root: NodeHash,
   nuv1: Val,
   nuv2: Val,
   ndv: Val,
@@ -224,15 +224,11 @@ test test_delete_state() {
   let hr = hash_val(rootVal)
   let hr1 = hash_val(nuv1)
   let hn = hash_val(nuv2)
-  let e = NodeHash { hash: empty_hash }
+  let e = HashNode { hash: empty_hash }
 
-  let tree = HashNode { hash: hr, left: e, right: e }
+  let tree = Node { hash: hr, left: e, right: e }
   let tree1 =
-    HashNode {
-      hash: hr1,
-      left: HashNode { hash: hn, left: e, right: e },
-      right: e,
-    }
+    Node { hash: hr1, left: Node { hash: hn, left: e, right: e }, right: e }
   // FIXME: Implement delete/burning
   tree != tree1
   // delete_check2(

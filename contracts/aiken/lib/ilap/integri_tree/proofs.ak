@@ -1,6 +1,6 @@
 use aiken/primitive/bytearray
 use ilap/integri_tree/hash.{combine_three_hashes, empty_hash, hash_val}
-use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
+use ilap/integri_tree/types.{HashNode, Node, NodeHash, Proof, Val}
 
 /// 
 /// The `append_values` is a function that creates the required 3 values from the
@@ -69,8 +69,8 @@ fn append_values(
 pub fn append_check(
   e: ByteArray,
   t_size: ByteArray,
-  root: Hash,
-  updated_root: Hash,
+  root: NodeHash,
+  updated_root: NodeHash,
   nuv: Val,
   nav: Val,
   proof: Proof,
@@ -102,10 +102,10 @@ pub fn append_check(
 /// - nr of elements: tree size - 1
 fn check_proof(
   is_new_state: Bool,
-  root: Hash,
+  root: NodeHash,
   proof: Proof,
-  nuh: Hash,
-  nah: Hash,
+  nuh: NodeHash,
+  nah: NodeHash,
   nodes: (Val, Val, Val),
 ) -> Bool {
   let (has_nu, has_na, calculated_root) =
@@ -129,13 +129,13 @@ pub fn validate_proof(
   has_nu: Bool,
   has_na: Bool,
   node: Proof,
-  nuh: Hash,
-  nah: Hash,
+  nuh: NodeHash,
+  nah: NodeHash,
   nodes: (Val, Val, Val),
-) -> (Bool, Bool, Hash) {
+) -> (Bool, Bool, NodeHash) {
   when node is {
-    NodeHash { hash } -> (has_nu, has_na, hash)
-    HashNode { hash, left, right } -> {
+    HashNode { hash } -> (has_nu, has_na, hash)
+    Node { hash, left, right } -> {
       let enu = hash == nuh
       let ena = hash == nah
 

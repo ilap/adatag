@@ -1,7 +1,7 @@
 use aiken/crypto
 
-// FIXME: blake2b_224 will be used when Plutus V3 is available.
-pub type Hash =
+// Blake2b_224 is used as Plutus V3 is available now.
+pub type NodeHash =
   crypto.Hash<crypto.Blake2b_224, ByteArray>
 
 pub type Val {
@@ -11,6 +11,6 @@ pub type Val {
 }
 
 pub type Proof {
-  HashNode { hash: Hash, left: Proof, right: Proof }
-  NodeHash { hash: Hash }
+  Node { hash: NodeHash, left: Proof, right: Proof }
+  HashNode { hash: NodeHash }
 }

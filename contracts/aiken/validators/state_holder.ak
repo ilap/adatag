@@ -1,4 +1,5 @@
 use aiken/collection/list
+use aiken/crypto.{ScriptHash}
 use aiken/primitive/bytearray
 use cardano/assets.{add}
 use cardano/script_context.{ScriptContext}
@@ -6,7 +7,7 @@ use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Redeemer, Transaction, find_input,
 }
 use ilap/adatag/tests/fixture.{other_hash, own_address, own_hash}
-use ilap/adatag/types.{AdatagAdded, ScriptHash, State}
+use ilap/adatag/types.{AdatagAdded, State}
 use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 
 //use aiken/cbor
@@ -60,7 +61,7 @@ validator state_holder(auth_token: ScriptHash) {
         fn(output: Output) { output.address == input_address },
       )
 
-    // Condition(1): Only a valid inline datum is allowed.
+    // Condition(1): Only a valid inline datum is allowed. 
     expect InlineDatum(new_state) = own_output.datum
     expect new_state: State = new_state
 

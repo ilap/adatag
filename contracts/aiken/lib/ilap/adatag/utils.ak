@@ -9,6 +9,7 @@ use aiken/builtin
 use aiken/cbor
 use aiken/collection/dict
 use aiken/collection/list
+use aiken/crypto.{ScriptHash}
 use aiken/interval.{Finite}
 use aiken/primitive/bytearray
 use cardano/address.{Address, Script, VerificationKey}
@@ -17,7 +18,7 @@ use cardano/transaction.{
   Datum, InlineDatum, Input, Output, OutputReference, ValidityRange, placeholder,
 }
 use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
-use ilap/adatag/types.{PosixTime, ScriptHash, TokenName}
+use ilap/adatag/types.{PosixTime, TokenName}
 
 pub fn debug_message(message: String, data: Data) -> String {
   let prefix = builtin.append_string(message, @": ")

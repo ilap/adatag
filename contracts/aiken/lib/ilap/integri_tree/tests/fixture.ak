@@ -2,7 +2,7 @@ use aiken/primitive/bytearray
 //use aiken/builtin
 use aiken/primitive/string
 use ilap/integri_tree/hash.{empty_hash, hash_val, root_hash}
-use ilap/integri_tree/types.{Hash, HashNode, NodeHash, Proof, Val}
+use ilap/integri_tree/types.{HashNode, Node, NodeHash, Proof, Val}
 
 /// Generate a path from a nood to the root using empty_hash as other child of a node
 pub fn generate_tree(prefix: ByteArray, n: Int, node: Proof) -> Proof {
@@ -14,16 +14,15 @@ pub fn generate_tree(prefix: ByteArray, n: Int, node: Proof) -> Proof {
   let vh = hash_val(Val { xi: i, xa: a, xb: b })
 
   when n is {
-    0 -> HashNode { hash: vh, left: node, right: NodeHash { hash: empty_hash } }
+    0 -> Node { hash: vh, left: node, right: HashNode { hash: empty_hash } }
     _ -> {
       // let l = builtin.debug(@"xxxx", generate_tree(prefix, n - 1, node))
       let l = generate_tree(prefix, n - 1, node)
 
       when e is {
-        True ->
-          HashNode { hash: vh, left: NodeHash { hash: empty_hash }, right: l }
+        True -> Node { hash: vh, left: HashNode { hash: empty_hash }, right: l }
         False ->
-          HashNode { hash: vh, left: l, right: NodeHash { hash: empty_hash } }
+          Node { hash: vh, left: l, right: HashNode { hash: empty_hash } }
       }
     }
   }
@@ -32,10 +31,10 @@ pub fn generate_tree(prefix: ByteArray, n: Int, node: Proof) -> Proof {
 /// Generates a mock proof for labeled tree tests.
 pub fn generate_proof(
   n: Int,
-) -> (ByteArray, ByteArray, Hash, Hash, Val, Val, Proof, Proof) {
+) -> (ByteArray, ByteArray, NodeHash, NodeHash, Val, Val, Proof, Proof) {
   let adatag = "ilap"
   let tree_size = "131072"
-  let pl = NodeHash { hash: empty_hash }
+  let pl = HashNode { hash: empty_hash }
 
   let idx = "65536"
 
@@ -49,16 +48,12 @@ pub fn generate_proof(
   let lv = Val { xi: tree_size, xa: adatag, xb: "it" }
   let hlv = hash_val(lv)
 
-  //let pleaf = HashNode { hash: hlv, left: pl, right: pl }
-  let pun = HashNode { hash: hun, left: pl, right: pl }
+  //let pleaf = Node { hash: hlv, left: pl, right: pl }
+  let pun = Node { hash: hun, left: pl, right: pl }
 
   // let hleaf = combine_three_hashes(hlv, empty_hash, empty_hash)
   let pan =
-    HashNode {
-      hash: han,
-      left: HashNode { hash: hlv, left: pl, right: pl },
-      right: pl,
-    }
+    Node { hash: han, left: Node { hash: hlv, left: pl, right: pl }, right: pl }
 
   let proof = generate_tree("ib", n, pun)
   let proof1 = generate_tree("ib", n, pan)
