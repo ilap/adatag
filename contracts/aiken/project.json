@@ -3,23 +3,30 @@
   "// 1": "https://nx.dev/nx-api/nx/executors/run-commands",
   "// 2": "https://nx.dev/reference/project-configuration#targets",
   "// 3": " https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json",
-
   "name": "aiken",
   "version": "0.2.0",
   "root": "contracts/aiken",
   "projectType": "library",
   "namedInputs": {
-    "contractsDefault": ["{projectRoot}/**/*.ak"]
+    "contractsDefault": [
+      "{projectRoot}/**/*.ak"
+    ]
   },
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["test"],
+      "dependsOn": [
+        "test"
+      ],
       "options": {
         "cwd": "contracts/aiken"
       },
-      "inputs": ["contractsDefault"],
-      "outputs": ["{projectRoot}/plutus.json"],
+      "inputs": [
+        "contractsDefault"
+      ],
+      "outputs": [
+        "{projectRoot}/plutus.json"
+      ],
       "cache": true,
       "configurations": {
         "dev": {
@@ -46,9 +53,13 @@
       "defaultConfiguration": "dev"
     },
     "test": {
-      "dependsOn": ["lint"],
+      "dependsOn": [
+        "lint"
+      ],
       "executor": "nx:run-commands",
-      "inputs": ["contractsDefault"],
+      "inputs": [
+        "contractsDefault"
+      ],
       "cache": true,
       "options": {
         "cwd": "contracts/aiken"
@@ -67,7 +78,9 @@
       "options": {
         "cwd": "contracts/aiken"
       },
-      "inputs": ["contractsDefault"],
+      "inputs": [
+        "contractsDefault"
+      ],
       "cache": true,
       "command": "aiken fmt --check"
     }

@@ -1,6 +1,6 @@
 /// A very simple one NFT minting policy for imitating adahandle in @adatag tests.
+/// > Note: No any check/test is necessary,
 validator always_mint {
-  /// No any check is necessary,
   mint(_r: Option<Void>, _pid: Void, _tx: Void) {
     True
   }
@@ -8,9 +8,4 @@ validator always_mint {
   else(_) {
     fail @"unsupported purpose"
   }
-}
-
-/// It must always succeed
-test always_mint_must_succeed() {
-  always_mint.mint(None, Void, Void)
 }

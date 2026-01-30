@@ -1,8 +1,6 @@
 use aiken/builtin.{append_bytearray, blake2b_224}
 use ilap/integri_tree/types.{HashNode, Node, NodeHash, Proof, Val}
 
-//use aiken/cbor
-//
 // Blake2b_224
 pub const empty_hash =
   #[
@@ -39,13 +37,13 @@ pub const empty_hash =
 // sha2_256
 // pub const empty_hash =
 //  #[
-//    0xe3,
-//    0xb0,
-//    0xc4,
-//    0x42,
-//    0x98,
-//   0xfc,
-// 0x1c,
+//  0xe3,
+//  0xb0,
+//  0xc4,
+//  0x42,
+//  0x98,
+//  0xfc,
+//  0x1c,
 //  0x14,
 //  0x9a,
 //  0xfb,
@@ -56,23 +54,23 @@ pub const empty_hash =
 //  0xb9,
 //  0x24,
 //  0x27,
-// 0xae,
-// 0x41,
-// 0xe4,
-// 0x64,
-// 0x9b,
+//  0xae,
+//  0x41,
+//  0xe4,
+//  0x64,
+//  0x9b,
 //  0x93,
 //  0xa4,
-//0x95,
+//  0x95,
 //  0x99,
-//    0x1b,
+//  0x1b,
 //  0x78,
-// 0x52,
-//   0xb8,
-//    0x55,
-//  ]
+//  0x52,
+//  0xb8,
+//  0x55,
+//  0x4c,
+// ]
 
-/// 0x4c,
 pub fn combine_hashes(h1: NodeHash, h2: NodeHash) -> NodeHash {
   hash(append_bytearray(h1, h2))
 }
@@ -90,7 +88,7 @@ pub fn hash_val(val: Val) -> NodeHash {
 }
 
 pub fn hash(array: ByteArray) -> NodeHash {
-  // FOXME: switched to Blake2b_224
+  //FIXME: switched to Blake2b_224
   //sha2_256(array)
   blake2b_224(array)
 }

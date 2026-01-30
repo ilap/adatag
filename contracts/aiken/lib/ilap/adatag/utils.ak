@@ -1,25 +1,24 @@
-//// Standard utilities for Adatag's validators and minting policies retrieving the:
-//// 0. Input and output of a script
-//// 1. Input datum, value
-//// 2. Output datum, value
-//// 3. token and amount of a value (MintedValue, Value)
-//// 4. Has signed by and address or credential etc.
-
 use aiken/builtin
 use aiken/cbor
 use aiken/collection/dict
 use aiken/collection/list
 use aiken/crypto.{ScriptHash}
-use aiken/interval.{Finite}
+use aiken/interval.{Finite, IntervalBound, PositiveInfinity}
 use aiken/primitive/bytearray
 use cardano/address.{Address, Script, VerificationKey}
 use cardano/assets.{Value, add, quantity_of, tokens, zero}
 use cardano/transaction.{
   Datum, InlineDatum, Input, Output, OutputReference, ValidityRange, placeholder,
 }
-use ilap/adatag/tests/fixture.{other_address, own_address, own_hash}
-use ilap/adatag/types.{PosixTime, TokenName}
+use ilap/adatag/tests/fixture.{other_scriptaddress, own_hash, own_scriptaddress}
+use ilap/adatag/types.{PosixTime, TimeDepositDatum, TokenName}
 
+/// Standard utilities for Adatag's validators and minting policies retrieving the:
+/// 0. Input and output of a script
+/// 1. Input datum, value
+/// 2. Output datum, value
+/// 3. token and amount of a value (MintedValue, Value)
+/// 4. Has signed by and address or credential etc.
 pub fn debug_message(message: String, data: Data) -> String {
   let prefix = builtin.append_string(message, @": ")
   builtin.append_string(prefix, cbor.diagnostic(data))
@@ -39,7 +38,9 @@ pub fn has_only_token(
   tn == token_name && quantity == token_quantity
 }
 
-pub fn correct_nft_amount(
+/// Validates that the minting action is for a single NFT token with the given
+/// policy ID, token name and amount.
+pub fn valid_nft_mint(
   minting: Bool,
   mint: Value,
   symbol: ScriptHash,
@@ -51,7 +52,6 @@ pub fn correct_nft_amount(
     } else {
       -1
     }
-  //let mint_value = value.from_minted_value(mint)
   has_only_token(mint, symbol, token_name, mint_amount)
 }
 
@@ -104,7 +104,7 @@ test test_output_has_token() {
       |> add("", "", 100)
   let output =
     Output {
-      address: other_address(),
+      address: other_scriptaddress,
       value: vv,
       datum: InlineDatum(Void),
       reference_script: None,
@@ -139,16 +139,62 @@ pub fn signed_by(tx_signatures: List<ScriptHash>, beneficiary: ByteArray) {
 }
 
 pub fn time_elapsed(range: ValidityRange, time: PosixTime) -> Bool {
+  trace @"Tx validity range": interval.to_string(range)
+  trace @"Unlock Time      ": time
+  range |> interval.is_entirely_after(time)
+}
+
+pub fn time_elapsed3(range: ValidityRange, time: PosixTime) -> Bool {
+  let IntervalBound { bound_type, is_inclusive } = range.lower_bound
+
+  trace @"Tx validity range": interval.to_string(range)
+  trace @"Unlock Time      ": time
+  when (bound_type, is_inclusive) is {
+    (Finite(low), True) -> low > time
+    (Finite(low), False) -> low >= time
+    (PositiveInfinity, _) -> True
+    _ -> False
+  }
+}
+
+/// Positive infinite lower bound means the transaction is valid forever from the lower bound
+pub fn time_elapsed2(range: ValidityRange, time: PosixTime) -> Bool {
   let from = interval.after(time)
 
+  trace @"Tx validity range": interval.to_string(range)
+  trace @"Unlock Time      ": interval.to_string(from)
+
+  //trace @"Checking time elaps": interval.is_empty(range)
+  when range.lower_bound.bound_type is {
+    Finite(lower_bound) -> {
+      trace @"Range contain    ": lower_bound
+      Void
+    }
+    _ -> {
+      trace @"Lower Bound: -infinity"
+      Void
+    }
+  }
   expect Finite(lower_bound) = range.lower_bound.bound_type
   interval.contains(from, lower_bound)
+}
+
+pub fn decode_timedeposit_datum(datum: Option<Data>) -> Option<TimeDepositDatum> {
+  when datum is {
+    Some(d) ->
+      if d is TimeDepositDatum {
+        Some(d)
+      } else {
+        None
+      }
+    _ -> None
+  }
 }
 
 test test_find_script_input_datum() {
   let output =
     Output {
-      address: own_address(),
+      address: own_scriptaddress,
       value: zero,
       datum: InlineDatum(Void),
       reference_script: None,
@@ -255,7 +301,7 @@ test test_is_valid_tag_slow_fail() {
 /// A very simple string to unsigned integer parser.
 /// It fails when the string contains any non digits
 /// or starts with leading zeros (expect "0" string)
-pub fn parse_int(string: ByteArray) -> Int {
+pub fn parse_uint(string: ByteArray) -> Int {
   let fst = builtin.index_bytearray(string, 0)
   let len = bytearray.length(string)
 
@@ -281,7 +327,7 @@ pub fn parse_int(string: ByteArray) -> Int {
 }
 
 test test_parse_ints() {
-  // parse_int("12345678901") == 12345678901 && 
-  // parse_int("0") == 0 && 
-  parse_int("100000000000000000000000000000000000000000000") == 100000000000000000000000000000000000000000000
+  parse_uint("12345678901") == 12345678901 && parse_uint("0") == 0 && parse_uint(
+    "100000000000000000000000000000000000000000000",
+  ) == 100000000000000000000000000000000000000000000
 }

@@ -1,22 +1,15 @@
 use aiken/collection/list
 use aiken/crypto.{ScriptHash}
 use aiken/primitive/bytearray
-use cardano/assets.{add}
-use cardano/script_context.{ScriptContext}
+use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Redeemer, Transaction, find_input,
 }
-use ilap/adatag/tests/fixture.{other_hash, own_address, own_hash}
 use ilap/adatag/types.{AdatagAdded, State}
-use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
-
-//use aiken/cbor
-//use ilap/integri_tree/hash.{combine_three_hashes, hash_val}
-//use ilap/integri_tree/types as tree
-//use ilap/integri_tree/proofs.{empty_hash}
+use ilap/adatag/utils.{has_only_token, parse_uint, valid_nft_mint}
 
 /// This is a simple parameterized validator designed for handling (by UtxOs) auth
-/// NFT tokens and the state of a tree used for minting and burning adatags.
+/// NFT tokens and the state of an integri-tree used for minting and burning adatags.
 ///
 /// For example, in a UTXO that contains the validator address, an auth token in the
 /// value field, and the state of the relevant tree in the datum field.
@@ -26,15 +19,17 @@ use ilap/adatag/utils.{correct_nft_amount, has_only_token, parse_int}
 /// and the other required conditions are met.
 ///
 /// Assuming proper bootstrap, meaning:
-/// There are only 26 auth tokens sitting on 26 StateHolder's address, with 26 initial datums
-/// i.e. 26 individual EUTxOs holding the state of the reelvant adatag trees.
+/// There are only 26 auth tokens sitting on 26 StateHolder's addresses, with
+/// 26 initial datums i.e. 26 individual EUTxOs holding the initial state of
+/// the relevant adatag tree.
 ///
 /// E.g. 
+/// ```
 /// Validator Address, Curr symbol, token name, amount, datum
 /// validator_address, auth_token_polid,  "a",        1,      initial_state_a
 /// ...
 /// validator_address, auth_token_polid,  "z",        1,      initial_state_z
-///
+/// ```
 /// >Note: initial_state_a's proof i.e. root hash of ProofTree {Val { xi: 1, xa: "`", xb: "b"}, left: empty_hash, right: empty_hash}
 ///
 validator state_holder(auth_token: ScriptHash) {
@@ -44,14 +39,12 @@ validator state_holder(auth_token: ScriptHash) {
     own_ref: OutputReference,
     transaction: Transaction,
   ) {
-    //let ScriptContext { transaction, purpose } = ctx
-    //expect Spend(own_ref) = purpose
-
     let Transaction { inputs, outputs, mint, .. } = transaction
 
-    // Get the own address to find the outputs.
+    // Find the script’s own input.
     expect Some(own_input) = find_input(inputs, own_ref)
 
+    // Get the scripts own address from the input.
     let Output { address: input_address, .. } = own_input.output
 
     // Condition(0): Only one output is epxected/allowed
@@ -71,7 +64,7 @@ validator state_holder(auth_token: ScriptHash) {
     let minting = new_state.operation == AdatagAdded
 
     expect
-      correct_nft_amount(
+      valid_nft_mint(
         minting: minting,
         // Assumption: no ADA policy is allowed by the ledger rules 
         // and only one policy is being minted/burned in the transaction
@@ -98,8 +91,8 @@ validator state_holder(auth_token: ScriptHash) {
 
     expect Some(old_state) = datum
 
-    let old_size = parse_int(old_state.size)
-    let new_size = parse_int(new_state.size)
+    let old_size = parse_uint(old_state.size)
+    let new_size = parse_uint(new_state.size)
 
     // Tree state's sanity checks
     and {
@@ -120,101 +113,7 @@ validator state_holder(auth_token: ScriptHash) {
     }
   }
 
-  else(_ctx: ScriptContext) {
+  else(_) {
     fail @"unsupported purpose"
   }
 }
-
-test test_state_holder() {
-  let mp = own_hash
-  let auth_token = other_hash
-  let adatag = "ilap"
-
-  let os =
-    State {
-      operation_count: 1,
-      operation: AdatagAdded,
-      size: "10",
-      adatag: "idk",
-      minting_policy: mp,
-      root_hash: "",
-    }
-
-  let ns =
-    State {
-      operation_count: 2,
-      operation: AdatagAdded,
-      size: "11",
-      adatag: "ilap",
-      minting_policy: mp,
-      root_hash: "",
-    }
-
-  let mv =
-    assets.zero
-      |> add(mp, adatag, 1)
-  let vv =
-    assets.zero
-      |> add("", "", 100)
-      |> add(auth_token, bytearray.take(adatag, 1), 1)
-  let output =
-    Output {
-      address: own_address(),
-      value: vv,
-      datum: InlineDatum(os),
-      reference_script: None,
-    }
-
-  let state_output =
-    Output {
-      address: own_address(),
-      value: vv,
-      datum: InlineDatum(ns),
-      reference_script: None,
-    }
-
-  let utxo =
-    OutputReference {
-      transaction_id: transaction.placeholder.id,
-      output_index: 0,
-    }
-
-  let input = Input { output_reference: utxo, output }
-
-  let tx =
-    Transaction {
-      ..transaction.placeholder,
-      mint: mv,
-      extra_signatories: [other_hash],
-      inputs: [input],
-      outputs: [state_output],
-    }
-  //let ctx = ScriptContext { purpose: Spend(utxo), transaction: tx }
-  let s: Option<State> = Some(os)
-  state_holder.spend(
-    Void,
-    auth_token: auth_token,
-    datum: s,
-    own_ref: utxo,
-    transaction: tx,
-  )
-}
-//test test_tree_state() {
-//   let ns =
-//    State {
-//      operation_count: 1110,
-//      operation: AdatagAdded,
-//      size: "0",
-//      adatag: "",
-//      minting_policy: "9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6",
-//      root_hash: "",
-//    }
-
-//  let ts = "d8799f00d87a8040410058354500340003210002230050000722008700420050000491000009950002210213011004890002007500360000082502060513051500581c9228a8330752bfb2ad4962eb9ebe8eabf397d7174e41cb525363c8d6ff"
-
-//cbor.diagnostic(ns) == @"a"
-//cbor.serialise(ns) == ""
-//  let cs = combine_three_hashes(hash_val(tree.Val {xi: "0", xa: "y", xb: "{"}), empty_hash, empty_hash)
-//  cs == ""
-//True
-//}

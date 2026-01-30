@@ -1,5 +1,7 @@
-name = "adatag/aiken"
+name = "ilap/adatag"
 version = "0.2.0"
+compiler = "v1.1.21"
+plutus = "v3"
 license = "Apache-2.0"
 description = "Aiken contracts for @adatag project"
 
