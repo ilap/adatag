@@ -8,7 +8,7 @@
     "@blaze-cardano/core": "0.4.5",
     "@blaze-cardano/uplc": "0.1.30",
     "@blaze-cardano/tx": "0.6.1",
-    "@blaze-cardano/wallet": "0.1.56",
+    "@blaze-cardano/wallet": "0.1.58",
     "@blaze-cardano/ogmios": "0.0.6",
     "@blaze-cardano/emulator": "0.1.76",
     "@blaze-cardano/query": "0.2.17",
