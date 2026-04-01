@@ -11,7 +11,7 @@
     "@blaze-cardano/wallet": "0.1.56",
     "@blaze-cardano/ogmios": "0.0.6",
     "@blaze-cardano/emulator": "0.1.76",
-    "@blaze-cardano/query": "0.2.17",
+    "@blaze-cardano/query": "0.2.19",
     "@heroicons/react": "^2.1.3",
     "@meshsdk/core": "^1.7.3",
     "@meshsdk/react": "^1.7.3",
