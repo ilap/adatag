@@ -1,9 +1,9 @@
 use aiken/collection/list
 use cardano/assets
 use cardano/transaction.{NoDatum, Transaction}
-use ilap/adatag/tests/fixture.{beneficiary_address, own_hash}
+use ilap/adatag/tests/fixture.{beneficiary_address, token_policy}
 use oneshot
-use tests/test_utils.{mk_input, mk_output, mk_outref}
+use tests/validator_test_utils.{mk_input, mk_output, mk_outref}
 
 const letters =
   [
@@ -17,7 +17,7 @@ const mint_value =
   list.foldl(
     letters,
     assets.zero,
-    fn(tn, acc) { assets.add(acc, own_hash, tn, 1) },
+    fn(tn, acc) { assets.add(acc, token_policy, tn, 1) },
   )
 
 const outref = mk_outref(0)
@@ -26,17 +26,17 @@ const valid_tx =
   Transaction {
     ..transaction.placeholder,
     mint: mint_value,
-    inputs: [mk_input(output, 0)],
+    inputs: [mk_input(0, output)],
   }
 
 /// jq -r ".validators[1].compiledCode"  plutus.json
 test test_auth_token_outref_in_tx_passes() {
-  oneshot.auth_token.mint(outref, Void, Void, valid_tx)
+  oneshot.oneshot.mint(outref, Void, Void, valid_tx)
 }
 
 test test_auth_token_outref_not_in_tx_fails() fail {
   // A bad tx that does not include the required UTxO in its inputs
-  let bad_tx = Transaction { ..valid_tx, inputs: [mk_input(output, 1)] }
+  let bad_tx = Transaction { ..valid_tx, inputs: [mk_input(1, output)] }
 
-  oneshot.auth_token.mint(outref, Void, Void, bad_tx)
+  oneshot.oneshot.mint(outref, Void, Void, bad_tx)
 }

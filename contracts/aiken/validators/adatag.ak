@@ -23,7 +23,7 @@ validator adatag_minting(params: MintParams) {
     // Only one input is allowed
     trace @"find_script_inputs"
     expect [validator_input] =
-      find_script_inputs(inputs: inputs, script_hash: params.state_holder)
+      find_script_inputs(inputs: inputs, script_hash: params.stateholder_hash)
     trace @"expect InlineDatum(old_state) = validator_input.output.datum"
     expect InlineDatum(old_state) = validator_input.output.datum
     trace @"expect old_state: State = old_state"
@@ -33,7 +33,7 @@ validator adatag_minting(params: MintParams) {
     // only one output is allowed
     trace @"find_script_outputs"
     expect [validator_output] =
-      find_script_outputs(outputs, params.state_holder)
+      find_script_outputs(outputs, params.stateholder_hash)
     trace @"expect InlineDatum(new_state) = validator_output.datum"
     expect InlineDatum(new_state) = validator_output.datum
     trace @"New state"
@@ -44,29 +44,28 @@ validator adatag_minting(params: MintParams) {
     let mint_amount = quantity_of(mint, policy_id, new_state.adatag)
 
     trace @"complex validation"
-    is_valid_tag(new_state.adatag)? && check_timedeposit(
-      new_state.adatag,
-      outputs,
-      params,
-      validity_range,
-    )? && when rdmr is {
-      Minting(redeemer) -> and {
-          mint_amount == 1,
-          append_check(
-            new_state.adatag,
-            new_state.size,
-            old_state.root_hash,
-            new_state.root_hash,
-            redeemer.update_val,
-            redeemer.append_val,
-            redeemer.proof,
-          )?,
-        }
-      Burning(_redeemer) -> and {
-          mint_amount == -1,
-          // TODO: implement burning
-          False,
-        }
+    and {
+      is_valid_tag(new_state.adatag)?,
+      check_timedeposit(new_state.adatag, outputs, params, validity_range)?,
+      when rdmr is {
+        Minting(redeemer) -> and {
+            mint_amount == 1,
+            append_check(
+              new_state.adatag,
+              new_state.size,
+              old_state.root_hash,
+              new_state.root_hash,
+              redeemer.update_val,
+              redeemer.append_val,
+              redeemer.proof,
+            )?,
+          }
+        Burning(_redeemer) -> and {
+            mint_amount == -1,
+            // TODO: implement burning
+            False,
+          }
+      },
     }
     // FIXME: Implement
   }
@@ -95,7 +94,7 @@ fn check_timedeposit(
       params,
       range,
       outputs,
-      params.timedeposit_validator,
+      params.timedeposit_hash,
       adatag,
     )?,
   }

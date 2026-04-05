@@ -1,4 +1,5 @@
 use aiken/crypto.{ScriptHash, VerificationKeyHash}
+use cardano/assets.{PolicyId}
 use ilap/integri_tree/types.{NodeHash, Proof, Val}
 
 pub type PosixTime =
@@ -61,7 +62,7 @@ pub type State {
   root_hash: NodeHash,
   // Corresponding adatag minting policy. It is used to avoid circular dependency
   // between the StateHolder and Minting policy.
-  minting_policy: ScriptHash,
+  minting_policy: PolicyId,
 }
 
 //-----------------------------------------------------------------------------
@@ -80,11 +81,11 @@ pub type State {
 pub type MintParams {
   // The authorization token that's carrying the state of the @adatag tree.
   // AssetClass { unAssetClass :: (CurrencySymbol, TokenName) }
-  auth_token: ScriptHash,
+  token_policy: PolicyId,
   // State holder validator, the authorization token and the state reside on.
-  state_holder: ScriptHash,
+  stateholder_hash: ScriptHash,
   // TimeDeposit validator, for checking time-lock deposits' outputs.
-  timedeposit_validator: ScriptHash,
+  timedeposit_hash: ScriptHash,
   // The date when the time (in ms) lock deposit will be deactivated.
   deactivation_time: PosixTime,
   // The deposit is calculated based on the deposit base and the length of the @adatag being minted.

@@ -18,6 +18,11 @@ test test_append_check_2_16() {
   append_check(adatag, tree_size, root, root1, nun, nun1, proof)
 }
 
+test test_append_check_2_24() {
+  let (adatag, tree_size, root, root1, nun, nun1, proof, _) = generate_proof(48)
+  append_check(adatag, tree_size, root, root1, nun, nun1, proof)
+}
+
 test test_append_check_2_28() {
   let (adatag, tree_size, root, root1, nun, nun1, proof, _) = generate_proof(56)
   append_check(adatag, tree_size, root, root1, nun, nun1, proof)

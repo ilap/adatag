@@ -10,7 +10,9 @@ use cardano/assets.{Value, add, quantity_of, tokens, zero}
 use cardano/transaction.{
   Datum, InlineDatum, Input, Output, OutputReference, ValidityRange, placeholder,
 }
-use ilap/adatag/tests/fixture.{other_scriptaddress, own_hash, own_scriptaddress}
+use ilap/adatag/tests/fixture.{
+  beneficiary_address, minting_policy, state_holder_address, stateholder_hash,
+}
 use ilap/adatag/types.{PosixTime, TimeDepositDatum, TokenName}
 
 /// Standard utilities for Adatag's validators and minting policies retrieving the:
@@ -98,18 +100,17 @@ pub fn output_has_token(
 
 test test_output_has_token() {
   let vv =
-    // FIXME: value. ...
     zero
-      |> add(own_hash, "ilap", 1)
+      |> add(minting_policy, "ilap", 1)
       |> add("", "", 100)
   let output =
     Output {
-      address: other_scriptaddress,
+      address: beneficiary_address,
       value: vv,
       datum: InlineDatum(Void),
       reference_script: None,
     }
-  output_has_token([output], own_hash, "ilap")
+  output_has_token([output], minting_policy, "ilap")
 }
 
 pub fn find_script_input_datum(
@@ -194,7 +195,7 @@ pub fn decode_timedeposit_datum(datum: Option<Data>) -> Option<TimeDepositDatum>
 test test_find_script_input_datum() {
   let output =
     Output {
-      address: own_scriptaddress,
+      address: state_holder_address,
       value: zero,
       datum: InlineDatum(Void),
       reference_script: None,
@@ -205,7 +206,7 @@ test test_find_script_input_datum() {
   let input = Input { output_reference: utxo, output }
 
   expect [datum] =
-    find_script_input_datum(inputs: [input], script_hash: own_hash)
+    find_script_input_datum(inputs: [input], script_hash: stateholder_hash)
 
   cbor.diagnostic(datum) != @"a"
 }

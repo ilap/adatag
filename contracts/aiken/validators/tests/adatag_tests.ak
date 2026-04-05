@@ -6,24 +6,48 @@ use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use ilap/adatag/tests/fixture as tag_fixture
+use ilap/adatag/tests/fixture.{minting_policy, stateholder_hash, timedeposit_address, timedeposit_hash, token_policy} as tag_fixture
 use ilap/adatag/types.{
   AdatagAdded, MintParams, MintRedeemer, Minting, State, TimeDepositDatum,
 }
-use ilap/integri_tree/proofs.{append_check}
 use ilap/integri_tree/tests/fixture as tree_fixture
+use tests/validator_test_utils.{before_deactivation_interval, mk_valid_mint_value, mock_mint_params}
 
-test test_adatag_minting_2_20() {
+
+/// Property test for proper minting of Adatag state token
+/// Maxing tree size to 2^28 - 1 = 268435455
+/// 
+test test_adatag_proper_minting_2_28() {
   let (adatag, tree_size, root, root1, nun, nun1, proof, _) =
-    tree_fixture.generate_proof(40)
+    tree_fixture.generate_proof(64)
 
-  let mpv: ScriptHash =
-    #"1876543210987654321098765432109876543210987654321098765432109876543210"
-  let shv: ScriptHash = tag_fixture.own_hash
-  let auth_token: ScriptHash = tag_fixture.other_hash
-  let tdv: ScriptHash =
-    #"9876543210987654321098765432109876543210987654321098765432109876543210"
-  // 1 day in ms i.e. 86400 * 1000 = 86400000
+    let rdmr = Minting(MintRedeemer { update_val: nun, append_val: nun1, proof })
+
+
+      let tx =
+    Transaction {
+      ..transaction.placeholder,
+      mint: mk_valid_mint_value(adatag),
+      /// Minting policy just validating the adahandle's input and only if deactivation time has not passed
+      ///
+      //inputs: [input],
+      //outputs: [state_output, timedeposit_output, adahandle_output],
+      validity_range: before_deactivation_interval,
+    }
+
+  adatag.adatag_minting.mint(
+    params: mock_mint_params,
+    rdmr: rdmr,
+    policy_id: minting_policy,
+    self: tx,
+  )?
+}
+
+test test_adatag_minting_2_32() {
+  let adatag = "ilaprocks"
+  let (adatag, tree_size, root, root1, nun, nun1, proof, proof1) =
+    tree_fixture.generate_valid_proof(adatag, 64)
+
   let day = 86400000
   let curr_time = day
   let three_hours = 10800000
@@ -34,31 +58,33 @@ test test_adatag_minting_2_20() {
       operation_count: 1,
       operation: AdatagAdded,
       size: "131071",
+      // 131072
       adatag: "idk",
-      minting_policy: mpv,
+      minting_policy,
       root_hash: root,
     }
-
+  //trace @"Treesize: ": tree_size
+  //trace @"Loong proof: ": proof
   let ns =
     State {
       operation_count: 2,
       operation: AdatagAdded,
       size: tree_size,
       adatag,
-      minting_policy: mpv,
+      minting_policy,
       root_hash: root1,
     }
 
   let mv =
     assets.zero
-      |> assets.add(mpv, adatag, 1)
+      |> assets.add(minting_policy, adatag, 1)
   let vv =
     assets.zero
       |> assets.add("", "", 100)
-      |> assets.add(auth_token, bytearray.take(adatag, 1), 1)
+      |> assets.add(token_policy, bytearray.take(adatag, 1), 1)
   let output =
     Output {
-      address: tag_fixture.own_scriptaddress,
+      address: tag_fixture.state_holder_address,
       value: vv,
       datum: InlineDatum(os),
       reference_script: None,
@@ -66,7 +92,7 @@ test test_adatag_minting_2_20() {
 
   let state_output =
     Output {
-      address: tag_fixture.own_scriptaddress,
+      address: tag_fixture.state_holder_address,
       value: vv,
       datum: InlineDatum(ns),
       reference_script: None,
@@ -80,7 +106,7 @@ test test_adatag_minting_2_20() {
     TimeDepositDatum { beneficiary: "", deadline: twenty_days }
   let timedeposit_output =
     Output {
-      address: tag_fixture.scripthash_address(tdv),
+      address: timedeposit_address,
       value: tv,
       datum: InlineDatum(timedeposit_datum),
       reference_script: None,
@@ -116,19 +142,19 @@ test test_adatag_minting_2_20() {
     Transaction {
       ..transaction.placeholder,
       mint: mv,
-      extra_signatories: [tag_fixture.other_hash],
+      //extra_signatories: [tag_fixture.other_hash],
       inputs: [input],
       outputs: [state_output, timedeposit_output, adahandle_output],
       validity_range: iv,
     }
 
-  let rdmr = Minting(MintRedeemer { update_val: nun, append_val: nun1, proof })
+  let rdmr = Minting(MintRedeemer { update_val: nun, append_val: nun, proof: proof })
 
   let params =
     MintParams {
-      auth_token,
-      state_holder: shv,
-      timedeposit_validator: tdv,
+      token_policy,
+      stateholder_hash: stateholder_hash,
+      timedeposit_hash: timedeposit_hash,
       deposit_base: 1750,
       // Preferably 3-6 months after bootstrap
       // 1 day after start
@@ -140,34 +166,10 @@ test test_adatag_minting_2_20() {
       adahandle: #"6876543210987654321098765432109876543210987654321098765432109876543210",
     }
 
-  // ahs,
   adatag.adatag_minting.mint(
     params: params,
     rdmr: rdmr,
-    policy_id: mpv,
+    policy_id: minting_policy,
     self: tx,
   )?
-}
-
-test test_append_check_2_24() {
-  let (
-    adatag,
-    tree_size,
-    old_root_hash,
-    new_root_hash,
-    update_val,
-    append_val,
-    proof,
-    _,
-  ) = tree_fixture.generate_proof(48)
-
-  append_check(
-    adatag,
-    tree_size,
-    old_root_hash,
-    new_root_hash,
-    update_val,
-    append_val,
-    proof,
-  )
 }

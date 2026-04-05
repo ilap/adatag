@@ -32,7 +32,7 @@ use ilap/adatag/utils.{has_only_token, parse_uint, valid_nft_mint}
 /// ```
 /// >Note: initial_state_a's proof i.e. root hash of ProofTree {Val { xi: 1, xa: "`", xb: "b"}, left: empty_hash, right: empty_hash}
 ///
-validator state_holder(auth_token: ScriptHash) {
+validator stateholder(token_policy: ScriptHash) {
   spend(
     datum: Option<State>,
     _redeemer: Redeemer,
@@ -76,12 +76,12 @@ validator state_holder(auth_token: ScriptHash) {
     // Condition(4): the own output's value must only contain a valid
     // authorization token (as parameter of the validator). It's valid when the adatag's 
     // 1st letter == authorization token.
-    // e.g. adatag == "ilap" then auth_token's token name must be "i"
+    // e.g. adatag == "ilap" then token_policy's token name must be "i"
     let output_value = own_output.value
     expect
       has_only_token(
         output_value,
-        auth_token,
+        token_policy,
         bytearray.take(new_state.adatag, 1),
         1,
       )

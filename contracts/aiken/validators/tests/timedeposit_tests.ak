@@ -1,17 +1,17 @@
-use aiken/builtin
-use aiken/crypto.{VerificationKeyHash}
 use aiken/interval
-use cardano/transaction.{Transaction}
 use ilap/adatag/tests/fixture.{beneficiary_keyhash, collector_keyhash}
-use ilap/adatag/types.{Collect, Redeem, TimeDepositDatum, TimeDepositParams}
+use ilap/adatag/types.{Collect, Redeem}
 use ilap/adatag/utils.{time_elapsed}
-use time_deposit
+use tests/validator_test_utils.{
+  invalid_datum, mk_timedeposit_tx as mk_tx, timedeposit_params,
+  valid_timedeposit_datum,
+}
+use timedeposit
 
 // ============================================================================
 // Helpers for tests
 // ============================================================================
 
-///
 /// ``` markdown
 /// | Case    | Datum            | Time condition                 | Signer      | Result |
 /// | ------- | ---------------- | ------------------------------ | ----------- | ------ |
@@ -25,35 +25,6 @@ use time_deposit
 /// | Redeem  | ✅ valid          | deadline **not** passed        | beneficiary | ❌ FAIL |
 /// | Redeem  | ✅ valid          | deadline passed                | ❌           | ❌ FAIL |
 /// ```
-fn mk_tx(
-  semi_open: Bool,
-  from: Int,
-  to: Int,
-  sigs: List<VerificationKeyHash>,
-) -> Transaction {
-  Transaction {
-    ..transaction.placeholder,
-    validity_range: if semi_open {
-      interval.between(from, to)
-    } else {
-      interval.entirely_between(from, to)
-    },
-    extra_signatories: sigs,
-  }
-}
-
-fn valid_datum(beneficiary: VerificationKeyHash, deadline: Int) -> Option<Data> {
-  Some(as_data(TimeDepositDatum { beneficiary, deadline }))
-}
-
-fn invalid_datum() -> Option<Data> {
-  Some(builtin.b_data(#"deadbeef"))
-}
-
-fn params(coll_time: Int) -> TimeDepositParams {
-  TimeDepositParams { collector: collector_keyhash, collection_time: coll_time }
-}
-
 const coll_time = 100
 
 // -----------------------------
@@ -61,8 +32,8 @@ const coll_time = 100
 // -----------------------------
 
 test timedeposit_collect_invalid_datum_pass_anytime() {
-  time_deposit.timedeposit.spend(
-    params(coll_time),
+  timedeposit.timedeposit.spend(
+    timedeposit_params(coll_time),
     invalid_datum(),
     Collect,
     Void,
@@ -72,8 +43,8 @@ test timedeposit_collect_invalid_datum_pass_anytime() {
 
 // 1️⃣ invalid datum, collector signs -> PASS
 test timedeposit_collect_pass_invalid_datum_collector() {
-  time_deposit.timedeposit.spend(
-    params(coll_time),
+  timedeposit.timedeposit.spend(
+    timedeposit_params(coll_time),
     invalid_datum(),
     Collect,
     Void,
@@ -83,8 +54,8 @@ test timedeposit_collect_pass_invalid_datum_collector() {
 
 // 2️⃣ no datum, collector signs -> PASS
 test timedeposit_collect_pass_no_datum_collector() {
-  time_deposit.timedeposit.spend(
-    params(coll_time),
+  timedeposit.timedeposit.spend(
+    timedeposit_params(coll_time),
     None,
     Collect,
     Void,
@@ -95,8 +66,8 @@ test timedeposit_collect_pass_no_datum_collector() {
 // 3️⃣ invalid datum, missing collector -> FAIL
 test timedeposit_collect_fail_invalid_datum_no_signer() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
       invalid_datum(),
       Collect,
       Void,
@@ -106,9 +77,9 @@ test timedeposit_collect_fail_invalid_datum_no_signer() fail {
 
 // 4️⃣ valid datum, collection time passed, collector signs -> PASS
 test timedeposit_collect_pass_valid_time_passed() {
-  time_deposit.timedeposit.spend(
-    params(coll_time),
-    valid_datum(beneficiary_keyhash, 200),
+  timedeposit.timedeposit.spend(
+    timedeposit_params(coll_time),
+    valid_timedeposit_datum(beneficiary_keyhash, 200),
     Collect,
     Void,
     mk_tx(True, coll_time + 1, 9999, [collector_keyhash]),
@@ -118,9 +89,9 @@ test timedeposit_collect_pass_valid_time_passed() {
 // 5️⃣ valid datum, collection time NOT passed, collector signs -> FAIL
 test timedeposit_collect_fail_valid_time_not_passed() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
-      valid_datum(beneficiary_keyhash, 200),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
+      valid_timedeposit_datum(beneficiary_keyhash, 200),
       Collect,
       Void,
       mk_tx(True, 0, 50, [collector_keyhash]),
@@ -130,9 +101,9 @@ test timedeposit_collect_fail_valid_time_not_passed() fail {
 // 6️⃣ valid datum, collection time passed, missing collector -> FAIL
 test timedeposit_collect_fail_valid_time_passed_no_signer() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
-      valid_datum(beneficiary_keyhash, 200),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
+      valid_timedeposit_datum(beneficiary_keyhash, 200),
       Collect,
       Void,
       mk_tx(True, 100, 9999, []),
@@ -145,9 +116,9 @@ test timedeposit_collect_fail_valid_time_passed_no_signer() fail {
 
 // 7️⃣ valid datum, deadline passed, beneficiary signs -> PASS
 test timedeposit_redeem_pass_deadline_passed() {
-  time_deposit.timedeposit.spend(
-    params(coll_time),
-    valid_datum(beneficiary_keyhash, coll_time),
+  timedeposit.timedeposit.spend(
+    timedeposit_params(coll_time),
+    valid_timedeposit_datum(beneficiary_keyhash, coll_time),
     Redeem,
     Void,
     mk_tx(True, coll_time + 1, 9999, [beneficiary_keyhash]),
@@ -157,8 +128,8 @@ test timedeposit_redeem_pass_deadline_passed() {
 // 8️⃣ invalid datum, beneficiary signs -> FAIL
 test timedeposit_redeem_fail_invalid_datum() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
       invalid_datum(),
       Redeem,
       Void,
@@ -169,9 +140,9 @@ test timedeposit_redeem_fail_invalid_datum() fail {
 // 9️⃣ valid datum, deadline NOT passed, beneficiary signs -> FAIL
 test timedeposit_redeem_fail_deadline_not_passed() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
-      valid_datum(beneficiary_keyhash, coll_time),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
+      valid_timedeposit_datum(beneficiary_keyhash, coll_time),
       Redeem,
       Void,
       mk_tx(True, 50, 99, [beneficiary_keyhash]),
@@ -181,9 +152,9 @@ test timedeposit_redeem_fail_deadline_not_passed() fail {
 // 1️⃣0️⃣ valid datum, deadline passed, missing beneficiary -> FAIL
 test timedeposit_redeem_fail_deadline_passed_no_signer() fail {
   expect
-    fail time_deposit.timedeposit.spend(
-      params(coll_time),
-      valid_datum(beneficiary_keyhash, coll_time),
+    fail timedeposit.timedeposit.spend(
+      timedeposit_params(coll_time),
+      valid_timedeposit_datum(beneficiary_keyhash, coll_time),
       Redeem,
       Void,
       mk_tx(True, coll_time + 1, 9999, []),

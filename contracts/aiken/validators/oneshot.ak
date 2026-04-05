@@ -7,7 +7,7 @@ use cardano/transaction.{Input, OutputReference, Transaction}
 /// 
 /// A very simple one shot minting policy for minting 26 one letter token names
 /// that will be used with state holder validator.
-validator auth_token(utxo_ref: OutputReference) {
+validator oneshot(utxo_ref: OutputReference) {
   /// No any check other than the OutRef's is necessary, as the utxo spent
   /// garantees uniqueness of the authorization token's policy.
   mint(_r: Void, _pid: Void, tx: Transaction) {
